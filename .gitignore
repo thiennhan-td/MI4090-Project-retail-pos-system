@@ -1,0 +1,33 @@
+# Office & temporary lock files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+*.tmp
+.pos-edit-*/
+
+# Superseded / out-of-scope draft files
+Khảo sát KiotViet/DFD-POS-KiotViet.html
+
+# .NET / C# build artifacts
+bin/
+obj/
+out/
+Publish/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+.idea/
+
+# Local secrets & machine-specific config (keep *.example.json tracked)
+appsettings.Local.json
+appsettings.Development.json
+.env
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

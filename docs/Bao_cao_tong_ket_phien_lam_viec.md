@@ -38,14 +38,26 @@
   - **Ma trận RBAC 3 vai trò (*Thu ngân, Nhân viên kho, Quản lý*):** Phủ **31/31 chức năng BFD**, tách thành **41 hàng thao tác** (40 mã quyền cho `QuyenVaiTro` + bước xác thực `F1.1`), tách rõ quyền người dùng khỏi lời gọi nội bộ (`IInventoryService`, `IShiftCashService`).
   - **5 tình huống kiểm chứng dự kiến (`TC-IT-01` → `TC-IT-05`):** Phủ đủ giao dịch hợp lệ Quầy↔Kho, đủ quyền nhưng sai trạng thái/luật, thiếu quyền gọi trực tiếp Service bỏ qua UI, lỗi giữa giao dịch rollback sạch, và gửi lại yêu cầu idempotency. *(Đều ở trạng thái thiết kế dự kiến, chưa chạy).*
   - **Đã chốt dứt điểm 6 quyết định (`QĐ01–QĐ06`):** Không còn điểm mở/đề xuất `ĐX` nào ở giai đoạn Phân tích.
-- **Dọn dẹp thư mục:** Đã xóa thư mục xuất tạm `.pos-edit-1795711839697/`.
+- **Dọn dẹp & Tổ chức lại kho GitHub (`main`):**
+  - Khởi tạo Git, tạo `.gitignore` chuẩn C#/Office và `README.md`, đẩy lên repo `https://github.com/thiennhan-td/MI4090-Project-retail-pos-system`.
+  - Tổ chức gọn toàn bộ tài liệu vào 3 thư mục tiếng Anh dưới `docs/`: `docs/references/`, `docs/survey/`, `docs/analysis/`.
+  - Đã xóa thư mục xuất tạm `.pos-edit-1795711839697/` và bản dự thảo RBAC cũ.
+
+### 4. Rà soát bộ giao diện Stitch của TV2 & Dựng Front-end Demo khớp 100% ERD 21 bảng
+- **Báo cáo rà soát chi tiết (`docs/analysis/Bao_cao_ra_soat_UI_Stitch_voi_BFD_ERD_RBAC.md`):**
+  - Giải nén và kiểm tra toàn bộ **19 màn hình Stitch** (`F1.1–F8.5`) đối chiếu với BFD 31 chức năng, ERD 21 thực thể và RBAC `QĐ01–QĐ06`.
+  - Chỉ rõ **12 điểm mâu thuẫn** (đa chi nhánh/kho/quầy, khách hàng VIP/Voucher, VAT/giá vốn/lô SX/HSD, RFID/2FA, `F1.3` thừa vai trò & đóng ca cưỡng bức, `F4.1–F4.2` dùng checkbox thay ô số `soLuongNhapLai`, `F7.4` thiếu thành phần công thức két `QT06`, `F6.2–F6.4` sai tách quyền duyệt, chưa chung 1 Main Shell, sai định dạng ngày `05/15/2025` ở `F5.1`) kèm đề xuất sửa theo mức ưu tiên `P0/P1/P2`.
+- **Bản Front-end Demo tương tác đã chỉnh sửa (`frontend-demo/`):**
+  - Gồm 4 tệp gọn (`index.html`, `styles.css`, `store.js`, `app.js`), giữ nguyên Design System `Retail Core POS` của TV2, thống nhất vào **01 Main Shell duy nhất**, định dạng chuẩn `#,##0 đ` và `dd/MM/yyyy`.
+  - Chạy tương tác trực tiếp trên mô hình **21 thực thể ERD**, **3 vai trò × 40 mã quyền RBAC** và **12 quy tắc `QT01–QT12`** (đã kiểm tra thực tế trên trình duyệt, 0 lỗi JS console).
+  - Mở lại demo bằng cách nhấp đúp `frontend-demo/index.html` hoặc chạy `python -m http.server 5500 --directory "frontend-demo"`.
 
 ---
 
 ## II. Những phần còn đang dở / chưa triển khai
 
-### 1. Việc vặt cần dọn tay (1 phút)
-- [ ] **Đóng Word và xóa bản dự thảo cũ `Quy-tac-nghiep-vu-va-RBAC-POS.docx`:** File này đang bị khóa mở bởi Microsoft Word nên chưa tự xóa được; sau khi đóng Word, xóa bản dự thảo cũ và chỉ giữ lại bản chốt `Quy-tac-nghiep-vu-va-RBAC-POS-da-chot.docx` (hoặc đổi tên lại nếu muốn).
+### 1. Việc cần xem lại đầu phiên sau
+- [ ] **Chạy thử & duyệt bản `frontend-demo/`** qua cả 3 vai trò (`quanly_pos`, `thungan_pos`, `thukho_pos`, mật khẩu `123456`) và xác nhận dùng làm giao diện gốc cho Web ASP.NET Core.
 - [ ] *(Tùy chọn thẩm mỹ)* Trong hình ERD tổng quan của `Bao-cao-ERD-POS.docx`, đường nối `PhieuKiem — DongKiem` (góc dưới trái) thiếu dấu chấm tròn chỉ FK phía `DongKiem` (hình cụm 4 đã có đủ).
 
 ### 2. Phần 3 — Thiết kế kiến trúc tổng thể C# *(Bước tiếp theo ngay)*
@@ -83,4 +95,6 @@
 | `docs/analysis/Dac-ta-chuc-nang-POS-31.docx` | Đặc tả 31 chức năng đồng bộ `QĐ01–QĐ06` | Đã chốt & sửa lỗi nhỏ |
 | `docs/analysis/Bao-cao-ERD-POS.docx` & `ERD-POS-21*.png` | Báo cáo ERD 21 thực thể, thẻ kho & vòng đời | Đã chốt |
 | `docs/analysis/Quy-tac-nghiep-vu-va-RBAC-POS-da-chot.docx` | 12 quy tắc nghiệp vụ, Ma trận RBAC 41 hàng & 5 kịch bản test dự kiến | Đã chốt (bản chính thức) |
+| `docs/analysis/Bao_cao_ra_soat_UI_Stitch_voi_BFD_ERD_RBAC.md` | Báo cáo rà soát 19 màn hình Stitch đối chiếu BFD, ERD & RBAC | Đã hoàn thiện |
+| `frontend-demo/` (`index.html`, `styles.css`, `store.js`, `app.js`) | Bản Front-end Demo tương tác 19 màn hình khớp 100% ERD 21 bảng & RBAC | Đã hoàn thiện & kiểm thử |
 | `docs/Bao_cao_tong_ket_phien_lam_viec.md` | Báo cáo tổng kết phiên làm việc & lộ trình tiếp theo | Đã cập nhật |

@@ -76,10 +76,11 @@
 
 | Tệp | Vai trò | Trạng thái |
 |---|---|---|
-| `Khảo sát KiotViet/Khao_sat_he_thong_ban_le_KiotViet.md` | Báo cáo khảo sát hiện trạng 4W+1H & phạm vi | Đã hoàn thiện |
-| `BFD_POS_TinhChinh.png` / `BFD_POS_TinhChinh.html` / `Khảo sát KiotViet/BFD-POS-31.png` | Biểu đồ phân cấp chức năng (8 nhóm / 31 chức năng) | Đã chốt |
-| `Khảo sát KiotViet/Dac-ta-chuc-nang-POS-31.docx` | Đặc tả 31 chức năng đồng bộ `QĐ01–QĐ06` | Đã chốt & sửa lỗi nhỏ |
-| `Bao-cao-ERD-POS.docx` | Báo cáo ERD 21 thực thể, thẻ kho & vòng đời | Đã chốt |
-| `Quy-tac-nghiep-vu-va-RBAC-POS-da-chot.docx` | 12 quy tắc nghiệp vụ, Ma trận RBAC 41 hàng & 5 kịch bản test dự kiến | Đã chốt (bản chính thức) |
-| `Quy-tac-nghiep-vu-va-RBAC-POS.docx` | Bản dự thảo cũ trước khi chốt `QĐ01–QĐ06` | Chờ đóng Word để xóa |
-| `Checklist_BTL_HTTTQL_v2026.xlsx` & `Checklist_BTL_HTTTQL_2026.md` | Phiếu đánh giá & rubric MI4090 | Tài liệu đối chiếu |
+| `docs/references/Checklist_BTL_HTTTQL_v2026.xlsx` & `Checklist_BTL_HTTTQL_2026.md` | Phiếu đánh giá & rubric MI4090 | Tài liệu tham khảo |
+| `docs/survey/Khao_sat_he_thong_ban_le_KiotViet.md` | Báo cáo khảo sát hiện trạng 4W+1H & phạm vi | Đã hoàn thiện |
+| `docs/survey/KiotViet_Bieu_mau_Giao_dien_POS.zip` & `KiotViet_Bao_cao_thong_ke.zip` | Phụ lục minh chứng khảo sát | Đã hoàn thiện |
+| `docs/analysis/BFD_POS_TinhChinh.png` / `.html` / `BFD-POS-31.png` | Biểu đồ phân cấp chức năng (8 nhóm / 31 chức năng) | Đã chốt |
+| `docs/analysis/Dac-ta-chuc-nang-POS-31.docx` | Đặc tả 31 chức năng đồng bộ `QĐ01–QĐ06` | Đã chốt & sửa lỗi nhỏ |
+| `docs/analysis/Bao-cao-ERD-POS.docx` & `ERD-POS-21*.png` | Báo cáo ERD 21 thực thể, thẻ kho & vòng đời | Đã chốt |
+| `docs/analysis/Quy-tac-nghiep-vu-va-RBAC-POS-da-chot.docx` | 12 quy tắc nghiệp vụ, Ma trận RBAC 41 hàng & 5 kịch bản test dự kiến | Đã chốt (bản chính thức) |
+| `docs/Bao_cao_tong_ket_phien_lam_viec.md` | Báo cáo tổng kết phiên làm việc & lộ trình tiếp theo | Đã cập nhật |

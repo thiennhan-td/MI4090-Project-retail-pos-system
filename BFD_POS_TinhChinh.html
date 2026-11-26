@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sơ đồ phân cấp chức năng POS bán lẻ (Bản tinh chỉnh)</title>
+  <style>
+    :root {
+      --bg: #f6f8f6;
+      --surface: #ffffff;
+      --primary: #184b40;
+      --primary-soft: #deebe5;
+      --border: #cbd8d1;
+      --line: #95aba0;
+      --text: #1c2e29;
+      --muted: #556b62;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      padding: 32px 24px 48px;
+    }
+    .canvas {
+      max-width: 1120px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid #e1e8e4;
+      border-radius: 14px;
+      padding: 32px 36px 40px;
+      box-shadow: 0 6px 24px rgba(24, 75, 64, 0.06);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #132722;
+      letter-spacing: -0.01em;
+    }
+    .subtitle {
+      margin: 0;
+      font-size: 15px;
+      color: var(--muted);
+    }
+    .actions button {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      background: #f2f7f4;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+    .actions button:hover {
+      background: var(--primary-soft);
+    }
+    .root-wrap {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      padding-bottom: 24px;
+    }
+    .root {
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 13px 42px;
+      border-radius: 10px;
+      min-width: 440px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 3px 10px rgba(24, 75, 64, 0.16);
+    }
+    .root-wrap::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      height: 24px;
+      background: var(--line);
+      transform: translateX(-50%);
+    }
+    .tree-grid {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .tree-row {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr;
+      align-items: stretch;
+      position: relative;
+    }
+    .connector {
+      position: relative;
+    }
+    /* Vertical spine segment */
+    .connector::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: -20px;
+      width: 2px;
+      background: var(--line);
+      transform: translateX(-50%);
+    }
+    .tree-row:last-child .connector::before {
+      bottom: auto;
+      height: 24px;
+    }
+    /* Horizontal branch line connecting left & right cards */
+    .connector::after {
+      content: "";
+      position: absolute;
+      top: 22px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--line);
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-head {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 16px;
+      font-weight: 700;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-body {
+      padding: 12px 16px 14px;
+      margin: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .card-body li {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 8px;
+      font-size: 14.5px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+    .code {
+      font-weight: 600;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .note {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    @media (max-width: 820px) {
+      .tree-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .connector,
+      .root-wrap::after {
+        display: none;
+      }
+      .root {
+        min-width: 0;
+        width: 100%;
+      }
+    }
+    body.clean {
+      background: #ffffff;
+      padding: 0;
+    }
+    body.clean .canvas {
+      box-shadow: none;
+      border: none;
+      border-radius: 0;
+    }
+    body.clean .actions {
+      display: none;
+    }
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .canvas { box-shadow: none; border: none; padding: 12px; max-width: none; }
+      .actions { display: none; }
+      .card-head, .root { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="header">
+      <div>
+        <h1>Sơ đồ phân cấp chức năng POS bán lẻ</h1>
+        <p class="subtitle">Phạm vi 1 cửa hàng · 8 nhóm nghiệp vụ · 31 chức năng cấp 3</p>
+      </div>
+      <div class="actions">
+        <button onclick="window.print()">In / Xuất PDF</button>
+      </div>
+    </div>
+
+    <div class="root-wrap">
+      <div class="root">F · Quản lý bán lẻ</div>
+    </div>
+
+    <div class="tree-grid">
+      <!-- Row 1 -->
+      <div class="tree-row">
+        <section class="card">
+          <div class="card-head">F1 · Quản trị hệ thống</div>
+          <ul class="card-body">
+            <li><span class="code">F1.1</span><span>Đăng nhập và đăng xuất</span></li>
+            <li><span class="code">F1.2</span><span>Quản lý tài khoản nhân viên</span></li>
+            <li><span class="code">F1.3</span><span>Phân quyền thao tác</span></li>
+          </ul>
+        </section>
+        <div class="connector"></div>
+        <section class="card">
+          <div class="card-head">F2 · Quản lý danh mục</div>
+          <ul class="card-body">
+            <li><span class="code">F2.1</span><span>Quản lý nhóm hàng</span></li>
+            <li><span class="code">F2.2</span><span>Quản lý mặt hàng và giá bán</span></li>
+            <li><span class="code">F2.3</span><span>Quản lý nhà cung cấp</span></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="tree-row">
+        <section class="card">
+          <div class="card-head">F3 · Bán hàng và thu tiền</div>
+          <ul class="card-body">
+            <li><span class="code">F3.1</span><span>Lập hóa đơn và tính tiền</span></li>
+            <li><span class="code">F3.2</span><span>Ghi nhận thanh toán</span></li>
+            <li><span class="code">F3.3</span><span>Xác nhận bán và xuất kho</span></li>
+            <li><span class="code">F3.4</span><span>Tra cứu, in và hủy hóa đơn</span></li>
+          </ul>
+        </section>
+        <div class="connector"></div>
+        <section class="card">
+          <div class="card-head">F4 · Nhận trả hàng và hoàn tiền</div>
+          <ul class="card-body">
+            <li><span class="code">F4.1</span><span>Tra cứu hóa đơn gốc và lập phiếu trả</span></li>
+            <li><span class="code">F4.2</span><span>Xác nhận hoàn tiền và nhập lại kho</span></li>
+            <li><span class="code">F4.3</span><span>Tra cứu phiếu trả hàng</span></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="tree-row">
+        <section class="card">
+          <div class="card-head">F5 · Nhập hàng và thanh toán NCC</div>
+          <ul class="card-body">
+            <li><span class="code">F5.1</span><span>Lập và lưu tạm phiếu nhập</span></li>
+            <li><span class="code">F5.2</span><span>Xác nhận nhập kho</span></li>
+            <li><span class="code">F5.3</span><span>Ghi nhận và tra cứu khoản trả NCC</span></li>
+            <li><span class="code">F5.4</span><span>Tra cứu và hủy phiếu nhập</span></li>
+          </ul>
+        </section>
+        <div class="connector"></div>
+        <section class="card">
+          <div class="card-head">F6 · Kiểm soát tồn kho</div>
+          <ul class="card-body">
+            <li><span class="code">F6.1</span><span>Tra cứu sổ hàng hóa</span></li>
+            <li><span class="code">F6.2</span><span>Lập phiếu kiểm và ghi thực đếm</span></li>
+            <li><span class="code">F6.3</span><span>Đối chiếu và xem xét chênh lệch</span></li>
+            <li><span class="code">F6.4</span><span>Hoàn thành kiểm kho và điều chỉnh tồn</span></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="tree-row">
+        <section class="card">
+          <div class="card-head">F7 · Quản lý ca và sổ quỹ</div>
+          <ul class="card-body">
+            <li><span class="code">F7.1</span><span>Mở ca và ghi tiền đầu ca</span></li>
+            <li><span class="code">F7.2</span><span>Lập phiếu thu và phiếu chi</span></li>
+            <li><span class="code">F7.3</span><span>Tra cứu sổ quỹ và giao dịch trong ca</span></li>
+            <li><span class="code">F7.4</span><span>Kiểm đếm, đối chiếu và đóng ca</span></li>
+            <li><span class="code">F7.5</span><span>Tra cứu lịch sử bàn giao</span></li>
+          </ul>
+        </section>
+        <div class="connector"></div>
+        <section class="card">
+          <div class="card-head">F8 · Lập báo cáo thống kê</div>
+          <ul class="card-body">
+            <li><span class="code">F8.1</span><span>Tổng hợp hoạt động cuối ngày</span></li>
+            <li><span class="code">F8.2</span><span>Thống kê bán hàng và trả hàng</span></li>
+            <li><span class="code">F8.3</span><span>Thống kê hàng hóa và xuất nhập tồn</span></li>
+            <li><span class="code">F8.4</span><span>Tổng hợp thanh toán và chênh lệch ca</span></li>
+            <li><span class="code">F8.5</span><span>Thống kê nhập hàng và công nợ NCC</span></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+
+    <div class="note">
+      <span>Phạm vi: 1 cửa hàng bán lẻ (không quản lý khách hàng thành viên &amp; kênh bán ngoài).</span>
+      <span>Phân hệ gợi ý: TV1 (Quầy: F3, F4, F7 + BC bán/ca) ↔ TV2 (Kho &amp; Hệ thống: F1, F2, F5, F6 + BC kho/NCC).</span>
+    </div>
+  </div>
+  <script>
+    if (location.search.includes('clean=1')) document.body.classList.add('clean');
+  </script>
+</body>
+</html>

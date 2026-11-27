@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retail Core POS — Demo Giao Diện Stitch V2 (17 màn hình)</title>
+  <style>
+    :root {
+      --navy: #1E3A8A;
+      --royal: #2563EB;
+      --teal: #0D9488;
+      --amber: #D97706;
+      --bg: #F8FAFC;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --muted: #64748B;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Inter, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+    aside {
+      width: 310px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .brand {
+      padding: 16px 18px;
+      background: var(--navy);
+      color: #FFFFFF;
+    }
+    .brand h1 { margin: 0; font-size: 16px; font-weight: 700; }
+    .brand p { margin: 4px 0 0; font-size: 12px; color: #BFDBFE; }
+    .nav-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 10px 20px;
+    }
+    .group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      padding: 10px 8px 4px;
+    }
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 6px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 2px;
+      transition: background 0.15s;
+    }
+    .nav-btn:hover { background: #F1F5F9; }
+    .nav-btn.active {
+      background: #EFF6FF;
+      border-color: #BFDBFE;
+    }
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-code { font-size: 12px; font-weight: 700; color: var(--navy); }
+    .nav-title { font-size: 12.5px; color: var(--text); font-weight: 500; }
+    .pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .pill-ok { background: #CCFBF1; color: #0F766E; }
+    .pill-warn { background: #FEF3C7; color: #B45309; }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .meta-title { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .meta-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .controls { display: flex; align-items: center; gap: 8px; }
+    .btn {
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background: #F1F5F9; }
+    .btn.active { background: var(--royal); color: #FFFFFF; border-color: var(--royal); }
+    .viewer {
+      flex: 1;
+      position: relative;
+      background: #E2E8F0;
+      overflow: auto;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #FFFFFF;
+      display: block;
+    }
+    .img-wrap {
+      display: none;
+      padding: 20px;
+      text-align: center;
+    }
+    .img-wrap img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.14);
+      background: #FFFFFF;
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="brand">
+      <h1>Retail Core POS — Stitch V2</h1>
+      <p>17 màn hình · Phủ đủ 8 nhóm / 31 chức năng</p>
+    </div>
+    <div id="nav-list" class="nav-scroll"></div>
+  </aside>
+  <section class="main">
+    <header>
+      <div>
+        <div id="cur-title" class="meta-title">Đang tải...</div>
+        <div id="cur-note" class="meta-note"></div>
+      </div>
+      <div class="controls">
+        <button id="btn-html" class="btn active" onclick="setMode('html')">Xem HTML trực tiếp</button>
+        <button id="btn-img" class="btn" onclick="setMode('img')">Xem ảnh thiết kế (PNG)</button>
+        <a id="btn-open" class="btn" href="#" target="_blank">Mở tab riêng ↗</a>
+      </div>
+    </header>
+    <div class="viewer">
+      <iframe id="frame" src=""></iframe>
+      <div id="img-wrap" class="img-wrap"><img id="preview-img" src="" alt="Screen preview" /></div>
+    </div>
+  </section>
+
+  <script>
+    const SCREENS = [
+  {
+    "id": "F1.1_DangNhap",
+    "group": "F1 · Quản trị hệ thống",
+    "code": "F1.1",
+    "title": "Đăng nhập hệ thống POS",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Đã bỏ RFID, PIN, QR, chọn ca trước đăng nhập.",
+    "html": "screens/F1.1_DangNhap/code.html",
+    "img": "screens/F1.1_DangNhap/screen.png"
+  },
+  {
+    "id": "F1.2_TaiKhoan",
+    "group": "F1 · Quản trị hệ thống",
+    "code": "F1.2",
+    "title": "Quản lý tài khoản nhân sự",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Lưu hồ sơ trực tiếp trong TaiKhoan (QĐ06).",
+    "html": "screens/F1.2_TaiKhoan/code.html",
+    "img": "screens/F1.2_TaiKhoan/screen.png"
+  },
+  {
+    "id": "F1.3_PhanQuyen",
+    "group": "F1 · Quản trị hệ thống",
+    "code": "F1.3",
+    "title": "Cấu hình phân quyền vai trò",
+    "owner": "TV2",
+    "status": "V2 chuẩn*",
+    "note": "Đúng 3 vai trò, bỏ Kế toán quỹ & Đóng ca cưỡng bức (*seed thật Quản lý 29/40 quyền).",
+    "html": "screens/F1.3_PhanQuyen/code.html",
+    "img": "screens/F1.3_PhanQuyen/screen.png"
+  },
+  {
+    "id": "F2.1-F2.3_DanhMuc",
+    "group": "F2 · Quản lý danh mục",
+    "code": "F2.1–F2.3",
+    "title": "Danh mục Nhóm hàng, Mặt hàng & NCC",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Gom 3 danh mục vào 1 màn hình đa tab, bỏ giá vốn/VAT/Lô.",
+    "html": "screens/F2.1-F2.3_DanhMuc/code.html",
+    "img": "screens/F2.1-F2.3_DanhMuc/screen.png"
+  },
+  {
+    "id": "F3.1-F3.3_BanHangPOS",
+    "group": "F3 · Bán hàng & Thu tiền",
+    "code": "F3.1–F3.3",
+    "title": "Màn hình Bán hàng POS",
+    "owner": "TV1",
+    "status": "Cần gọt nhẹ",
+    "note": "Bản V1 chưa sinh lại: cần bỏ Quầy 01, Khách lẻ [F4], Chiết khấu khi code.",
+    "html": "screens/F3.1-F3.3_BanHangPOS/code.html",
+    "img": "screens/F3.1-F3.3_BanHangPOS/screen.png"
+  },
+  {
+    "id": "F3.4_TraInHuyHoaDon",
+    "group": "F3 · Bán hàng & Thu tiền",
+    "code": "F3.4",
+    "title": "Tra cứu, in và hủy hóa đơn",
+    "owner": "TV1",
+    "status": "V2 chuẩn",
+    "note": "Phân rõ quyền hủy hóa đơn đã xác nhận của Quản lý.",
+    "html": "screens/F3.4_TraInHuyHoaDon/code.html",
+    "img": "screens/F3.4_TraInHuyHoaDon/screen.png"
+  },
+  {
+    "id": "F4.1-F4.2_LapPhieuTra",
+    "group": "F4 · Nhận trả & Hoàn tiền",
+    "code": "F4.1–F4.2",
+    "title": "Lập phiếu trả & Hoàn tiền",
+    "owner": "TV1",
+    "status": "V2 chuẩn",
+    "note": "Đã có ô số riêng SL nhập lại (0..SL trả), đa khoản hoàn & Xóa phiếu nháp.",
+    "html": "screens/F4.1-F4.2_LapPhieuTra/code.html",
+    "img": "screens/F4.1-F4.2_LapPhieuTra/screen.png"
+  },
+  {
+    "id": "F4.3_TraCuuPhieuTra",
+    "group": "F4 · Nhận trả & Hoàn tiền",
+    "code": "F4.3",
+    "title": "Tra cứu phiếu trả hàng",
+    "owner": "TV1",
+    "status": "Cần gọt nhẹ",
+    "note": "Bản V1 chưa sinh lại: cần bỏ Quầy 01/02 & Voucher/Điểm thưởng khi code.",
+    "html": "screens/F4.3_TraCuuPhieuTra/code.html",
+    "img": "screens/F4.3_TraCuuPhieuTra/screen.png"
+  },
+  {
+    "id": "F5.1-F5.2_LapNhapKho",
+    "group": "F5 · Nhập hàng & Trả tiền",
+    "code": "F5.1–F5.2",
+    "title": "Lập & Xác nhận phiếu nhập kho",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Đã bỏ VAT 8%, Lô SX, Hạn dùng; sửa đúng ngày dd/MM/yyyy.",
+    "html": "screens/F5.1-F5.2_LapNhapKho/code.html",
+    "img": "screens/F5.1-F5.2_LapNhapKho/screen.png"
+  },
+  {
+    "id": "F5.3-F5.4_SoNhapTraNCC",
+    "group": "F5 · Nhập hàng & Trả tiền",
+    "code": "F5.3–F5.4",
+    "title": "Sổ phiếu nhập & Trả tiền NCC",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Chuẩn quyền Quản lý ghi trả NCC & hủy phiếu nhập đã xác nhận.",
+    "html": "screens/F5.3-F5.4_SoNhapTraNCC/code.html",
+    "img": "screens/F5.3-F5.4_SoNhapTraNCC/screen.png"
+  },
+  {
+    "id": "F6.1_TheKho",
+    "group": "F6 · Kiểm soát tồn kho",
+    "code": "F6.1",
+    "title": "Sổ chi tiết hàng hóa (Thẻ kho)",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Truy vết biến động bất biến BienDongKho theo mặt hàng.",
+    "html": "screens/F6.1_TheKho/code.html",
+    "img": "screens/F6.1_TheKho/screen.png"
+  },
+  {
+    "id": "F6.2-F6.4_KiemKho",
+    "group": "F6 · Kiểm soát tồn kho",
+    "code": "F6.2–F6.4",
+    "title": "Phiếu kiểm kê & Cân chỉnh tồn",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Khớp KPI 1+2+1=4 SKU, bỏ giá vốn, tách nút Gửi duyệt (NV kho) vs Duyệt (Quản lý).",
+    "html": "screens/F6.2-F6.4_KiemKho/code.html",
+    "img": "screens/F6.2-F6.4_KiemKho/screen.png"
+  },
+  {
+    "id": "F7.1_F7.4_F7.5_CaBanGiao",
+    "group": "F7 · Quản lý ca & Sổ quỹ",
+    "code": "F7.1, F7.4–F7.5",
+    "title": "Quản lý ca & Bàn giao két",
+    "owner": "TV1",
+    "status": "V2 chuẩn",
+    "note": "Bỏ Người nhận bàn giao & PIN; giữ bảng đếm mệnh giá; đủ dòng tiền QT06.",
+    "html": "screens/F7.1_F7.4_F7.5_CaBanGiao/code.html",
+    "img": "screens/F7.1_F7.4_F7.5_CaBanGiao/screen.png"
+  },
+  {
+    "id": "F7.2-F7.3_SoQuyThuChi",
+    "group": "F7 · Quản lý ca & Sổ quỹ",
+    "code": "F7.2–F7.3",
+    "title": "Sổ quỹ & Thu chi tiền mặt",
+    "owner": "TV1",
+    "status": "V2 chuẩn",
+    "note": "Đã bỏ sổ phụ ngân hàng; tách rõ nguồn chứng từ.",
+    "html": "screens/F7.2-F7.3_SoQuyThuChi/code.html",
+    "img": "screens/F7.2-F7.3_SoQuyThuChi/screen.png"
+  },
+  {
+    "id": "F8.1-F8.2_BaoCaoCuoiNgay",
+    "group": "F8 · Báo cáo thống kê",
+    "code": "F8.1–F8.2",
+    "title": "Báo cáo cuối ngày & Bán trả",
+    "owner": "TV2+TV1",
+    "status": "V2 chuẩn",
+    "note": "Đúng vai trò Quản lý, bỏ cột Khách VIP, có biểu đồ & đếm đơn không trùng.",
+    "html": "screens/F8.1-F8.2_BaoCaoCuoiNgay/code.html",
+    "img": "screens/F8.1-F8.2_BaoCaoCuoiNgay/screen.png"
+  },
+  {
+    "id": "F8.3_BaoCaoXNT",
+    "group": "F8 · Báo cáo thống kê",
+    "code": "F8.3",
+    "title": "Thống kê Xuất – Nhập – Tồn",
+    "owner": "TV2",
+    "status": "V2 chuẩn",
+    "note": "Chỉ tính số lượng từ thẻ kho, bỏ giá vốn & kho đệm.",
+    "html": "screens/F8.3_BaoCaoXNT/code.html",
+    "img": "screens/F8.3_BaoCaoXNT/screen.png"
+  },
+  {
+    "id": "F8.4-F8.5_BaoCaoLechCaNCC",
+    "group": "F8 · Báo cáo thống kê",
+    "code": "F8.4–F8.5",
+    "title": "Lệch ca & Công nợ NCC",
+    "owner": "TV2+TV1",
+    "status": "V2 chuẩn",
+    "note": "Đúng vai trò Quản lý, đối soát ca đã đóng & công nợ quá hạn.",
+    "html": "screens/F8.4-F8.5_BaoCaoLechCaNCC/code.html",
+    "img": "screens/F8.4-F8.5_BaoCaoLechCaNCC/screen.png"
+  }
+];
+    let current = SCREENS[0];
+    let mode = 'html';
+
+    function renderNav() {
+      const groups = [...new Set(SCREENS.map(s => s.group))];
+      const root = document.getElementById('nav-list');
+      root.innerHTML = groups.map(g => {
+        const items = SCREENS.filter(s => s.group === g);
+        return `<div class="group-title">${g}</div>` + items.map(s => `
+          <button class="nav-btn ${s.id === current.id ? 'active' : ''}" onclick="selectScreen('${s.id}')">
+            <div class="nav-row">
+              <span class="nav-code">${s.code} · ${s.owner}</span>
+              <span class="pill ${s.status.startsWith('V2') ? 'pill-ok' : 'pill-warn'}">${s.status}</span>
+            </div>
+            <div class="nav-title">${s.title}</div>
+          </button>
+        `).join('');
+      }).join('');
+    }
+
+    function selectScreen(id) {
+      current = SCREENS.find(s => s.id === id) || SCREENS[0];
+      document.getElementById('cur-title').textContent = `${current.code} — ${current.title} (${current.owner})`;
+      document.getElementById('cur-note').textContent = current.note;
+      document.getElementById('btn-open').href = current.html;
+      document.getElementById('frame').src = current.html;
+      document.getElementById('preview-img').src = current.img;
+      renderNav();
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('btn-html').classList.toggle('active', m === 'html');
+      document.getElementById('btn-img').classList.toggle('active', m === 'img');
+      document.getElementById('frame').style.display = m === 'html' ? 'block' : 'none';
+      document.getElementById('img-wrap').style.display = m === 'img' ? 'block' : 'none';
+    }
+
+    selectScreen(SCREENS[0].id);
+  </script>
+</body>
+</html>

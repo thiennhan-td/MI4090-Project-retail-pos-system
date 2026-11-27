@@ -1,0 +1,926 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary": "#ffffff",
+          "tertiary-fixed-dim": "#6bd8cb",
+          "surface": "#f8f9ff",
+          "tertiary": "#00312c",
+          "error-container": "#ffdad6",
+          "tertiary-fixed": "#89f5e7",
+          "background": "#f8f9ff",
+          "on-surface": "#0b1c30",
+          "inverse-primary": "#b6c4ff",
+          "secondary-fixed": "#dbe1ff",
+          "primary-container": "#1e3a8a",
+          "error": "#ba1a1a",
+          "on-surface-variant": "#444651",
+          "tertiary-container": "#004942",
+          "on-tertiary-container": "#4ebdb0",
+          "on-secondary": "#ffffff",
+          "on-background": "#0b1c30",
+          "secondary-fixed-dim": "#b4c5ff",
+          "surface-tint": "#4059aa",
+          "surface-variant": "#d3e4fe",
+          "surface-container-low": "#eff4ff",
+          "surface-container-highest": "#d3e4fe",
+          "on-primary-fixed": "#00164e",
+          "inverse-surface": "#213145",
+          "surface-container-high": "#dce9ff",
+          "primary-fixed": "#dce1ff",
+          "inverse-on-surface": "#eaf1ff",
+          "secondary-container": "#316bf3",
+          "on-primary-fixed-variant": "#264191",
+          "surface-bright": "#f8f9ff",
+          "on-primary": "#ffffff",
+          "on-tertiary-fixed-variant": "#005049",
+          "surface-container-lowest": "#ffffff",
+          "outline": "#757682",
+          "outline-variant": "#c5c5d3",
+          "on-tertiary-fixed": "#00201d",
+          "on-primary-container": "#90a8ff",
+          "on-secondary-fixed-variant": "#003ea8",
+          "secondary": "#0051d5",
+          "on-error": "#ffffff",
+          "primary": "#00236f",
+          "on-secondary-container": "#fefcff",
+          "on-error-container": "#93000a",
+          "primary-fixed-dim": "#b6c4ff",
+          "on-secondary-fixed": "#00174b",
+          "surface-container": "#e5eeff",
+          "surface-dim": "#cbdbf5"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "space-xl": "1.5rem",
+          "margin": "1rem",
+          "space-xs": "0.25rem",
+          "space-lg": "1rem",
+          "margin-desktop": "2rem",
+          "gutter": "1rem",
+          "space-sm": "0.5rem",
+          "gutter-desktop": "1.5rem",
+          "space-md": "0.75rem"
+        },
+        "fontFamily": {
+          "label-md": [
+            "Inter"
+          ],
+          "headline-md": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-lg-mobile": [
+            "Plus Jakarta Sans"
+          ],
+          "body-lg": [
+            "Inter"
+          ],
+          "headline-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "label-lg": [
+            "Inter"
+          ],
+          "title-sm": [
+            "Inter"
+          ],
+          "headline-sm": [
+            "Plus Jakarta Sans"
+          ],
+          "numeric-display": [
+            "Inter"
+          ],
+          "label-sm": [
+            "Inter"
+          ],
+          "body-md": [
+            "Inter"
+          ],
+          "display-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "title-md": [
+            "Inter"
+          ],
+          "display-lg-mobile": [
+            "Plus Jakarta Sans"
+          ],
+          "body-sm": [
+            "Inter"
+          ]
+        },
+        "fontSize": {
+          "label-md": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "500"
+            }
+          ],
+          "headline-md": [
+            "22px",
+            {
+              "lineHeight": "28px",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg-mobile": [
+            "24px",
+            {
+              "lineHeight": "32px",
+              "fontWeight": "700"
+            }
+          ],
+          "body-lg": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-lg": [
+            "30px",
+            {
+              "lineHeight": "38px",
+              "fontWeight": "700"
+            }
+          ],
+          "label-lg": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "500"
+            }
+          ],
+          "title-sm": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-sm": [
+            "18px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "600"
+            }
+          ],
+          "numeric-display": [
+            "24px",
+            {
+              "lineHeight": "32px",
+              "fontWeight": "700"
+            }
+          ],
+          "label-sm": [
+            "11px",
+            {
+              "lineHeight": "14px",
+              "fontWeight": "600"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "400"
+            }
+          ],
+          "display-lg": [
+            "36px",
+            {
+              "lineHeight": "44px",
+              "fontWeight": "700"
+            }
+          ],
+          "title-md": [
+            "16px",
+            {
+              "lineHeight": "22px",
+              "fontWeight": "600"
+            }
+          ],
+          "display-lg-mobile": [
+            "28px",
+            {
+              "lineHeight": "36px",
+              "fontWeight": "700"
+            }
+          ],
+          "body-sm": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "400"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-sm bg-surface-container-low"><div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">point_of_sale</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary leading-tight tracking-tight">Retail Core</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Single Store POS &amp; ERP</span></div></div><nav class="flex flex-col gap-space-xs px-space-md py-space-md" data-active-classes="bg-primary-container text-on-primary font-title-sm text-title-sm"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="quan-tri-he-thong" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span>F1. Quản trị hệ thống</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="quan-ly-danh-muc" href="#"><span class="material-symbols-outlined text-[20px]">category</span><span>F2. Quản lý danh mục</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="ban-hang-va-thu-tien" href="#"><span class="material-symbols-outlined text-[20px]">shopping_cart_checkout</span><span>F3. Bán hàng &amp; Thu tiền</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="nhan-tra-va-hoan-tien" href="#"><span class="material-symbols-outlined text-[20px]">assignment_return</span><span>F4. Nhận trả &amp; Hoàn tiền</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="nhap-hang-va-tra-tien" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span>F5. Nhập hàng &amp; Trả tiền</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="kiem-soat-ton-kho" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span>F6. Kiểm soát tồn kho</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="quan-ly-ca-va-so-quy" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span>F7. Quản lý ca &amp; Sổ quỹ</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" data-path="bao-cao-thong-ke" href="#"><span class="material-symbols-outlined text-[20px]">bar_chart</span><span>F8. Báo cáo thống kê</span></a></nav></div><div class="p-space-md m-space-md rounded-lg bg-surface-container flex items-center justify-between"><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Trạng thái POS</span><span class="font-title-sm text-title-sm text-tertiary-container flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim inline-block"></span>Trực tuyến</span></div><span class="material-symbols-outlined text-outline text-[18px]">wifi</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter-desktop"><div class="flex items-center gap-space-md w-96"><div class="w-full flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-space-xs rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><span class="material-symbols-outlined text-outline text-[20px]">search</span><input class="w-full bg-transparent outline-none font-body-sm text-body-sm text-on-surface placeholder:text-outline" placeholder="Tra cứu mã đơn, SKU, khách hàng (F10)..." type="text"></div></div><div class="flex items-center gap-space-lg"><button class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors relative"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center gap-space-md pl-space-md"><div class="flex flex-col text-right"><span class="font-title-sm text-title-sm text-on-surface">Nguyễn Văn Quản Trị</span><span class="font-label-sm text-label-sm text-on-surface-variant">Quản lý cửa hàng</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 px-gutter-desktop pb-margin-desktop bg-surface"><div class="flex flex-col w-full gap-space-lg">
+<!-- Top Command & Filter Bar -->
+<section class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-6 bg-secondary rounded-full inline-block"></span>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-primary">F3.4 · Tra cứu, In lại &amp; Hủy hóa đơn</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tra cứu lịch sử giao dịch và in lại chứng từ bán hàng</p>
+</div>
+</div>
+
+</div>
+<!-- Filter Fields Form -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-space-md pt-space-xs">
+<div class="lg:col-span-4 flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</label>
+<div class="flex items-center bg-surface-container-low px-space-md py-space-xs rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-outline text-[20px] mr-space-xs">receipt_long</span>
+<input class="w-full bg-transparent outline-none font-body-md text-body-md text-on-surface placeholder:text-outline" id="filter-code" placeholder="VD: HD-2025-0142..." type="text" value="HD-2025-0142">
+</div>
+</div>
+<div class="lg:col-span-3 flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Khoảng ngày (dd/MM/yyyy)</label>
+<div class="flex items-center bg-surface-container-low px-space-md py-space-xs rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-outline text-[20px] mr-space-xs">calendar_today</span>
+<input class="w-full bg-transparent outline-none font-body-md text-body-md text-on-surface" type="text" value="24/10/2025 - 24/10/2025">
+</div>
+</div>
+<div class="lg:col-span-2 flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Trạng thái</label>
+<select class="bg-surface-container-low px-space-md py-space-xs rounded-lg font-body-md text-body-md text-on-surface shadow-sm outline-none" id="filter-status">
+<option value="all">Tất cả trạng thái</option>
+<option value="confirmed">Đã xác nhận</option>
+<option value="cancelled">Đã hủy</option>
+</select>
+</div>
+<div class="lg:col-span-3 flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Phương thức thanh toán</label>
+<div class="flex items-center gap-space-xs">
+<select class="w-full bg-surface-container-low px-space-md py-space-xs rounded-lg font-body-md text-body-md text-on-surface shadow-sm outline-none" id="filter-payment">
+<option value="all">Tất cả phương thức</option>
+<option value="cash">Tiền mặt</option>
+<option value="transfer">Chuyển khoản VietQR</option>
+<option value="mixed">Hỗn hợp</option>
+</select>
+<button class="bg-secondary text-on-secondary px-space-md py-space-xs rounded-lg font-title-sm text-title-sm flex items-center justify-center gap-1 shadow-sm hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_alt</span>
+<span>Lọc</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Dual Workspace: Left List (HoaDon) + Right Inspection (DongBan, ThanhToanBan, Reversal) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT PANEL: Danh sách hóa đơn -->
+<section class="lg:col-span-5 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-primary">Danh sách giao dịch</span>
+<span class="bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm px-2 py-0.5 rounded-full">4 kết quả</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Click để xem chi tiết</span>
+</div>
+<!-- Bill Items List -->
+<div class="flex flex-col divide-y-0 max-h-[720px] overflow-y-auto">
+<!-- Item 1 (Selected - Active Confirmed) -->
+<article class="invoice-card p-space-md bg-surface-container-high cursor-pointer transition-all hover:bg-surface-container-high flex flex-col gap-space-xs" id="card-HD-2025-0142" onclick="selectInvoice('HD-2025-0142')">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold tracking-tight">HD-2025-0142</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">24/10/2025 14:32:10 • Ca bán: CA-02</span>
+</div>
+<span class="bg-tertiary text-on-tertiary px-space-sm py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim"></span>
+              Đã xác nhận
+            </span>
+</div>
+<div class="flex items-baseline justify-between mt-space-xs pt-space-xs">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thu ngân lập</span>
+<span class="font-title-sm text-title-sm text-on-surface">Lê Thị Mai (TN-04)</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Phương thức: Hỗn hợp</span>
+<span class="font-numeric-display text-numeric-display text-primary font-bold">485,000 đ</span>
+</div>
+</div>
+</article>
+<!-- Item 2 (Active - Single Cash) -->
+<article class="invoice-card p-space-md bg-surface-container-lowest cursor-pointer transition-all hover:bg-surface-container-low flex flex-col gap-space-xs" id="card-HD-2025-0141" onclick="selectInvoice('HD-2025-0141')">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">HD-2025-0141</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">24/10/2025 14:15:02 • Ca bán: CA-02</span>
+</div>
+<span class="bg-tertiary text-on-tertiary px-space-sm py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim"></span>
+              Đã xác nhận
+            </span>
+</div>
+<div class="flex items-baseline justify-between mt-space-xs pt-space-xs">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thu ngân lập</span>
+<span class="font-title-sm text-title-sm text-on-surface">Lê Thị Mai (TN-04)</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Phương thức: Tiền mặt</span>
+<span class="font-numeric-display text-numeric-display text-on-surface font-bold">120,000 đ</span>
+</div>
+</div>
+</article>
+<!-- Item 3 (Cancelled - VietQR) -->
+<article class="invoice-card p-space-md bg-surface-container-lowest cursor-pointer transition-all hover:bg-surface-container-low flex flex-col gap-space-xs" id="card-HD-2025-0139" onclick="selectInvoice('HD-2025-0139')">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">HD-2025-0139</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">24/10/2025 11:20:45 • Ca bán: CA-01</span>
+</div>
+<span class="bg-error text-on-error px-space-sm py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-error-container"></span>
+              Đã hủy
+            </span>
+</div>
+<div class="flex items-baseline justify-between mt-space-xs pt-space-xs">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thu ngân lập</span>
+<span class="font-title-sm text-title-sm text-on-surface">Trần Hoài An (TN-02)</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Phương thức: Chuyển khoản</span>
+<span class="font-numeric-display text-numeric-display text-on-surface-variant line-through font-bold">350,000 đ</span>
+</div>
+</div>
+</article>
+<!-- Item 4 (Active - VietQR) -->
+<article class="invoice-card p-space-md bg-surface-container-lowest cursor-pointer transition-all hover:bg-surface-container-low flex flex-col gap-space-xs" id="card-HD-2025-0138" onclick="selectInvoice('HD-2025-0138')">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">HD-2025-0138</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">24/10/2025 10:48:19 • Ca bán: CA-01</span>
+</div>
+<span class="bg-tertiary text-on-tertiary px-space-sm py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim"></span>
+              Đã xác nhận
+            </span>
+</div>
+<div class="flex items-baseline justify-between mt-space-xs pt-space-xs">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thu ngân lập</span>
+<span class="font-title-sm text-title-sm text-on-surface">Trần Hoài An (TN-02)</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Phương thức: Chuyển khoản</span>
+<span class="font-numeric-display text-numeric-display text-on-surface font-bold">215,000 đ</span>
+</div>
+</div>
+</article>
+</div>
+<div class="p-space-md bg-surface-container-low flex items-center justify-between text-on-surface-variant">
+<span class="font-body-sm text-body-sm">Hiển thị 1 - 4 trên 4</span>
+<div class="flex gap-space-xs">
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- RIGHT PANEL: Chi tiết hóa đơn (DongBan + ThanhToanBan + Hủy/In) -->
+<section class="lg:col-span-7 flex flex-col gap-space-lg">
+<!-- Detail Card Canvas -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl flex flex-col gap-space-lg relative">
+<!-- Header status banner for current selected bill -->
+<div class="flex flex-wrap items-center justify-between gap-space-md pb-space-md bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[26px]">receipt</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm">
+<span class="font-display-lg text-display-lg-mobile md:text-headline-lg text-primary font-bold" id="detail-code">HD-2025-0142</span>
+<span class="bg-tertiary text-on-tertiary px-space-md py-0.5 rounded-full font-label-sm text-label-sm" id="detail-badge">Đã xác nhận</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant" id="detail-subtext">Giao dịch đã quyết toán và ghi nhận bút toán kho tức thời.</span>
+</div>
+</div>
+<!-- Action Buttons Bar -->
+<div class="flex items-center gap-space-sm">
+<button class="bg-surface-container-high hover:bg-surface-container text-primary font-title-sm text-title-sm px-space-md py-space-sm rounded-lg flex items-center gap-space-xs transition-colors shadow-sm" onclick="handleReprint()">
+<span class="material-symbols-outlined text-[18px]">print</span>
+<span>In lại hóa đơn</span>
+</button>
+<button class="bg-error text-on-error hover:bg-error/90 font-title-sm text-title-sm px-space-md py-space-sm rounded-lg flex items-center gap-space-xs transition-colors shadow-sm" id="btn-open-cancel" onclick="openCancelModal()">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span>Hủy hóa đơn</span>
+</button>
+</div>
+</div>
+<!-- Audit Alert (Only appears if Bill is CANCELLED) -->
+<div class="hidden p-space-md bg-error-container text-on-error-container rounded-lg flex flex-col gap-space-xs" id="cancellation-audit-box">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px] text-error font-bold">warning</span>
+<span class="font-title-sm text-title-sm font-bold text-error">Hóa đơn này đã được Hủy bởi Quản lý</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm pt-space-xs font-body-sm text-body-sm">
+<div><strong>Người duyệt hủy:</strong> <span id="audit-canceller">Nguyễn Văn Quản Trị</span></div>
+<div><strong>Thời điểm hủy:</strong> <span id="audit-cancel-time">24/10/2025 11:35:12</span></div>
+<div><strong>Mã ca đảo:</strong> <span id="audit-shift">CA-01</span></div>
+</div>
+<div class="font-body-sm text-body-sm bg-surface-container-lowest p-space-sm rounded mt-space-xs text-on-surface">
+<strong>Lý do hủy:</strong> <span id="audit-reason">Khách hàng tính nhầm số lượng và yêu cầu hoàn trả toàn bộ để xuất lại.</span>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary-container mt-1">
+<span class="material-symbols-outlined text-[16px]">autorenew</span>
+<span>Kho đã thực hiện hoàn nhập tồn kho (BienDongKho mã nhập hoàn XK-REV-0139).</span>
+</div>
+</div>
+<!-- Section 1: Thông tin chung (Entity: HoaDon) -->
+<div class="flex flex-col gap-space-sm">
+<h2 class="font-title-sm text-title-sm text-primary uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">info</span>
+            Thông tin xác nhận giao dịch
+          </h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md bg-surface-container-low p-space-md rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thu ngân lập</span>
+<span class="font-title-sm text-title-sm text-on-surface" id="detail-cashier">Lê Thị Mai (TN-04)</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ca bán hàng</span>
+<span class="font-title-sm text-title-sm text-on-surface" id="detail-shift">CA-02 (Ca chiều)</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thời gian xác nhận</span>
+<span class="font-title-sm text-title-sm text-on-surface" id="detail-confirmed-time">24/10/2025 14:32:10</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Kênh bán</span>
+<span class="font-title-sm text-title-sm text-on-surface">Bán lẻ trực tiếp</span>
+</div>
+</div>
+</div>
+<!-- Section 2: Danh sách mặt hàng (Entity: DongBan) -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<h2 class="font-title-sm text-title-sm text-primary uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">inventory</span>
+              Chi tiết mặt hàng (DongBan)
+            </h2>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="detail-item-count">Tổng số 3 sản phẩm</span>
+</div>
+<div class="overflow-x-auto rounded-lg bg-surface-container-low">
+<table class="w-full text-left">
+<thead class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<tr>
+<th class="py-space-sm px-space-md">#</th>
+<th class="py-space-sm px-space-md">Tên hàng / SKU</th>
+<th class="py-space-sm px-space-md text-center">ĐVT</th>
+<th class="py-space-sm px-space-md text-right">Số lượng</th>
+<th class="py-space-sm px-space-md text-right">Đơn giá thực bán</th>
+<th class="py-space-sm px-space-md text-right">Thành tiền</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm text-on-surface" id="table-items-body">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="py-space-sm px-space-md text-on-surface-variant">1</td>
+<td class="py-space-sm px-space-md">
+<div class="font-title-sm text-title-sm text-on-surface">Sữa tươi thanh trùng Đà Lạt Milk 950ml</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm">SKU: SP-DLM-950</div>
+</td>
+<td class="py-space-sm px-space-md text-center">Hộp</td>
+<td class="py-space-sm px-space-md text-right font-bold">2</td>
+<td class="py-space-sm px-space-md text-right">45,000 đ</td>
+<td class="py-space-sm px-space-md text-right font-bold text-primary">90,000 đ</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="py-space-sm px-space-md text-on-surface-variant">2</td>
+<td class="py-space-sm px-space-md">
+<div class="font-title-sm text-title-sm text-on-surface">Cà phê Arabica Cầu Đất túi 500g</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm">SKU: CF-ARB-500</div>
+</td>
+<td class="py-space-sm px-space-md text-center">Gói</td>
+<td class="py-space-sm px-space-md text-right font-bold">1</td>
+<td class="py-space-sm px-space-md text-right">245,000 đ</td>
+<td class="py-space-sm px-space-md text-right font-bold text-primary">245,000 đ</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-high transition-colors">
+<td class="py-space-sm px-space-md text-on-surface-variant">3</td>
+<td class="py-space-sm px-space-md">
+<div class="font-title-sm text-title-sm text-on-surface">Bánh quy bơ Danish Butter Cookies 454g</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm">SKU: BK-DNS-454</div>
+</td>
+<td class="py-space-sm px-space-md text-center">Hộp</td>
+<td class="py-space-sm px-space-md text-right font-bold">1</td>
+<td class="py-space-sm px-space-md text-right">150,000 đ</td>
+<td class="py-space-sm px-space-md text-right font-bold text-primary">150,000 đ</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Section 3: Cơ cấu thanh toán (Entity: ThanhToanBan) & Grand Total -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg pt-space-xs">
+<!-- Split Payment breakdown -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex flex-col gap-space-sm">
+<h3 class="font-title-sm text-title-sm text-primary uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+              Cơ cấu phương thức (ThanhToanBan)
+            </h3>
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm" id="payment-methods-list">
+<div class="flex items-center justify-between p-space-xs bg-surface-container-lowest rounded">
+<span class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-outline text-[18px]">attach_money</span>
+                  Tiền mặt
+                </span>
+<span class="font-bold text-on-surface" id="pay-cash-val">185,000 đ</span>
+</div>
+<div class="flex items-center justify-between p-space-xs bg-surface-container-lowest rounded">
+<span class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-outline text-[18px]">qr_code_2</span>
+                  Chuyển khoản VietQR
+                </span>
+<span class="font-bold text-on-surface" id="pay-transfer-val">300,000 đ</span>
+</div>
+</div>
+<div class="p-space-xs bg-surface-container rounded flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm mt-space-xs">
+<span>Trạng thái quỹ két</span>
+<span class="text-tertiary-container font-semibold">Đã hạch toán vào Két ca CA-02</span>
+</div>
+</div>
+<!-- Total Calculation Ledger -->
+<div class="bg-surface-container p-space-md rounded-lg flex flex-col justify-between">
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm">
+<div class="flex justify-between text-on-surface-variant">
+<span>Tổng tiền hàng (gốc):</span>
+<span class="font-semibold text-on-surface" id="calc-subtotal">485,000 đ</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Chiết khấu đơn hàng:</span>
+<span class="font-semibold text-on-surface">0 đ</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Thuế GTGT (đã gồm trong giá):</span>
+<span class="font-semibold text-on-surface">Đã tính</span>
+</div>
+</div>
+<div class="flex items-end justify-between pt-space-md">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">TỔNG THANH TOÁN</span>
+<span class="font-display-lg text-display-lg text-secondary font-bold" id="calc-grand-total">485,000 đ</span>
+</div>
+</div>
+</div>
+<!-- Inventory Reversal Notice Info -->
+
+</div>
+</section>
+</div>
+<!-- MODAL: HỦY HÓA ĐƠN & ĐẢO SỔ QUỸ/KHO (RBAC Store Manager) -->
+<div class="fixed inset-0 z-50 bg-on-surface/40 backdrop-blur-sm hidden flex items-center justify-center p-space-md" id="cancel-modal">
+<div class="bg-surface-container-lowest rounded-xl max-w-xl w-full p-space-xl shadow-xl flex flex-col gap-space-lg">
+<!-- Modal Header -->
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-error-container text-error flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">delete_forever</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-error">Xác nhận HỦY HÓA ĐƠN</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Thao tác này sẽ đảo ngược nghiệp vụ và không thể hoàn tác.</span>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface" onclick="closeCancelModal()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Warning Callout and Mechanisms -->
+<div class="bg-error-container text-on-error-container p-space-md rounded-lg flex flex-col gap-space-xs font-body-sm text-body-sm">
+<div class="flex items-center gap-1 font-title-sm text-title-sm text-error">
+<span class="material-symbols-outlined text-[18px]">gavel</span>
+<span>Thẩm quyền Quản lý cửa hàng (RBAC Session)</span>
+</div>
+<p>Thực hiện hủy hóa đơn <strong class="text-error font-bold" id="modal-bill-id">HD-2025-0142</strong> dưới phiên đăng nhập của <strong>Nguyễn Văn Quản Trị</strong>.</p>
+<div class="pt-space-xs flex flex-col gap-1 text-on-surface font-label-sm text-label-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+<span><strong>BienDongKho:</strong> Tự động xuất phiếu nhập hoàn kho các sản phẩm trong DongBan.</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+<span><strong>Quỹ ca (CA-02):</strong> Tự động ghi giảm/hoàn lại tiền mặt <span class="font-bold text-error" id="modal-cash-refund">185,000 đ</span> khỏi két ca hiện hành.</span>
+</div>
+</div>
+</div>
+<!-- Required Reason Field -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface font-bold" for="cancel-reason-input">
+          Lý do hủy bắt buộc <span class="text-error">*</span>
+</label>
+<textarea class="w-full bg-surface-container-low p-space-md rounded-lg font-body-sm text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-error shadow-sm" id="cancel-reason-input" placeholder="Nhập chi tiết nguyên nhân hủy hóa đơn (sai sót thanh toán, khách trả lại nguyên đai, quẹt thẻ lỗi)..." rows="3"></textarea>
+<span class="hidden text-error font-label-sm text-label-sm" id="cancel-error-text">Vui lòng cung cấp lý do hủy để phục vụ đối soát kiểm toán!</span>
+</div>
+<!-- Modal Footer Action Buttons -->
+<div class="flex items-center justify-end gap-space-md pt-space-xs">
+<button class="px-space-lg py-space-sm rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-title-sm text-title-sm transition-colors" onclick="closeCancelModal()">
+          Đóng / Bỏ qua
+        </button>
+<button class="px-space-lg py-space-sm rounded-lg bg-error text-on-error hover:bg-error/90 font-title-sm text-title-sm flex items-center gap-space-xs transition-colors shadow-sm" onclick="executeCancelInvoice()">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span>Xác nhận Duyệt Hủy Hóa Đơn</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Notification Toast for Reprint and Cancel success -->
+<div class="fixed bottom-6 right-6 z-50 bg-primary text-on-primary px-space-lg py-space-md rounded-xl shadow-xl hidden flex items-center gap-space-sm transition-all" id="toast-msg">
+<span class="material-symbols-outlined text-[20px] text-tertiary-fixed-dim" id="toast-icon">check_circle</span>
+<span class="font-body-sm text-body-sm" id="toast-text">Thao tác hoàn tất thành công.</span>
+</div>
+</div>
+<!-- Client-side Interactive Logic -->
+<script>
+  // Mock Data conforming to ERD (HoaDon, DongBan, ThanhToanBan, BienDongKho)
+  const invoiceData = {
+    'HD-2025-0142': {
+      code: 'HD-2025-0142',
+      status: 'confirmed',
+      cashier: 'Lê Thị Mai (TN-04)',
+      shift: 'CA-02 (Ca chiều)',
+      confirmedTime: '24/10/2025 14:32:10',
+      total: 485000,
+      payments: { cash: 185000, transfer: 300000 },
+      items: [
+        { name: 'Sữa tươi thanh trùng Đà Lạt Milk 950ml', sku: 'SP-DLM-950', unit: 'Hộp', qty: 2, price: 45000, amount: 90000 },
+        { name: 'Cà phê Arabica Cầu Đất túi 500g', sku: 'CF-ARB-500', unit: 'Gói', qty: 1, price: 245000, amount: 245000 },
+        { name: 'Bánh quy bơ Danish Butter Cookies 454g', sku: 'BK-DNS-454', unit: 'Hộp', qty: 1, price: 150000, amount: 150000 }
+      ],
+      cancellation: null
+    },
+    'HD-2025-0141': {
+      code: 'HD-2025-0141',
+      status: 'confirmed',
+      cashier: 'Lê Thị Mai (TN-04)',
+      shift: 'CA-02 (Ca chiều)',
+      confirmedTime: '24/10/2025 14:15:02',
+      total: 120000,
+      payments: { cash: 120000, transfer: 0 },
+      items: [
+        { name: 'Bánh gạo nướng An vị tảo biển 150g', sku: 'BG-AN-150', unit: 'Gói', qty: 4, price: 30000, amount: 120000 }
+      ],
+      cancellation: null
+    },
+    'HD-2025-0139': {
+      code: 'HD-2025-0139',
+      status: 'cancelled',
+      cashier: 'Trần Hoài An (TN-02)',
+      shift: 'CA-01 (Ca sáng)',
+      confirmedTime: '24/10/2025 11:20:45',
+      total: 350000,
+      payments: { cash: 0, transfer: 350000 },
+      items: [
+        { name: 'Hạt điều rang muối Bình Phước 500g', sku: 'HD-RM-500', unit: 'Hộp', qty: 2, price: 175000, amount: 350000 }
+      ],
+      cancellation: {
+        by: 'Nguyễn Văn Quản Trị',
+        time: '24/10/2025 11:35:12',
+        shift: 'CA-01',
+        reason: 'Khách hàng tính nhầm số lượng và yêu cầu hoàn trả toàn bộ để xuất lại.'
+      }
+    },
+    'HD-2025-0138': {
+      code: 'HD-2025-0138',
+      status: 'confirmed',
+      cashier: 'Trần Hoài An (TN-02)',
+      shift: 'CA-01 (Ca sáng)',
+      confirmedTime: '24/10/2025 10:48:19',
+      total: 215000,
+      payments: { cash: 0, transfer: 215000 },
+      items: [
+        { name: 'Nước ép cam Vfresh 1L', sku: 'NE-CAM-1L', unit: 'Hộp', qty: 3, price: 55000, amount: 165000 },
+        { name: 'Khăn giấy lụa Paseo 3 lớp', sku: 'KG-PAS-03', unit: 'Gói', qty: 2, price: 25000, amount: 50000 }
+      ],
+      cancellation: null
+    }
+  };
+
+  let currentSelectedCode = 'HD-2025-0142';
+
+  function formatMoney(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+  }
+
+  function selectInvoice(code) {
+    const data = invoiceData[code];
+    if (!data) return;
+
+    currentSelectedCode = code;
+
+    // Update left list highlights
+    document.querySelectorAll('.invoice-card').forEach(el => {
+      el.classList.remove('bg-surface-container-high');
+      el.classList.add('bg-surface-container-lowest');
+    });
+    const activeCard = document.getElementById('card-' + code);
+    if (activeCard) {
+      activeCard.classList.remove('bg-surface-container-lowest');
+      activeCard.classList.add('bg-surface-container-high');
+    }
+
+    // Populate Right Panel
+    document.getElementById('detail-code').innerText = data.code;
+    document.getElementById('detail-cashier').innerText = data.cashier;
+    document.getElementById('detail-shift').innerText = data.shift;
+    document.getElementById('detail-confirmed-time').innerText = data.confirmedTime;
+    document.getElementById('detail-item-count').innerText = `Tổng số ${data.items.length} sản phẩm`;
+    document.getElementById('calc-subtotal').innerText = formatMoney(data.total);
+    document.getElementById('calc-grand-total').innerText = formatMoney(data.total);
+
+    // Status badge & buttons configuration
+    const badge = document.getElementById('detail-badge');
+    const cancelBtn = document.getElementById('btn-open-cancel');
+    const auditBox = document.getElementById('cancellation-audit-box');
+    const subtext = document.getElementById('detail-subtext');
+
+    if (data.status === 'confirmed') {
+      badge.className = 'bg-tertiary text-on-tertiary px-space-md py-0.5 rounded-full font-label-sm text-label-sm';
+      badge.innerText = 'Đã xác nhận';
+      cancelBtn.classList.remove('hidden');
+      auditBox.classList.add('hidden');
+      subtext.innerText = 'Giao dịch đã quyết toán và ghi nhận bút toán kho tức thời.';
+    } else {
+      badge.className = 'bg-error text-on-error px-space-md py-0.5 rounded-full font-label-sm text-label-sm';
+      badge.innerText = 'Đã hủy';
+      cancelBtn.classList.add('hidden');
+      auditBox.classList.remove('hidden');
+      subtext.innerText = 'Hóa đơn đã vô hiệu hóa, tồn kho và số quỹ đã được hoàn nhập.';
+      
+      if (data.cancellation) {
+        document.getElementById('audit-canceller').innerText = data.cancellation.by;
+        document.getElementById('audit-cancel-time').innerText = data.cancellation.time;
+        document.getElementById('audit-shift').innerText = data.cancellation.shift;
+        document.getElementById('audit-reason').innerText = data.cancellation.reason;
+      }
+    }
+
+    // Populate Items Table
+    const tbody = document.getElementById('table-items-body');
+    tbody.innerHTML = '';
+    data.items.forEach((item, index) => {
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-surface-container-high transition-colors';
+      tr.innerHTML = `
+        <td class="py-space-sm px-space-md text-on-surface-variant">${index + 1}</td>
+        <td class="py-space-sm px-space-md">
+          <div class="font-title-sm text-title-sm text-on-surface">${item.name}</div>
+          <div class="text-on-surface-variant font-label-sm text-label-sm">SKU: ${item.sku}</div>
+        </td>
+        <td class="py-space-sm px-space-md text-center">${item.unit}</td>
+        <td class="py-space-sm px-space-md text-right font-bold">${item.qty}</td>
+        <td class="py-space-sm px-space-md text-right">${formatMoney(item.price)}</td>
+        <td class="py-space-sm px-space-md text-right font-bold text-primary">${formatMoney(item.amount)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Populate Payments
+    const payList = document.getElementById('payment-methods-list');
+    payList.innerHTML = '';
+    if (data.payments.cash > 0) {
+      payList.innerHTML += `
+        <div class="flex items-center justify-between p-space-xs bg-surface-container-lowest rounded">
+          <span class="flex items-center gap-2 text-on-surface">
+            <span class="material-symbols-outlined text-outline text-[18px]">attach_money</span>
+            Tiền mặt
+          </span>
+          <span class="font-bold text-on-surface">${formatMoney(data.payments.cash)}</span>
+        </div>
+      `;
+    }
+    if (data.payments.transfer > 0) {
+      payList.innerHTML += `
+        <div class="flex items-center justify-between p-space-xs bg-surface-container-lowest rounded">
+          <span class="flex items-center gap-2 text-on-surface">
+            <span class="material-symbols-outlined text-outline text-[18px]">qr_code_2</span>
+            Chuyển khoản VietQR
+          </span>
+          <span class="font-bold text-on-surface">${formatMoney(data.payments.transfer)}</span>
+        </div>
+      `;
+    }
+  }
+
+  function handleReprint() {
+    showToast(`Đang gửi lệnh in lại chứng từ cho hóa đơn ${currentSelectedCode} (Không phát sinh giao dịch mới)`, 'print');
+  }
+
+  function openCancelModal() {
+    const data = invoiceData[currentSelectedCode];
+    if (!data || data.status === 'cancelled') return;
+
+    document.getElementById('modal-bill-id').innerText = data.code;
+    document.getElementById('modal-cash-refund').innerText = formatMoney(data.payments.cash);
+    document.getElementById('cancel-reason-input').value = '';
+    document.getElementById('cancel-error-text').classList.add('hidden');
+    document.getElementById('cancel-modal').classList.remove('hidden');
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancel-modal').classList.add('hidden');
+  }
+
+  function executeCancelInvoice() {
+    const reasonInput = document.getElementById('cancel-reason-input');
+    const reason = reasonInput.value.trim();
+
+    if (!reason) {
+      document.getElementById('cancel-error-text').classList.remove('hidden');
+      reasonInput.focus();
+      return;
+    }
+
+    const data = invoiceData[currentSelectedCode];
+    if (data) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN');
+
+      data.status = 'cancelled';
+      data.cancellation = {
+        by: 'Nguyễn Văn Quản Trị',
+        time: dateStr,
+        shift: 'CA-02',
+        reason: reason
+      };
+
+      // Update card on left panel
+      const card = document.getElementById('card-' + currentSelectedCode);
+      if (card) {
+        const badgeSpan = card.querySelector('span.rounded-full');
+        if (badgeSpan) {
+          badgeSpan.className = 'bg-error text-on-error px-space-sm py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1 shadow-sm';
+          badgeSpan.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-error-container"></span>Đã hủy';
+        }
+        const totalSpan = card.querySelector('.font-numeric-display');
+        if (totalSpan) {
+          totalSpan.classList.add('line-through', 'text-on-surface-variant');
+          totalSpan.classList.remove('text-primary');
+        }
+      }
+
+      closeCancelModal();
+      selectInvoice(currentSelectedCode);
+      showToast(`Hóa đơn ${currentSelectedCode} đã được hủy thành công. Đã đảo tồn kho & quỹ ca.`, 'verified');
+    }
+  }
+
+  function showToast(text, icon = 'check_circle') {
+    const toast = document.getElementById('toast-msg');
+    document.getElementById('toast-text').innerText = text;
+    document.getElementById('toast-icon').innerText = icon;
+    toast.classList.remove('hidden');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 4500);
+  }
+
+  // Filter dynamic handling
+  document.getElementById('filter-code').addEventListener('input', function(e) {
+    const val = e.target.value.toUpperCase();
+    document.querySelectorAll('.invoice-card').forEach(card => {
+      const code = card.querySelector('span.font-headline-sm').innerText;
+      if (code.includes(val)) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+
+  document.getElementById('filter-status').addEventListener('change', function(e) {
+    const val = e.target.value;
+    document.querySelectorAll('.invoice-card').forEach(card => {
+      const code = card.id.replace('card-', '');
+      const bill = invoiceData[code];
+      if (val === 'all' || bill.status === val) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+</script></main></div>
+
+</body></html>

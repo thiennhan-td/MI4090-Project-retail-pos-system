@@ -1,0 +1,198 @@
+﻿@{
+    var pageTitle = ViewData["Title"] as string ?? "Retail Core POS";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isHome = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@pageTitle · Retail Core POS</title>
+    <link rel="stylesheet" href="~/css/pos-theme.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="pos-shell">
+        <aside class="pos-sidebar" id="pos-sidebar" aria-label="Điều hướng nghiệp vụ POS">
+            <div class="pos-brand">
+                <a class="pos-brand-link" asp-controller="Home" asp-action="Index">
+                    <span class="pos-brand-mark" aria-hidden="true">
+                        <svg class="pos-icon"><use href="@Url.Content("~/images/pos-icons.svg")#icon-brand"></use></svg>
+                    </span>
+                    <span>
+                        <span class="pos-brand-title">Retail Core POS</span>
+                        <span class="pos-brand-sub">Hệ thống bán lẻ &amp; kho</span>
+                    </span>
+                </a>
+                <button type="button" class="pos-sidebar-close" id="pos-sidebar-close" aria-label="Đóng thanh điều hướng">
+                    <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-close"></use></svg>
+                </button>
+            </div>
+
+            <nav class="pos-nav" aria-label="8 nhóm chức năng POS">
+                <div class="pos-nav-group">
+                    <a class="pos-nav-item @(isHome ? "is-active" : string.Empty)" asp-controller="Home" asp-action="Index">
+                        <span class="pos-nav-item-label">
+                            <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-home"></use></svg>
+                            <span>Trang chủ</span>
+                        </span>
+                    </a>
+                </div>
+
+                <section class="pos-nav-group" aria-label="F1 Quản trị hệ thống">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f1"></use></svg>
+                        <span>F1 · Quản trị hệ thống</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Đăng nhập hệ thống POS</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Quản lý tài khoản nhân sự</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Cấu hình phân quyền vai trò</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+
+                <section class="pos-nav-group" aria-label="F2 Quản lý danh mục">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f2"></use></svg>
+                        <span>F2 · Quản lý danh mục</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Nhóm hàng, Mặt hàng &amp; NCC</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+
+                <section class="pos-nav-group" aria-label="F3 Bán hàng và Thu tiền">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f3"></use></svg>
+                        <span>F3 · Bán hàng &amp; Thu tiền</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Màn hình Bán hàng POS</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Tra cứu, in và hủy hóa đơn</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+
+                <section class="pos-nav-group" aria-label="F4 Nhận trả và Hoàn tiền">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f4"></use></svg>
+                        <span>F4 · Nhận trả &amp; Hoàn tiền</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Lập phiếu trả &amp; Hoàn tiền</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Tra cứu phiếu trả hàng</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+
+                <section class="pos-nav-group" aria-label="F5 Nhập hàng và Trả tiền">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f5"></use></svg>
+                        <span>F5 · Nhập hàng &amp; Trả tiền</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Lập &amp; Xác nhận phiếu nhập kho</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Sổ phiếu nhập &amp; Trả tiền NCC</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+
+                <section class="pos-nav-group" aria-label="F6 Kiểm soát tồn kho">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f6"></use></svg>
+                        <span>F6 · Kiểm soát tồn kho</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Sổ chi tiết hàng hóa (Thẻ kho)</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Phiếu kiểm kê &amp; Cân chỉnh tồn</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+
+                <section class="pos-nav-group" aria-label="F7 Quản lý ca và Sổ quỹ">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f7"></use></svg>
+                        <span>F7 · Quản lý ca &amp; Sổ quỹ</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Quản lý ca &amp; Bàn giao két</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Sổ quỹ &amp; Thu chi tiền mặt</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+
+                <section class="pos-nav-group" aria-label="F8 Báo cáo thống kê">
+                    <h2 class="pos-nav-heading">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f8"></use></svg>
+                        <span>F8 · Báo cáo thống kê</span>
+                    </h2>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Báo cáo cuối ngày &amp; Bán trả</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Thống kê Xuất – Nhập – Tồn</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                        <span>Lệch ca &amp; Công nợ NCC</span>
+                        <span class="pos-nav-tag">Sắp có</span>
+                    </span>
+                </section>
+            </nav>
+        </aside>
+
+        <div class="pos-backdrop" id="pos-backdrop" aria-hidden="true"></div>
+
+        <div class="pos-main">
+            <header class="pos-header">
+                <div class="pos-header-left">
+                    <button type="button" class="pos-menu-btn" id="pos-menu-toggle" aria-controls="pos-sidebar" aria-expanded="false" aria-label="Mở thanh điều hướng">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-menu"></use></svg>
+                    </button>
+                    <h1 class="pos-page-title">@pageTitle</h1>
+                </div>
+                <div class="pos-header-meta">
+                    <span class="pos-pill">
+                        <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-store"></use></svg>
+                        <span>1 cửa hàng · 1 kho</span>
+                    </span>
+                    <span class="pos-pill pos-pill-teal">Khung nền POS</span>
+                </div>
+            </header>
+
+            <main class="pos-content" id="main-content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/js/pos-shell.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,15 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Lỗi hệ thống";
+}
+
+<section class="pos-card">
+    <h2 class="pos-h2">Đã xảy ra lỗi khi xử lý yêu cầu</h2>
+    <p class="pos-muted">Vui lòng thử lại hoặc liên hệ quản trị viên cửa hàng.</p>
+    @if (Model.ShowRequestId)
+    {
+        <p class="pos-muted" style="margin-top: 0.75rem;">
+            Mã yêu cầu: <code>@Model.RequestId</code>
+        </p>
+    }
+</section>

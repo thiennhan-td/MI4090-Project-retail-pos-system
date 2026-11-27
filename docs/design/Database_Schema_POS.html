@@ -1,0 +1,2251 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lược đồ cơ sở dữ liệu POS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Instrument+Serif&amp;display=swap">
+<style>
+* { box-sizing: border-box }
+html { color: #2d3142; background: #f5f5f5 }
+body { margin: 0; font: 16px/1.55 Geist, "Segoe UI", sans-serif }
+main { width: calc(100% - 48px); max-width: 1440px; margin: 0 auto; padding: 44px 0 72px }
+header { max-width: 850px }
+.kicker { color: #4f5d75; font-size: 12px; letter-spacing: .13em }
+h1 { font: 400 clamp(38px, 5vw, 64px)/1.12 "Instrument Serif", "Segoe UI", sans-serif; margin: 8px 0 16px }
+h2 { font-size: 28px; margin: 0 0 12px }
+h3 { margin: 0 0 8px; font-size: 17px }
+code, pre, .kicker, .sql-label, .edge-label, .key-badge { font-family: "Geist Mono", Consolas, monospace }
+a { color: #2e5aa8; text-underline-offset: 3px }
+a:focus-visible, .scroll:focus-visible { outline: 2px solid #2e5aa8; outline-offset: 2px }
+nav { display: flex; flex-wrap: wrap; gap: 8px 24px }
+.primary-nav { margin: 24px 0 16px; border-block: 1px solid #bfc0c0; padding: 14px 0 }
+.legend { color: #4f5d75; font-size: 14px }
+section { margin-top: 44px }
+.table-nav { margin-bottom: 24px }
+article { margin: 0 0 24px }
+figure { margin: 0; border: 1px solid #bfc0c0; border-radius: 6px; background: #f5f5f5 }
+.scroll { width: 100%; overflow-x: auto }
+svg { display: block; width: var(--svg-width); min-width: var(--svg-width); fill: #2d3142 }
+.table-name { font-size: 14px; font-weight: 600 }
+svg a .table-name { fill: #2e5aa8; text-decoration: underline }
+.column-name { font-size: 13px }
+.sql-label, .edge-label { font-size: 10px; fill: #4f5d75 }
+.key-badge, .card-tag { font-size: 9px; font-weight: 600; fill: #4f5d75 }
+figcaption { border-top: 1px solid #bfc0c0; background: #fcfcfb; padding: 12px 24px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 14px }
+pre { margin: 0; padding: 20px; border: 1px solid #bfc0c0; background: #fcfcfb; font-size: 12px; overflow-x: auto }
+@media (max-width: 640px) { main { width: calc(100% - 24px); padding-top: 24px } }
+@media print { main { width: 100%; padding: 0 } article { break-inside: avoid } svg { width: auto; max-width: 100%; min-width: 0 } .scroll { overflow: visible } pre { white-space: pre-wrap; overflow-wrap: anywhere } }
+</style>
+</head>
+<body>
+<main>
+<header>
+<p class="kicker">MI4090 · RETAIL CORE POS · SQL SERVER</p>
+<h1>Lược đồ cơ sở dữ liệu POS</h1>
+<p>21 bảng · 123 cột · 38 khóa ngoại</p>
+</header>
+<nav class="primary-nav" aria-label="Các cụm bảng">
+<a href="#cum-1">Quản trị và ca bán</a>
+<a href="#cum-2">Bán hàng và nhận trả</a>
+<a href="#cum-3">Nhập hàng và danh mục</a>
+<a href="#cum-4">Kiểm kê và thẻ kho</a>
+<a href="#ddl">DDL gốc</a>
+</nav>
+<div class="legend">
+<p>Mũi tên nối cột FK đến cột đích. Nét đứt đánh dấu FK có cột cho phép <code>NULL</code>. Hộp “CỘT ĐÍCH” trích các cột được tham chiếu và liên kết đến bảng đầy đủ. Hai đường mang cùng mã <code>FK38</code> thuộc cùng một khóa ngoại ghép.</p>
+<p><code>PK</code> khóa chính · <code>FK</code> khóa ngoại · <code>UQ</code> ràng buộc duy nhất · <code>ON DELETE NO ACTION</code> · <code>ON UPDATE NO ACTION</code></p>
+</div>
+<section id="cum-1"><h2>Quản trị và ca bán</h2><nav aria-label="Quản trị và ca bán" class="table-nav"><a href="#table-TaiKhoan"><code>TaiKhoan</code></a> <a href="#table-VaiTro"><code>VaiTro</code></a> <a href="#table-QuyenVaiTro"><code>QuyenVaiTro</code></a> <a href="#table-Quyen"><code>Quyen</code></a> <a href="#table-CaBan"><code>CaBan</code></a> <a href="#table-PhieuThuChi"><code>PhieuThuChi</code></a></nav>
+<article id="table-TaiKhoan"><h3><code>dbo.TaiKhoan</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng TaiKhoan">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 224" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-TaiKhoan-title database-schema-pos-TaiKhoan-desc">
+<title id="database-schema-pos-TaiKhoan-title">dbo.TaiKhoan</title>
+<desc id="database-schema-pos-TaiKhoan-desc">Cột và khóa ngoại của bảng dbo.TaiKhoan.</desc>
+<defs><marker id="database-schema-pos-TaiKhoan-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="224" fill="#f5f5f5"/>
+<g data-fk="FK_TaiKhoan_maVaiTro" data-source="maVaiTro" data-parent="VaiTro" data-target="maVaiTro"><title>FK_TaiKhoan_maVaiTro (maVaiTro) → dbo.VaiTro (maVaiTro)</title><path d="M 360 92 H 376 Q 384 92 384 100 V 108 Q 384 116 392 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-TaiKhoan-arrow)"/></g>
+<rect x="423" y="96" width="90" height="14" fill="#f5f5f5"/><text x="468" y="106" text-anchor="middle" class="edge-label">FK01 NO ACTION</text>
+<g data-table="TaiKhoan" data-view="full">
+<rect x="24" y="20" width="336" height="180" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.TaiKhoan</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maTaiKhoan">
+<text x="36" y="72" class="column-name">maTaiKhoan</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maVaiTro">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maVaiTro</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="hoTen">
+<text x="36" y="120" class="column-name">hoTen</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">nvarchar(150)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tenDangNhap">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">tenDangNhap</text>
+<rect x="176" y="133" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="143" class="key-badge">UQ</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">nvarchar(64)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="matKhauBam">
+<text x="36" y="168" class="column-name">matKhauBam</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">varchar(256)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="trangThai">
+<text x="36" y="192" class="column-name">trangThai</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="VaiTro" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-VaiTro"><text x="564" y="91" class="table-name">dbo.VaiTro</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maVaiTro">
+<text x="564" y="120" class="column-name">maVaiTro</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK01</code> <code>(maVaiTro)</code> → <code>dbo.VaiTro (maVaiTro)</code></span></figcaption></figure></article>
+<article id="table-VaiTro"><h3><code>dbo.VaiTro</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng VaiTro">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 128" style="--svg-width:384px" role="img" aria-labelledby="database-schema-pos-VaiTro-title database-schema-pos-VaiTro-desc">
+<title id="database-schema-pos-VaiTro-title">dbo.VaiTro</title>
+<desc id="database-schema-pos-VaiTro-desc">Các cột của bảng dbo.VaiTro.</desc>
+<defs><marker id="database-schema-pos-VaiTro-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="384" height="128" fill="#f5f5f5"/>
+<g data-table="VaiTro" data-view="full">
+<rect x="24" y="20" width="336" height="84" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.VaiTro</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maVaiTro">
+<text x="36" y="72" class="column-name">maVaiTro</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tenVaiTro">
+<text x="36" y="96" class="column-name">tenVaiTro</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">UQ</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">nvarchar(150)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div></figure></article>
+<article id="table-QuyenVaiTro"><h3><code>dbo.QuyenVaiTro</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng QuyenVaiTro">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 224" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-QuyenVaiTro-title database-schema-pos-QuyenVaiTro-desc">
+<title id="database-schema-pos-QuyenVaiTro-title">dbo.QuyenVaiTro</title>
+<desc id="database-schema-pos-QuyenVaiTro-desc">Cột và khóa ngoại của bảng dbo.QuyenVaiTro.</desc>
+<defs><marker id="database-schema-pos-QuyenVaiTro-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="224" fill="#f5f5f5"/>
+<g data-fk="FK_QuyenVaiTro_maVaiTro" data-source="maVaiTro" data-parent="VaiTro" data-target="maVaiTro"><title>FK_QuyenVaiTro_maVaiTro (maVaiTro) → dbo.VaiTro (maVaiTro)</title><path d="M 360 68 H 400 Q 408 68 408 76 V 84 Q 408 92 416 92 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-QuyenVaiTro-arrow)"/></g>
+<g data-fk="FK_QuyenVaiTro_maQuyen" data-source="maQuyen" data-parent="Quyen" data-target="maQuyen"><title>FK_QuyenVaiTro_maQuyen (maQuyen) → dbo.Quyen (maQuyen)</title><path d="M 360 92 H 376 Q 384 92 384 100 V 172 Q 384 180 392 180 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-QuyenVaiTro-arrow)"/></g>
+<rect x="435" y="72" width="90" height="14" fill="#f5f5f5"/><text x="480" y="82" text-anchor="middle" class="edge-label">FK02 NO ACTION</text>
+<rect x="423" y="160" width="90" height="14" fill="#f5f5f5"/><text x="468" y="170" text-anchor="middle" class="edge-label">FK03 NO ACTION</text>
+<g data-table="QuyenVaiTro" data-view="full">
+<rect x="24" y="20" width="336" height="84" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.QuyenVaiTro</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maVaiTro">
+<text x="36" y="72" class="column-name">maVaiTro</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<rect x="197" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="200" y="71" class="key-badge">FK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maQuyen">
+<text x="36" y="96" class="column-name">maQuyen</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">PK</text>
+<rect x="197" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="200" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(64)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="VaiTro" data-view="referenced">
+<rect x="552" y="44" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="45" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="80" x2="888" y2="80" stroke="#bfc0c0"/>
+<a href="#table-VaiTro"><text x="564" y="67" class="table-name">dbo.VaiTro</text></a>
+<text x="876" y="66" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maVaiTro">
+<text x="564" y="96" class="column-name">maVaiTro</text>
+<rect x="704" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="95" class="key-badge">PK</text>
+<text x="816" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="Quyen" data-view="referenced">
+<rect x="552" y="132" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="133" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="168" x2="888" y2="168" stroke="#bfc0c0"/>
+<a href="#table-Quyen"><text x="564" y="155" class="table-name">dbo.Quyen</text></a>
+<text x="876" y="154" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maQuyen">
+<text x="564" y="184" class="column-name">maQuyen</text>
+<rect x="704" y="173" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="183" class="key-badge">PK</text>
+<text x="816" y="184" class="sql-label" text-anchor="end">varchar(64)</text>
+<text x="876" y="184" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK02</code> <code>(maVaiTro)</code> → <code>dbo.VaiTro (maVaiTro)</code></span> · <span><code>FK03</code> <code>(maQuyen)</code> → <code>dbo.Quyen (maQuyen)</code></span></figcaption></figure></article>
+<article id="table-Quyen"><h3><code>dbo.Quyen</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng Quyen">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 128" style="--svg-width:384px" role="img" aria-labelledby="database-schema-pos-Quyen-title database-schema-pos-Quyen-desc">
+<title id="database-schema-pos-Quyen-title">dbo.Quyen</title>
+<desc id="database-schema-pos-Quyen-desc">Các cột của bảng dbo.Quyen.</desc>
+<defs><marker id="database-schema-pos-Quyen-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="384" height="128" fill="#f5f5f5"/>
+<g data-table="Quyen" data-view="full">
+<rect x="24" y="20" width="336" height="84" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.Quyen</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maQuyen">
+<text x="36" y="72" class="column-name">maQuyen</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(64)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tenQuyen">
+<text x="36" y="96" class="column-name">tenQuyen</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">nvarchar(150)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div></figure></article>
+<article id="table-CaBan"><h3><code>dbo.CaBan</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng CaBan">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 296" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-CaBan-title database-schema-pos-CaBan-desc">
+<title id="database-schema-pos-CaBan-title">dbo.CaBan</title>
+<desc id="database-schema-pos-CaBan-desc">Cột và khóa ngoại của bảng dbo.CaBan.</desc>
+<defs><marker id="database-schema-pos-CaBan-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="296" fill="#f5f5f5"/>
+<g data-fk="FK_CaBan_maNguoiMo" data-source="maNguoiMo" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_CaBan_maNguoiMo (maNguoiMo) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 92 H 400 Q 408 92 408 100 V 116 Q 408 124 416 124 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-CaBan-arrow)"/></g>
+<g data-fk="FK_CaBan_maNguoiChot" data-source="maNguoiChot" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_CaBan_maNguoiChot (maNguoiChot) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 116 H 376 Q 384 116 384 124 V 132 Q 384 140 392 140 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-CaBan-arrow)"/></g>
+<rect x="435" y="104" width="90" height="14" fill="#f5f5f5"/><text x="480" y="114" text-anchor="middle" class="edge-label">FK04 NO ACTION</text>
+<rect x="423" y="147" width="90" height="14" fill="#f5f5f5"/><text x="468" y="157" text-anchor="middle" class="edge-label">FK05 NO ACTION</text>
+<g data-table="CaBan" data-view="full">
+<rect x="24" y="20" width="336" height="252" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.CaBan</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maCa">
+<text x="36" y="72" class="column-name">maCa</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiMo">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maNguoiMo</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiChot">
+<text x="36" y="120" class="column-name">maNguoiChot</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="lucMo">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">lucMo</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tienMatDauCa">
+<text x="36" y="168" class="column-name">tienMatDauCa</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="trangThai">
+<rect x="25" y="176" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="192" class="column-name">trangThai</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucDong">
+<text x="36" y="216" class="column-name">lucDong</text>
+<text x="288" y="216" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="216" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="tienDuKienKhiChot">
+<rect x="25" y="224" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="240" class="column-name">tienDuKienKhiChot</text>
+<text x="288" y="240" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="240" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="tienThucDem">
+<text x="36" y="264" class="column-name">tienThucDem</text>
+<text x="288" y="264" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="264" class="sql-label" text-anchor="end">NULL</text>
+</g>
+</g>
+<g data-table="TaiKhoan" data-view="referenced">
+<rect x="552" y="84" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="85" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="120" x2="888" y2="120" stroke="#bfc0c0"/>
+<a href="#table-TaiKhoan"><text x="564" y="107" class="table-name">dbo.TaiKhoan</text></a>
+<text x="876" y="106" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maTaiKhoan">
+<text x="564" y="136" class="column-name">maTaiKhoan</text>
+<rect x="704" y="125" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="135" class="key-badge">PK</text>
+<text x="816" y="136" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="136" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK04</code> <code>(maNguoiMo)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span> · <span><code>FK05</code> <code>(maNguoiChot)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span></figcaption></figure></article>
+<article id="table-PhieuThuChi"><h3><code>dbo.PhieuThuChi</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng PhieuThuChi">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 320" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-PhieuThuChi-title database-schema-pos-PhieuThuChi-desc">
+<title id="database-schema-pos-PhieuThuChi-title">dbo.PhieuThuChi</title>
+<desc id="database-schema-pos-PhieuThuChi-desc">Cột và khóa ngoại của bảng dbo.PhieuThuChi.</desc>
+<defs><marker id="database-schema-pos-PhieuThuChi-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="320" fill="#f5f5f5"/>
+<g data-fk="FK_PhieuThuChi_maCa" data-source="maCa" data-parent="CaBan" data-target="maCa"><title>FK_PhieuThuChi_maCa (maCa) → dbo.CaBan (maCa)</title><path d="M 360 92 H 400 Q 408 92 408 100 V 108 Q 408 116 416 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuThuChi-arrow)"/></g>
+<g data-fk="FK_PhieuThuChi_maNguoiLap" data-source="maNguoiLap" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_PhieuThuChi_maNguoiLap (maNguoiLap) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 116 H 376 Q 384 116 384 124 V 196 Q 384 204 392 204 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuThuChi-arrow)"/></g>
+<rect x="435" y="96" width="90" height="14" fill="#f5f5f5"/><text x="480" y="106" text-anchor="middle" class="edge-label">FK06 NO ACTION</text>
+<rect x="423" y="184" width="90" height="14" fill="#f5f5f5"/><text x="468" y="194" text-anchor="middle" class="edge-label">FK07 NO ACTION</text>
+<g data-table="PhieuThuChi" data-view="full">
+<rect x="24" y="20" width="336" height="276" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.PhieuThuChi</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maPhieuThuChi">
+<text x="36" y="72" class="column-name">maPhieuThuChi</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maCa">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maCa</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiLap">
+<text x="36" y="120" class="column-name">maNguoiLap</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucGhi">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">lucGhi</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="loaiThuChi">
+<text x="36" y="168" class="column-name">loaiThuChi</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="nguonQuy">
+<rect x="25" y="176" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="192" class="column-name">nguonQuy</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="phuongThuc">
+<text x="36" y="216" class="column-name">phuongThuc</text>
+<text x="288" y="216" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="216" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soTien">
+<rect x="25" y="224" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="240" class="column-name">soTien</text>
+<text x="288" y="240" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="240" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lyDo">
+<text x="36" y="264" class="column-name">lyDo</text>
+<text x="288" y="264" class="sql-label" text-anchor="end">nvarchar(500)</text>
+<text x="348" y="264" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soChungTuKemTheo">
+<text x="36" y="288" class="column-name">soChungTuKemTheo</text>
+<text x="288" y="288" class="sql-label" text-anchor="end">nvarchar(64)</text>
+<text x="348" y="288" class="sql-label" text-anchor="end">NULL</text>
+</g>
+</g>
+<g data-table="CaBan" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-CaBan"><text x="564" y="91" class="table-name">dbo.CaBan</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maCa">
+<text x="564" y="120" class="column-name">maCa</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="TaiKhoan" data-view="referenced">
+<rect x="552" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="192" x2="888" y2="192" stroke="#bfc0c0"/>
+<a href="#table-TaiKhoan"><text x="564" y="179" class="table-name">dbo.TaiKhoan</text></a>
+<text x="876" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maTaiKhoan">
+<text x="564" y="208" class="column-name">maTaiKhoan</text>
+<rect x="704" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="207" class="key-badge">PK</text>
+<text x="816" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK06</code> <code>(maCa)</code> → <code>dbo.CaBan (maCa)</code></span> · <span><code>FK07</code> <code>(maNguoiLap)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span></figcaption></figure></article></section>
+<section id="cum-2"><h2>Bán hàng và nhận trả</h2><nav aria-label="Bán hàng và nhận trả" class="table-nav"><a href="#table-HoaDon"><code>HoaDon</code></a> <a href="#table-DongBan"><code>DongBan</code></a> <a href="#table-ThanhToanBan"><code>ThanhToanBan</code></a> <a href="#table-PhieuTra"><code>PhieuTra</code></a> <a href="#table-DongTra"><code>DongTra</code></a> <a href="#table-KhoanHoan"><code>KhoanHoan</code></a></nav>
+<article id="table-HoaDon"><h3><code>dbo.HoaDon</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng HoaDon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="--svg-width:1440px" role="img" aria-labelledby="database-schema-pos-HoaDon-title database-schema-pos-HoaDon-desc">
+<title id="database-schema-pos-HoaDon-title">dbo.HoaDon</title>
+<desc id="database-schema-pos-HoaDon-desc">Cột và khóa ngoại của bảng dbo.HoaDon.</desc>
+<defs><marker id="database-schema-pos-HoaDon-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="1440" height="320" fill="#f5f5f5"/>
+<g data-fk="FK_HoaDon_maCa" data-source="maCa" data-parent="CaBan" data-target="maCa"><title>FK_HoaDon_maCa (maCa) → dbo.CaBan (maCa)</title><path d="M 552 92 H 512 Q 504 92 504 100 V 164 Q 504 172 496 172 H 360" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-HoaDon-arrow)"/></g>
+<g data-fk="FK_HoaDon_maCaDao" data-source="maCaDao" data-parent="CaBan" data-target="maCa"><title>FK_HoaDon_maCaDao (maCaDao) → dbo.CaBan (maCa)</title><path d="M 552 164 H 536 Q 528 164 528 172 V 180 Q 528 188 520 188 H 360" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-HoaDon-arrow)"/></g>
+<g data-fk="FK_HoaDon_maNguoiLap" data-source="maNguoiLap" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_HoaDon_maNguoiLap (maNguoiLap) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 888 116 H 928 Q 936 116 936 124 V 140 Q 936 148 944 148 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-HoaDon-arrow)"/></g>
+<g data-fk="FK_HoaDon_maNguoiHuy" data-source="maNguoiHuy" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_HoaDon_maNguoiHuy (maNguoiHuy) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 888 140 H 904 Q 912 140 912 148 V 156 Q 912 164 920 164 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-HoaDon-arrow)"/></g>
+<rect x="387" y="152" width="90" height="14" fill="#f5f5f5"/><text x="432" y="162" text-anchor="middle" class="edge-label">FK08 NO ACTION</text>
+<rect x="399" y="195" width="90" height="14" fill="#f5f5f5"/><text x="444" y="205" text-anchor="middle" class="edge-label">FK11 NO ACTION</text>
+<rect x="963" y="128" width="90" height="14" fill="#f5f5f5"/><text x="1008" y="138" text-anchor="middle" class="edge-label">FK09 NO ACTION</text>
+<rect x="951" y="171" width="90" height="14" fill="#f5f5f5"/><text x="996" y="181" text-anchor="middle" class="edge-label">FK10 NO ACTION</text>
+<g data-table="HoaDon" data-view="full">
+<rect x="552" y="20" width="336" height="276" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="56" x2="888" y2="56" stroke="#bfc0c0"/>
+<text x="564" y="43" class="table-name">dbo.HoaDon</text>
+<text x="876" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maHoaDon">
+<text x="564" y="72" class="column-name">maHoaDon</text>
+<rect x="704" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="71" class="key-badge">PK</text>
+<text x="816" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maCa">
+<rect x="553" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="96" class="column-name">maCa</text>
+<rect x="704" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="95" class="key-badge">FK</text>
+<text x="816" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiLap">
+<text x="564" y="120" class="column-name">maNguoiLap</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">FK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiHuy">
+<rect x="553" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="144" class="column-name">maNguoiHuy</text>
+<rect x="704" y="133" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="143" class="key-badge">FK</text>
+<text x="816" y="144" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="144" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="maCaDao">
+<text x="564" y="168" class="column-name">maCaDao</text>
+<rect x="704" y="157" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="167" class="key-badge">FK</text>
+<text x="816" y="168" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="168" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="lucLap">
+<rect x="553" y="176" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="192" class="column-name">lucLap</text>
+<text x="816" y="192" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="876" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucXacNhan">
+<text x="564" y="216" class="column-name">lucXacNhan</text>
+<text x="816" y="216" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="876" y="216" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="trangThai">
+<rect x="553" y="224" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="240" class="column-name">trangThai</text>
+<text x="816" y="240" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="876" y="240" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucHuy">
+<text x="564" y="264" class="column-name">lucHuy</text>
+<text x="816" y="264" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="876" y="264" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="lyDoHuy">
+<text x="564" y="288" class="column-name">lyDoHuy</text>
+<text x="816" y="288" class="sql-label" text-anchor="end">nvarchar(500)</text>
+<text x="876" y="288" class="sql-label" text-anchor="end">NULL</text>
+</g>
+</g>
+<g data-table="CaBan" data-view="referenced">
+<rect x="24" y="132" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="133" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="168" x2="360" y2="168" stroke="#bfc0c0"/>
+<a href="#table-CaBan"><text x="36" y="155" class="table-name">dbo.CaBan</text></a>
+<text x="348" y="154" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maCa">
+<text x="36" y="184" class="column-name">maCa</text>
+<rect x="176" y="173" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="183" class="key-badge">PK</text>
+<text x="288" y="184" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="184" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="TaiKhoan" data-view="referenced">
+<rect x="1080" y="108" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="1081" y="109" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="1080" y1="144" x2="1416" y2="144" stroke="#bfc0c0"/>
+<a href="#table-TaiKhoan"><text x="1092" y="131" class="table-name">dbo.TaiKhoan</text></a>
+<text x="1404" y="130" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maTaiKhoan">
+<text x="1092" y="160" class="column-name">maTaiKhoan</text>
+<rect x="1232" y="149" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="1235" y="159" class="key-badge">PK</text>
+<text x="1344" y="160" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="1404" y="160" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK08</code> <code>(maCa)</code> → <code>dbo.CaBan (maCa)</code></span> · <span><code>FK09</code> <code>(maNguoiLap)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span> · <span><code>FK10</code> <code>(maNguoiHuy)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span> · <span><code>FK11</code> <code>(maCaDao)</code> → <code>dbo.CaBan (maCa)</code></span></figcaption></figure></article>
+<article id="table-DongBan"><h3><code>dbo.DongBan</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng DongBan">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 248" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-DongBan-title database-schema-pos-DongBan-desc">
+<title id="database-schema-pos-DongBan-title">dbo.DongBan</title>
+<desc id="database-schema-pos-DongBan-desc">Cột và khóa ngoại của bảng dbo.DongBan.</desc>
+<defs><marker id="database-schema-pos-DongBan-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="248" fill="#f5f5f5"/>
+<g data-fk="FK_DongBan_maHoaDon" data-source="maHoaDon" data-parent="HoaDon" data-target="maHoaDon"><title>FK_DongBan_maHoaDon (maHoaDon) → dbo.HoaDon (maHoaDon)</title><path d="M 360 92 H 400 Q 408 92 408 100 V 108 Q 408 116 416 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongBan-arrow)"/></g>
+<g data-fk="FK_DongBan_maHang" data-source="maHang" data-parent="MatHang" data-target="maHang"><title>FK_DongBan_maHang (maHang) → dbo.MatHang (maHang)</title><path d="M 360 116 H 376 Q 384 116 384 124 V 196 Q 384 204 392 204 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongBan-arrow)"/></g>
+<rect x="435" y="96" width="90" height="14" fill="#f5f5f5"/><text x="480" y="106" text-anchor="middle" class="edge-label">FK12 NO ACTION</text>
+<rect x="423" y="184" width="90" height="14" fill="#f5f5f5"/><text x="468" y="194" text-anchor="middle" class="edge-label">FK13 NO ACTION</text>
+<g data-table="DongBan" data-view="full">
+<rect x="24" y="20" width="336" height="156" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.DongBan</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maDongBan">
+<text x="36" y="72" class="column-name">maDongBan</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maHoaDon">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maHoaDon</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maHang">
+<text x="36" y="120" class="column-name">maHang</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soLuongBan">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">soLuongBan</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">int</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="donGiaThucBan">
+<text x="36" y="168" class="column-name">donGiaThucBan</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="HoaDon" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-HoaDon"><text x="564" y="91" class="table-name">dbo.HoaDon</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHoaDon">
+<text x="564" y="120" class="column-name">maHoaDon</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="MatHang" data-view="referenced">
+<rect x="552" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="192" x2="888" y2="192" stroke="#bfc0c0"/>
+<a href="#table-MatHang"><text x="564" y="179" class="table-name">dbo.MatHang</text></a>
+<text x="876" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHang">
+<text x="564" y="208" class="column-name">maHang</text>
+<rect x="704" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="207" class="key-badge">PK</text>
+<text x="816" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK12</code> <code>(maHoaDon)</code> → <code>dbo.HoaDon (maHoaDon)</code></span> · <span><code>FK13</code> <code>(maHang)</code> → <code>dbo.MatHang (maHang)</code></span></figcaption></figure></article>
+<article id="table-ThanhToanBan"><h3><code>dbo.ThanhToanBan</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng ThanhToanBan">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 200" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-ThanhToanBan-title database-schema-pos-ThanhToanBan-desc">
+<title id="database-schema-pos-ThanhToanBan-title">dbo.ThanhToanBan</title>
+<desc id="database-schema-pos-ThanhToanBan-desc">Cột và khóa ngoại của bảng dbo.ThanhToanBan.</desc>
+<defs><marker id="database-schema-pos-ThanhToanBan-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="200" fill="#f5f5f5"/>
+<g data-fk="FK_ThanhToanBan_maHoaDon" data-source="maHoaDon" data-parent="HoaDon" data-target="maHoaDon"><title>FK_ThanhToanBan_maHoaDon (maHoaDon) → dbo.HoaDon (maHoaDon)</title><path d="M 360 92 H 376 Q 384 92 384 100 V 108 Q 384 116 392 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-ThanhToanBan-arrow)"/></g>
+<rect x="423" y="96" width="90" height="14" fill="#f5f5f5"/><text x="468" y="106" text-anchor="middle" class="edge-label">FK14 NO ACTION</text>
+<g data-table="ThanhToanBan" data-view="full">
+<rect x="24" y="20" width="336" height="156" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.ThanhToanBan</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maThanhToan">
+<text x="36" y="72" class="column-name">maThanhToan</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maHoaDon">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maHoaDon</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="phuongThuc">
+<text x="36" y="120" class="column-name">phuongThuc</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soTienThanhToan">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">soTienThanhToan</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tienKhachDua">
+<text x="36" y="168" class="column-name">tienKhachDua</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NULL</text>
+</g>
+</g>
+<g data-table="HoaDon" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-HoaDon"><text x="564" y="91" class="table-name">dbo.HoaDon</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHoaDon">
+<text x="564" y="120" class="column-name">maHoaDon</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK14</code> <code>(maHoaDon)</code> → <code>dbo.HoaDon (maHoaDon)</code></span></figcaption></figure></article>
+<article id="table-PhieuTra"><h3><code>dbo.PhieuTra</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng PhieuTra">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 336" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-PhieuTra-title database-schema-pos-PhieuTra-desc">
+<title id="database-schema-pos-PhieuTra-title">dbo.PhieuTra</title>
+<desc id="database-schema-pos-PhieuTra-desc">Cột và khóa ngoại của bảng dbo.PhieuTra.</desc>
+<defs><marker id="database-schema-pos-PhieuTra-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="336" fill="#f5f5f5"/>
+<g data-fk="FK_PhieuTra_maHoaDon" data-source="maHoaDon" data-parent="HoaDon" data-target="maHoaDon"><title>FK_PhieuTra_maHoaDon (maHoaDon) → dbo.HoaDon (maHoaDon)</title><path d="M 360 92 H 424 Q 432 92 432 100 V 108 Q 432 116 440 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuTra-arrow)"/></g>
+<g data-fk="FK_PhieuTra_maCaNhan" data-source="maCaNhan" data-parent="CaBan" data-target="maCa"><title>FK_PhieuTra_maCaNhan (maCaNhan) → dbo.CaBan (maCa)</title><path d="M 360 116 H 400 Q 408 116 408 124 V 196 Q 408 204 416 204 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuTra-arrow)"/></g>
+<g data-fk="FK_PhieuTra_maNguoiNhan" data-source="maNguoiNhan" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_PhieuTra_maNguoiNhan (maNguoiNhan) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 140 H 376 Q 384 140 384 148 V 284 Q 384 292 392 292 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuTra-arrow)"/></g>
+<rect x="447" y="96" width="90" height="14" fill="#f5f5f5"/><text x="492" y="106" text-anchor="middle" class="edge-label">FK15 NO ACTION</text>
+<rect x="435" y="184" width="90" height="14" fill="#f5f5f5"/><text x="480" y="194" text-anchor="middle" class="edge-label">FK16 NO ACTION</text>
+<rect x="423" y="272" width="90" height="14" fill="#f5f5f5"/><text x="468" y="282" text-anchor="middle" class="edge-label">FK17 NO ACTION</text>
+<g data-table="PhieuTra" data-view="full">
+<rect x="24" y="20" width="336" height="204" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.PhieuTra</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maPhieuTra">
+<text x="36" y="72" class="column-name">maPhieuTra</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maHoaDon">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maHoaDon</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maCaNhan">
+<text x="36" y="120" class="column-name">maCaNhan</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiNhan">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">maNguoiNhan</text>
+<rect x="176" y="133" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="143" class="key-badge">FK</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucLap">
+<text x="36" y="168" class="column-name">lucLap</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucXacNhan">
+<rect x="25" y="176" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="192" class="column-name">lucXacNhan</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="trangThai">
+<text x="36" y="216" class="column-name">trangThai</text>
+<text x="288" y="216" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="216" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="HoaDon" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-HoaDon"><text x="564" y="91" class="table-name">dbo.HoaDon</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHoaDon">
+<text x="564" y="120" class="column-name">maHoaDon</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="CaBan" data-view="referenced">
+<rect x="552" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="192" x2="888" y2="192" stroke="#bfc0c0"/>
+<a href="#table-CaBan"><text x="564" y="179" class="table-name">dbo.CaBan</text></a>
+<text x="876" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maCa">
+<text x="564" y="208" class="column-name">maCa</text>
+<rect x="704" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="207" class="key-badge">PK</text>
+<text x="816" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="TaiKhoan" data-view="referenced">
+<rect x="552" y="244" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="245" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="280" x2="888" y2="280" stroke="#bfc0c0"/>
+<a href="#table-TaiKhoan"><text x="564" y="267" class="table-name">dbo.TaiKhoan</text></a>
+<text x="876" y="266" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maTaiKhoan">
+<text x="564" y="296" class="column-name">maTaiKhoan</text>
+<rect x="704" y="285" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="295" class="key-badge">PK</text>
+<text x="816" y="296" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="296" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK15</code> <code>(maHoaDon)</code> → <code>dbo.HoaDon (maHoaDon)</code></span> · <span><code>FK16</code> <code>(maCaNhan)</code> → <code>dbo.CaBan (maCa)</code></span> · <span><code>FK17</code> <code>(maNguoiNhan)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span></figcaption></figure></article>
+<article id="table-DongTra"><h3><code>dbo.DongTra</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng DongTra">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 248" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-DongTra-title database-schema-pos-DongTra-desc">
+<title id="database-schema-pos-DongTra-title">dbo.DongTra</title>
+<desc id="database-schema-pos-DongTra-desc">Cột và khóa ngoại của bảng dbo.DongTra.</desc>
+<defs><marker id="database-schema-pos-DongTra-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="248" fill="#f5f5f5"/>
+<g data-fk="FK_DongTra_maPhieuTra" data-source="maPhieuTra" data-parent="PhieuTra" data-target="maPhieuTra"><title>FK_DongTra_maPhieuTra (maPhieuTra) → dbo.PhieuTra (maPhieuTra)</title><path d="M 360 92 H 400 Q 408 92 408 100 V 108 Q 408 116 416 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongTra-arrow)"/></g>
+<g data-fk="FK_DongTra_maDongBan" data-source="maDongBan" data-parent="DongBan" data-target="maDongBan"><title>FK_DongTra_maDongBan (maDongBan) → dbo.DongBan (maDongBan)</title><path d="M 360 116 H 376 Q 384 116 384 124 V 196 Q 384 204 392 204 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongTra-arrow)"/></g>
+<rect x="435" y="96" width="90" height="14" fill="#f5f5f5"/><text x="480" y="106" text-anchor="middle" class="edge-label">FK18 NO ACTION</text>
+<rect x="423" y="184" width="90" height="14" fill="#f5f5f5"/><text x="468" y="194" text-anchor="middle" class="edge-label">FK19 NO ACTION</text>
+<g data-table="DongTra" data-view="full">
+<rect x="24" y="20" width="336" height="156" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.DongTra</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maDongTra">
+<text x="36" y="72" class="column-name">maDongTra</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maPhieuTra">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maPhieuTra</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maDongBan">
+<text x="36" y="120" class="column-name">maDongBan</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soLuongTra">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">soLuongTra</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">int</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soLuongNhapLai">
+<text x="36" y="168" class="column-name">soLuongNhapLai</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">int</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="PhieuTra" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-PhieuTra"><text x="564" y="91" class="table-name">dbo.PhieuTra</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maPhieuTra">
+<text x="564" y="120" class="column-name">maPhieuTra</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="DongBan" data-view="referenced">
+<rect x="552" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="192" x2="888" y2="192" stroke="#bfc0c0"/>
+<a href="#table-DongBan"><text x="564" y="179" class="table-name">dbo.DongBan</text></a>
+<text x="876" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maDongBan">
+<text x="564" y="208" class="column-name">maDongBan</text>
+<rect x="704" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="207" class="key-badge">PK</text>
+<text x="816" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK18</code> <code>(maPhieuTra)</code> → <code>dbo.PhieuTra (maPhieuTra)</code></span> · <span><code>FK19</code> <code>(maDongBan)</code> → <code>dbo.DongBan (maDongBan)</code></span></figcaption></figure></article>
+<article id="table-KhoanHoan"><h3><code>dbo.KhoanHoan</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng KhoanHoan">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 176" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-KhoanHoan-title database-schema-pos-KhoanHoan-desc">
+<title id="database-schema-pos-KhoanHoan-title">dbo.KhoanHoan</title>
+<desc id="database-schema-pos-KhoanHoan-desc">Cột và khóa ngoại của bảng dbo.KhoanHoan.</desc>
+<defs><marker id="database-schema-pos-KhoanHoan-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="176" fill="#f5f5f5"/>
+<g data-fk="FK_KhoanHoan_maPhieuTra" data-source="maPhieuTra" data-parent="PhieuTra" data-target="maPhieuTra"><title>FK_KhoanHoan_maPhieuTra (maPhieuTra) → dbo.PhieuTra (maPhieuTra)</title><path d="M 360 92 H 376 Q 384 92 384 100 V 108 Q 384 116 392 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-KhoanHoan-arrow)"/></g>
+<rect x="423" y="96" width="90" height="14" fill="#f5f5f5"/><text x="468" y="106" text-anchor="middle" class="edge-label">FK20 NO ACTION</text>
+<g data-table="KhoanHoan" data-view="full">
+<rect x="24" y="20" width="336" height="132" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.KhoanHoan</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maKhoanHoan">
+<text x="36" y="72" class="column-name">maKhoanHoan</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maPhieuTra">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maPhieuTra</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="phuongThuc">
+<text x="36" y="120" class="column-name">phuongThuc</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soTienHoan">
+<text x="36" y="144" class="column-name">soTienHoan</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="PhieuTra" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-PhieuTra"><text x="564" y="91" class="table-name">dbo.PhieuTra</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maPhieuTra">
+<text x="564" y="120" class="column-name">maPhieuTra</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK20</code> <code>(maPhieuTra)</code> → <code>dbo.PhieuTra (maPhieuTra)</code></span></figcaption></figure></article></section>
+<section id="cum-3"><h2>Nhập hàng và danh mục</h2><nav aria-label="Nhập hàng và danh mục" class="table-nav"><a href="#table-NhaCungCap"><code>NhaCungCap</code></a> <a href="#table-PhieuNhap"><code>PhieuNhap</code></a> <a href="#table-DongNhap"><code>DongNhap</code></a> <a href="#table-TraNhaCungCap"><code>TraNhaCungCap</code></a> <a href="#table-NhomHang"><code>NhomHang</code></a> <a href="#table-MatHang"><code>MatHang</code></a></nav>
+<article id="table-NhaCungCap"><h3><code>dbo.NhaCungCap</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng NhaCungCap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 152" style="--svg-width:384px" role="img" aria-labelledby="database-schema-pos-NhaCungCap-title database-schema-pos-NhaCungCap-desc">
+<title id="database-schema-pos-NhaCungCap-title">dbo.NhaCungCap</title>
+<desc id="database-schema-pos-NhaCungCap-desc">Các cột của bảng dbo.NhaCungCap.</desc>
+<defs><marker id="database-schema-pos-NhaCungCap-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="384" height="152" fill="#f5f5f5"/>
+<g data-table="NhaCungCap" data-view="full">
+<rect x="24" y="20" width="336" height="108" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.NhaCungCap</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maNhaCungCap">
+<text x="36" y="72" class="column-name">maNhaCungCap</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tenNhaCungCap">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">tenNhaCungCap</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">UQ</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">nvarchar(150)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="thongTinLienHe">
+<text x="36" y="120" class="column-name">thongTinLienHe</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">nvarchar(500)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div></figure></article>
+<article id="table-PhieuNhap"><h3><code>dbo.PhieuNhap</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng PhieuNhap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 320" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-PhieuNhap-title database-schema-pos-PhieuNhap-desc">
+<title id="database-schema-pos-PhieuNhap-title">dbo.PhieuNhap</title>
+<desc id="database-schema-pos-PhieuNhap-desc">Cột và khóa ngoại của bảng dbo.PhieuNhap.</desc>
+<defs><marker id="database-schema-pos-PhieuNhap-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="320" fill="#f5f5f5"/>
+<g data-fk="FK_PhieuNhap_maNhaCungCap" data-source="maNhaCungCap" data-parent="NhaCungCap" data-target="maNhaCungCap"><title>FK_PhieuNhap_maNhaCungCap (maNhaCungCap) → dbo.NhaCungCap (maNhaCungCap)</title><path d="M 360 92 H 424 Q 432 92 432 100 V 108 Q 432 116 440 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuNhap-arrow)"/></g>
+<g data-fk="FK_PhieuNhap_maNguoiLap" data-source="maNguoiLap" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_PhieuNhap_maNguoiLap (maNguoiLap) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 116 H 400 Q 408 116 408 124 V 188 Q 408 196 416 196 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuNhap-arrow)"/></g>
+<g data-fk="FK_PhieuNhap_maNguoiHuy" data-source="maNguoiHuy" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_PhieuNhap_maNguoiHuy (maNguoiHuy) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 140 H 376 Q 384 140 384 148 V 204 Q 384 212 392 212 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-PhieuNhap-arrow)"/></g>
+<rect x="447" y="96" width="90" height="14" fill="#f5f5f5"/><text x="492" y="106" text-anchor="middle" class="edge-label">FK21 NO ACTION</text>
+<rect x="435" y="176" width="90" height="14" fill="#f5f5f5"/><text x="480" y="186" text-anchor="middle" class="edge-label">FK22 NO ACTION</text>
+<rect x="423" y="219" width="90" height="14" fill="#f5f5f5"/><text x="468" y="229" text-anchor="middle" class="edge-label">FK23 NO ACTION</text>
+<g data-table="PhieuNhap" data-view="full">
+<rect x="24" y="20" width="336" height="276" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.PhieuNhap</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maPhieuNhap">
+<text x="36" y="72" class="column-name">maPhieuNhap</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNhaCungCap">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maNhaCungCap</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiLap">
+<text x="36" y="120" class="column-name">maNguoiLap</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiHuy">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">maNguoiHuy</text>
+<rect x="176" y="133" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="143" class="key-badge">FK</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="lucLap">
+<text x="36" y="168" class="column-name">lucLap</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucXacNhan">
+<rect x="25" y="176" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="192" class="column-name">lucXacNhan</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="trangThai">
+<text x="36" y="216" class="column-name">trangThai</text>
+<text x="288" y="216" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="216" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucHuy">
+<rect x="25" y="224" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="240" class="column-name">lucHuy</text>
+<text x="288" y="240" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="240" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="lyDoHuy">
+<text x="36" y="264" class="column-name">lyDoHuy</text>
+<text x="288" y="264" class="sql-label" text-anchor="end">nvarchar(500)</text>
+<text x="348" y="264" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="hanThanhToan">
+<text x="36" y="288" class="column-name">hanThanhToan</text>
+<text x="288" y="288" class="sql-label" text-anchor="end">date</text>
+<text x="348" y="288" class="sql-label" text-anchor="end">NULL</text>
+</g>
+</g>
+<g data-table="NhaCungCap" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-NhaCungCap"><text x="564" y="91" class="table-name">dbo.NhaCungCap</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maNhaCungCap">
+<text x="564" y="120" class="column-name">maNhaCungCap</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="TaiKhoan" data-view="referenced">
+<rect x="552" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="192" x2="888" y2="192" stroke="#bfc0c0"/>
+<a href="#table-TaiKhoan"><text x="564" y="179" class="table-name">dbo.TaiKhoan</text></a>
+<text x="876" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maTaiKhoan">
+<text x="564" y="208" class="column-name">maTaiKhoan</text>
+<rect x="704" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="207" class="key-badge">PK</text>
+<text x="816" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK21</code> <code>(maNhaCungCap)</code> → <code>dbo.NhaCungCap (maNhaCungCap)</code></span> · <span><code>FK22</code> <code>(maNguoiLap)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span> · <span><code>FK23</code> <code>(maNguoiHuy)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span></figcaption></figure></article>
+<article id="table-DongNhap"><h3><code>dbo.DongNhap</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng DongNhap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 248" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-DongNhap-title database-schema-pos-DongNhap-desc">
+<title id="database-schema-pos-DongNhap-title">dbo.DongNhap</title>
+<desc id="database-schema-pos-DongNhap-desc">Cột và khóa ngoại của bảng dbo.DongNhap.</desc>
+<defs><marker id="database-schema-pos-DongNhap-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="248" fill="#f5f5f5"/>
+<g data-fk="FK_DongNhap_maPhieuNhap" data-source="maPhieuNhap" data-parent="PhieuNhap" data-target="maPhieuNhap"><title>FK_DongNhap_maPhieuNhap (maPhieuNhap) → dbo.PhieuNhap (maPhieuNhap)</title><path d="M 360 92 H 400 Q 408 92 408 100 V 108 Q 408 116 416 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongNhap-arrow)"/></g>
+<g data-fk="FK_DongNhap_maHang" data-source="maHang" data-parent="MatHang" data-target="maHang"><title>FK_DongNhap_maHang (maHang) → dbo.MatHang (maHang)</title><path d="M 360 116 H 376 Q 384 116 384 124 V 196 Q 384 204 392 204 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongNhap-arrow)"/></g>
+<rect x="435" y="96" width="90" height="14" fill="#f5f5f5"/><text x="480" y="106" text-anchor="middle" class="edge-label">FK24 NO ACTION</text>
+<rect x="423" y="184" width="90" height="14" fill="#f5f5f5"/><text x="468" y="194" text-anchor="middle" class="edge-label">FK25 NO ACTION</text>
+<g data-table="DongNhap" data-view="full">
+<rect x="24" y="20" width="336" height="156" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.DongNhap</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maDongNhap">
+<text x="36" y="72" class="column-name">maDongNhap</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maPhieuNhap">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maPhieuNhap</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maHang">
+<text x="36" y="120" class="column-name">maHang</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soLuongNhap">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">soLuongNhap</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">int</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="donGiaNhap">
+<text x="36" y="168" class="column-name">donGiaNhap</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="PhieuNhap" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-PhieuNhap"><text x="564" y="91" class="table-name">dbo.PhieuNhap</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maPhieuNhap">
+<text x="564" y="120" class="column-name">maPhieuNhap</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="MatHang" data-view="referenced">
+<rect x="552" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="192" x2="888" y2="192" stroke="#bfc0c0"/>
+<a href="#table-MatHang"><text x="564" y="179" class="table-name">dbo.MatHang</text></a>
+<text x="876" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHang">
+<text x="564" y="208" class="column-name">maHang</text>
+<rect x="704" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="207" class="key-badge">PK</text>
+<text x="816" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK24</code> <code>(maPhieuNhap)</code> → <code>dbo.PhieuNhap (maPhieuNhap)</code></span> · <span><code>FK25</code> <code>(maHang)</code> → <code>dbo.MatHang (maHang)</code></span></figcaption></figure></article>
+<article id="table-TraNhaCungCap"><h3><code>dbo.TraNhaCungCap</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng TraNhaCungCap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 336" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-TraNhaCungCap-title database-schema-pos-TraNhaCungCap-desc">
+<title id="database-schema-pos-TraNhaCungCap-title">dbo.TraNhaCungCap</title>
+<desc id="database-schema-pos-TraNhaCungCap-desc">Cột và khóa ngoại của bảng dbo.TraNhaCungCap.</desc>
+<defs><marker id="database-schema-pos-TraNhaCungCap-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="336" fill="#f5f5f5"/>
+<g data-fk="FK_TraNhaCungCap_maPhieuNhap" data-source="maPhieuNhap" data-parent="PhieuNhap" data-target="maPhieuNhap"><title>FK_TraNhaCungCap_maPhieuNhap (maPhieuNhap) → dbo.PhieuNhap (maPhieuNhap)</title><path d="M 360 92 H 424 Q 432 92 432 100 V 108 Q 432 116 440 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-TraNhaCungCap-arrow)"/></g>
+<g data-fk="FK_TraNhaCungCap_maNguoiGhi" data-source="maNguoiGhi" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_TraNhaCungCap_maNguoiGhi (maNguoiGhi) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 116 H 400 Q 408 116 408 124 V 196 Q 408 204 416 204 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-TraNhaCungCap-arrow)"/></g>
+<g data-fk="FK_TraNhaCungCap_maCaChi" data-source="maCaChi" data-parent="CaBan" data-target="maCa"><title>FK_TraNhaCungCap_maCaChi (maCaChi) → dbo.CaBan (maCa)</title><path d="M 360 140 H 376 Q 384 140 384 148 V 284 Q 384 292 392 292 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-TraNhaCungCap-arrow)"/></g>
+<rect x="447" y="96" width="90" height="14" fill="#f5f5f5"/><text x="492" y="106" text-anchor="middle" class="edge-label">FK26 NO ACTION</text>
+<rect x="435" y="184" width="90" height="14" fill="#f5f5f5"/><text x="480" y="194" text-anchor="middle" class="edge-label">FK27 NO ACTION</text>
+<rect x="423" y="272" width="90" height="14" fill="#f5f5f5"/><text x="468" y="282" text-anchor="middle" class="edge-label">FK28 NO ACTION</text>
+<g data-table="TraNhaCungCap" data-view="full">
+<rect x="24" y="20" width="336" height="228" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.TraNhaCungCap</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maKhoanTra">
+<text x="36" y="72" class="column-name">maKhoanTra</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maPhieuNhap">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maPhieuNhap</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiGhi">
+<text x="36" y="120" class="column-name">maNguoiGhi</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maCaChi">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">maCaChi</text>
+<rect x="176" y="133" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="143" class="key-badge">FK</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="lucTra">
+<text x="36" y="168" class="column-name">lucTra</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soTienTra">
+<rect x="25" y="176" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="192" class="column-name">soTienTra</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="phuongThuc">
+<text x="36" y="216" class="column-name">phuongThuc</text>
+<text x="288" y="216" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="216" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="nguonChi">
+<text x="36" y="240" class="column-name">nguonChi</text>
+<text x="288" y="240" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="240" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="PhieuNhap" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-PhieuNhap"><text x="564" y="91" class="table-name">dbo.PhieuNhap</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maPhieuNhap">
+<text x="564" y="120" class="column-name">maPhieuNhap</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="TaiKhoan" data-view="referenced">
+<rect x="552" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="192" x2="888" y2="192" stroke="#bfc0c0"/>
+<a href="#table-TaiKhoan"><text x="564" y="179" class="table-name">dbo.TaiKhoan</text></a>
+<text x="876" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maTaiKhoan">
+<text x="564" y="208" class="column-name">maTaiKhoan</text>
+<rect x="704" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="207" class="key-badge">PK</text>
+<text x="816" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="CaBan" data-view="referenced">
+<rect x="552" y="244" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="245" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="280" x2="888" y2="280" stroke="#bfc0c0"/>
+<a href="#table-CaBan"><text x="564" y="267" class="table-name">dbo.CaBan</text></a>
+<text x="876" y="266" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maCa">
+<text x="564" y="296" class="column-name">maCa</text>
+<rect x="704" y="285" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="295" class="key-badge">PK</text>
+<text x="816" y="296" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="296" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK26</code> <code>(maPhieuNhap)</code> → <code>dbo.PhieuNhap (maPhieuNhap)</code></span> · <span><code>FK27</code> <code>(maNguoiGhi)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span> · <span><code>FK28</code> <code>(maCaChi)</code> → <code>dbo.CaBan (maCa)</code></span></figcaption></figure></article>
+<article id="table-NhomHang"><h3><code>dbo.NhomHang</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng NhomHang">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 152" style="--svg-width:384px" role="img" aria-labelledby="database-schema-pos-NhomHang-title database-schema-pos-NhomHang-desc">
+<title id="database-schema-pos-NhomHang-title">dbo.NhomHang</title>
+<desc id="database-schema-pos-NhomHang-desc">Các cột của bảng dbo.NhomHang.</desc>
+<defs><marker id="database-schema-pos-NhomHang-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="384" height="152" fill="#f5f5f5"/>
+<g data-table="NhomHang" data-view="full">
+<rect x="24" y="20" width="336" height="108" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.NhomHang</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maNhom">
+<text x="36" y="72" class="column-name">maNhom</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tenNhom">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">tenNhom</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">UQ</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">nvarchar(150)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="trangThai">
+<text x="36" y="120" class="column-name">trangThai</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div></figure></article>
+<article id="table-MatHang"><h3><code>dbo.MatHang</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng MatHang">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 224" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-MatHang-title database-schema-pos-MatHang-desc">
+<title id="database-schema-pos-MatHang-title">dbo.MatHang</title>
+<desc id="database-schema-pos-MatHang-desc">Cột và khóa ngoại của bảng dbo.MatHang.</desc>
+<defs><marker id="database-schema-pos-MatHang-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="224" fill="#f5f5f5"/>
+<g data-fk="FK_MatHang_maNhom" data-source="maNhom" data-parent="NhomHang" data-target="maNhom"><title>FK_MatHang_maNhom (maNhom) → dbo.NhomHang (maNhom)</title><path d="M 360 92 H 376 Q 384 92 384 100 V 108 Q 384 116 392 116 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-MatHang-arrow)"/></g>
+<rect x="423" y="96" width="90" height="14" fill="#f5f5f5"/><text x="468" y="106" text-anchor="middle" class="edge-label">FK29 NO ACTION</text>
+<g data-table="MatHang" data-view="full">
+<rect x="24" y="20" width="336" height="180" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.MatHang</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maHang">
+<text x="36" y="72" class="column-name">maHang</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNhom">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maNhom</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tenHang">
+<text x="36" y="120" class="column-name">tenHang</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">UQ</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">nvarchar(150)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="donViTinh">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">donViTinh</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">nvarchar(32)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="giaBanHienHanh">
+<text x="36" y="168" class="column-name">giaBanHienHanh</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">decimal(19,0)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="trangThai">
+<text x="36" y="192" class="column-name">trangThai</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="NhomHang" data-view="referenced">
+<rect x="552" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="104" x2="888" y2="104" stroke="#bfc0c0"/>
+<a href="#table-NhomHang"><text x="564" y="91" class="table-name">dbo.NhomHang</text></a>
+<text x="876" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maNhom">
+<text x="564" y="120" class="column-name">maNhom</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">PK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK29</code> <code>(maNhom)</code> → <code>dbo.NhomHang (maNhom)</code></span></figcaption></figure></article></section>
+<section id="cum-4"><h2>Kiểm kê và thẻ kho</h2><nav aria-label="Kiểm kê và thẻ kho" class="table-nav"><a href="#table-PhieuKiem"><code>PhieuKiem</code></a> <a href="#table-DongKiem"><code>DongKiem</code></a> <a href="#table-BienDongKho"><code>BienDongKho</code></a></nav>
+<article id="table-PhieuKiem"><h3><code>dbo.PhieuKiem</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng PhieuKiem">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 224" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-PhieuKiem-title database-schema-pos-PhieuKiem-desc">
+<title id="database-schema-pos-PhieuKiem-title">dbo.PhieuKiem</title>
+<desc id="database-schema-pos-PhieuKiem-desc">Cột và khóa ngoại của bảng dbo.PhieuKiem.</desc>
+<defs><marker id="database-schema-pos-PhieuKiem-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="224" fill="#f5f5f5"/>
+<g data-fk="FK_PhieuKiem_maNguoiLap" data-source="maNguoiLap" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_PhieuKiem_maNguoiLap (maNguoiLap) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 92 H 400 Q 408 92 408 100 V 116 Q 408 124 416 124 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-PhieuKiem-arrow)"/></g>
+<g data-fk="FK_PhieuKiem_maNguoiDuyet" data-source="maNguoiDuyet" data-parent="TaiKhoan" data-target="maTaiKhoan"><title>FK_PhieuKiem_maNguoiDuyet (maNguoiDuyet) → dbo.TaiKhoan (maTaiKhoan)</title><path d="M 360 116 H 376 Q 384 116 384 124 V 132 Q 384 140 392 140 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-PhieuKiem-arrow)"/></g>
+<rect x="435" y="104" width="90" height="14" fill="#f5f5f5"/><text x="480" y="114" text-anchor="middle" class="edge-label">FK30 NO ACTION</text>
+<rect x="423" y="147" width="90" height="14" fill="#f5f5f5"/><text x="468" y="157" text-anchor="middle" class="edge-label">FK31 NO ACTION</text>
+<g data-table="PhieuKiem" data-view="full">
+<rect x="24" y="20" width="336" height="180" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.PhieuKiem</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maPhieuKiem">
+<text x="36" y="72" class="column-name">maPhieuKiem</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiLap">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maNguoiLap</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maNguoiDuyet">
+<text x="36" y="120" class="column-name">maNguoiDuyet</text>
+<rect x="176" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="119" class="key-badge">FK</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="mocKiem">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">mocKiem</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="lucHoanTat">
+<text x="36" y="168" class="column-name">lucHoanTat</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="trangThai">
+<text x="36" y="192" class="column-name">trangThai</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="TaiKhoan" data-view="referenced">
+<rect x="552" y="84" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="85" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="120" x2="888" y2="120" stroke="#bfc0c0"/>
+<a href="#table-TaiKhoan"><text x="564" y="107" class="table-name">dbo.TaiKhoan</text></a>
+<text x="876" y="106" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maTaiKhoan">
+<text x="564" y="136" class="column-name">maTaiKhoan</text>
+<rect x="704" y="125" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="135" class="key-badge">PK</text>
+<text x="816" y="136" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="136" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK30</code> <code>(maNguoiLap)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span> · <span><code>FK31</code> <code>(maNguoiDuyet)</code> → <code>dbo.TaiKhoan (maTaiKhoan)</code></span></figcaption></figure></article>
+<article id="table-DongKiem"><h3><code>dbo.DongKiem</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng DongKiem">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 224" style="--svg-width:936px" role="img" aria-labelledby="database-schema-pos-DongKiem-title database-schema-pos-DongKiem-desc">
+<title id="database-schema-pos-DongKiem-title">dbo.DongKiem</title>
+<desc id="database-schema-pos-DongKiem-desc">Cột và khóa ngoại của bảng dbo.DongKiem.</desc>
+<defs><marker id="database-schema-pos-DongKiem-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="936" height="224" fill="#f5f5f5"/>
+<g data-fk="FK_DongKiem_maPhieuKiem" data-source="maPhieuKiem" data-parent="PhieuKiem" data-target="maPhieuKiem"><title>FK_DongKiem_maPhieuKiem (maPhieuKiem) → dbo.PhieuKiem (maPhieuKiem)</title><path d="M 360 68 H 400 Q 408 68 408 76 V 84 Q 408 92 416 92 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongKiem-arrow)"/></g>
+<g data-fk="FK_DongKiem_maHang" data-source="maHang" data-parent="MatHang" data-target="maHang"><title>FK_DongKiem_maHang (maHang) → dbo.MatHang (maHang)</title><path d="M 360 92 H 376 Q 384 92 384 100 V 172 Q 384 180 392 180 H 552" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-DongKiem-arrow)"/></g>
+<rect x="435" y="72" width="90" height="14" fill="#f5f5f5"/><text x="480" y="82" text-anchor="middle" class="edge-label">FK32 NO ACTION</text>
+<rect x="423" y="160" width="90" height="14" fill="#f5f5f5"/><text x="468" y="170" text-anchor="middle" class="edge-label">FK33 NO ACTION</text>
+<g data-table="DongKiem" data-view="full">
+<rect x="24" y="20" width="336" height="156" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="56" x2="360" y2="56" stroke="#bfc0c0"/>
+<text x="36" y="43" class="table-name">dbo.DongKiem</text>
+<text x="348" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maPhieuKiem">
+<text x="36" y="72" class="column-name">maPhieuKiem</text>
+<rect x="176" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="71" class="key-badge">PK</text>
+<rect x="197" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="200" y="71" class="key-badge">FK</text>
+<text x="288" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maHang">
+<rect x="25" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="96" class="column-name">maHang</text>
+<rect x="176" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="95" class="key-badge">PK</text>
+<rect x="197" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="200" y="95" class="key-badge">FK</text>
+<text x="288" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="tonSoTaiMoc">
+<text x="36" y="120" class="column-name">tonSoTaiMoc</text>
+<text x="288" y="120" class="sql-label" text-anchor="end">int</text>
+<text x="348" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soLuongDem">
+<rect x="25" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="36" y="144" class="column-name">soLuongDem</text>
+<text x="288" y="144" class="sql-label" text-anchor="end">int</text>
+<text x="348" y="144" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="giaiTrinh">
+<text x="36" y="168" class="column-name">giaiTrinh</text>
+<text x="288" y="168" class="sql-label" text-anchor="end">nvarchar(500)</text>
+<text x="348" y="168" class="sql-label" text-anchor="end">NULL</text>
+</g>
+</g>
+<g data-table="PhieuKiem" data-view="referenced">
+<rect x="552" y="44" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="45" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="80" x2="888" y2="80" stroke="#bfc0c0"/>
+<a href="#table-PhieuKiem"><text x="564" y="67" class="table-name">dbo.PhieuKiem</text></a>
+<text x="876" y="66" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maPhieuKiem">
+<text x="564" y="96" class="column-name">maPhieuKiem</text>
+<rect x="704" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="95" class="key-badge">PK</text>
+<text x="816" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="MatHang" data-view="referenced">
+<rect x="552" y="132" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="133" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="168" x2="888" y2="168" stroke="#bfc0c0"/>
+<a href="#table-MatHang"><text x="564" y="155" class="table-name">dbo.MatHang</text></a>
+<text x="876" y="154" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHang">
+<text x="564" y="184" class="column-name">maHang</text>
+<rect x="704" y="173" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="183" class="key-badge">PK</text>
+<text x="816" y="184" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="184" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK32</code> <code>(maPhieuKiem)</code> → <code>dbo.PhieuKiem (maPhieuKiem)</code></span> · <span><code>FK33</code> <code>(maHang)</code> → <code>dbo.MatHang (maHang)</code></span></figcaption></figure></article>
+<article id="table-BienDongKho"><h3><code>dbo.BienDongKho</code></h3><figure>
+<div class="scroll" tabindex="0" role="region" aria-label="Lược đồ bảng BienDongKho">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 424" style="--svg-width:1440px" role="img" aria-labelledby="database-schema-pos-BienDongKho-title database-schema-pos-BienDongKho-desc">
+<title id="database-schema-pos-BienDongKho-title">dbo.BienDongKho</title>
+<desc id="database-schema-pos-BienDongKho-desc">Cột và khóa ngoại của bảng dbo.BienDongKho.</desc>
+<defs><marker id="database-schema-pos-BienDongKho-arrow" markerWidth="7" markerHeight="8" markerUnits="userSpaceOnUse" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="#4f5d75" stroke-width="1.25"/></marker></defs>
+<rect x="0" y="0" width="1440" height="424" fill="#f5f5f5"/>
+<g data-fk="FK_BienDongKho_maPhieuKiem_maHang" data-source="maHang" data-parent="DongKiem" data-target="maHang"><title>FK_BienDongKho_maPhieuKiem_maHang (maHang) → dbo.DongKiem (maHang)</title><path d="M 552 92 H 512 Q 504 92 504 100 V 180 Q 504 188 496 188 H 360" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-BienDongKho-arrow)"/></g>
+<g data-fk="FK_BienDongKho_maPhieuKiem_maHang" data-source="maPhieuKiem" data-parent="DongKiem" data-target="maPhieuKiem"><title>FK_BienDongKho_maPhieuKiem_maHang (maPhieuKiem) → dbo.DongKiem (maPhieuKiem)</title><path d="M 552 188 H 536 Q 528 188 528 196 V 204 Q 528 212 520 212 H 360" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-BienDongKho-arrow)"/></g>
+<g data-fk="FK_BienDongKho_maHang" data-source="maHang" data-parent="MatHang" data-target="maHang"><title>FK_BienDongKho_maHang (maHang) → dbo.MatHang (maHang)</title><path d="M 888 92 H 976 Q 984 92 984 100 V 108 Q 984 116 992 116 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#database-schema-pos-BienDongKho-arrow)"/></g>
+<g data-fk="FK_BienDongKho_maDongBan" data-source="maDongBan" data-parent="DongBan" data-target="maDongBan"><title>FK_BienDongKho_maDongBan (maDongBan) → dbo.DongBan (maDongBan)</title><path d="M 888 116 H 952 Q 960 116 960 124 V 196 Q 960 204 968 204 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-BienDongKho-arrow)"/></g>
+<g data-fk="FK_BienDongKho_maDongTra" data-source="maDongTra" data-parent="DongTra" data-target="maDongTra"><title>FK_BienDongKho_maDongTra (maDongTra) → dbo.DongTra (maDongTra)</title><path d="M 888 140 H 928 Q 936 140 936 148 V 284 Q 936 292 944 292 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-BienDongKho-arrow)"/></g>
+<g data-fk="FK_BienDongKho_maDongNhap" data-source="maDongNhap" data-parent="DongNhap" data-target="maDongNhap"><title>FK_BienDongKho_maDongNhap (maDongNhap) → dbo.DongNhap (maDongNhap)</title><path d="M 888 164 H 904 Q 912 164 912 172 V 372 Q 912 380 920 380 H 1080" fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#database-schema-pos-BienDongKho-arrow)"/></g>
+<rect x="387" y="168" width="90" height="14" fill="#f5f5f5"/><text x="432" y="178" text-anchor="middle" class="edge-label">FK38 NO ACTION</text>
+<rect x="399" y="192" width="90" height="14" fill="#f5f5f5"/><text x="444" y="202" text-anchor="middle" class="edge-label">FK38 NO ACTION</text>
+<rect x="987" y="96" width="90" height="14" fill="#f5f5f5"/><text x="1032" y="106" text-anchor="middle" class="edge-label">FK34 NO ACTION</text>
+<rect x="975" y="184" width="90" height="14" fill="#f5f5f5"/><text x="1020" y="194" text-anchor="middle" class="edge-label">FK35 NO ACTION</text>
+<rect x="963" y="272" width="90" height="14" fill="#f5f5f5"/><text x="1008" y="282" text-anchor="middle" class="edge-label">FK36 NO ACTION</text>
+<rect x="951" y="360" width="90" height="14" fill="#f5f5f5"/><text x="996" y="370" text-anchor="middle" class="edge-label">FK37 NO ACTION</text>
+<g data-table="BienDongKho" data-view="full">
+<rect x="552" y="20" width="336" height="276" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="553" y="21" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="552" y1="56" x2="888" y2="56" stroke="#bfc0c0"/>
+<text x="564" y="43" class="table-name">dbo.BienDongKho</text>
+<text x="876" y="42" class="card-tag" text-anchor="end">BẢNG</text>
+<g data-column="maBienDong">
+<text x="564" y="72" class="column-name">maBienDong</text>
+<rect x="704" y="61" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="71" class="key-badge">PK</text>
+<text x="816" y="72" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="72" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maHang">
+<rect x="553" y="80" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="96" class="column-name">maHang</text>
+<rect x="704" y="85" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="95" class="key-badge">FK</text>
+<text x="816" y="96" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="96" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maDongBan">
+<text x="564" y="120" class="column-name">maDongBan</text>
+<rect x="704" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="119" class="key-badge">FK</text>
+<text x="816" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="120" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="maDongTra">
+<rect x="553" y="128" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="144" class="column-name">maDongTra</text>
+<rect x="704" y="133" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="143" class="key-badge">FK</text>
+<text x="816" y="144" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="144" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="maDongNhap">
+<text x="564" y="168" class="column-name">maDongNhap</text>
+<rect x="704" y="157" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="167" class="key-badge">FK</text>
+<text x="816" y="168" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="168" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="maPhieuKiem">
+<rect x="553" y="176" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="192" class="column-name">maPhieuKiem</text>
+<rect x="704" y="181" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="191" class="key-badge">FK</text>
+<text x="816" y="192" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="876" y="192" class="sql-label" text-anchor="end">NULL</text>
+</g>
+<g data-column="loaiSuKien">
+<text x="564" y="216" class="column-name">loaiSuKien</text>
+<text x="816" y="216" class="sql-label" text-anchor="end">varchar(24)</text>
+<text x="876" y="216" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="soLuongThayDoi">
+<rect x="553" y="224" width="334" height="24" fill="#eeeef0"/>
+<text x="564" y="240" class="column-name">soLuongThayDoi</text>
+<text x="816" y="240" class="sql-label" text-anchor="end">int</text>
+<text x="876" y="240" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="thoiDiemGhi">
+<text x="564" y="264" class="column-name">thoiDiemGhi</text>
+<text x="816" y="264" class="sql-label" text-anchor="end">datetime2(3)</text>
+<text x="876" y="264" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="khoaSuKien">
+<text x="564" y="288" class="column-name">khoaSuKien</text>
+<rect x="704" y="277" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="707" y="287" class="key-badge">UQ</text>
+<text x="816" y="288" class="sql-label" text-anchor="end">varchar(256)</text>
+<text x="876" y="288" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="DongKiem" data-view="referenced">
+<rect x="24" y="140" width="336" height="92" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="25" y="141" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="24" y1="176" x2="360" y2="176" stroke="#bfc0c0"/>
+<a href="#table-DongKiem"><text x="36" y="163" class="table-name">dbo.DongKiem</text></a>
+<text x="348" y="162" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHang">
+<text x="36" y="192" class="column-name">maHang</text>
+<rect x="176" y="181" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="191" class="key-badge">PK</text>
+<rect x="197" y="181" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="200" y="191" class="key-badge">FK</text>
+<text x="288" y="192" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="192" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+<g data-column="maPhieuKiem">
+<text x="36" y="216" class="column-name">maPhieuKiem</text>
+<rect x="176" y="205" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="179" y="215" class="key-badge">PK</text>
+<rect x="197" y="205" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="200" y="215" class="key-badge">FK</text>
+<text x="288" y="216" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="348" y="216" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="MatHang" data-view="referenced">
+<rect x="1080" y="68" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="1081" y="69" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="1080" y1="104" x2="1416" y2="104" stroke="#bfc0c0"/>
+<a href="#table-MatHang"><text x="1092" y="91" class="table-name">dbo.MatHang</text></a>
+<text x="1404" y="90" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maHang">
+<text x="1092" y="120" class="column-name">maHang</text>
+<rect x="1232" y="109" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="1235" y="119" class="key-badge">PK</text>
+<text x="1344" y="120" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="1404" y="120" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="DongBan" data-view="referenced">
+<rect x="1080" y="156" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="1081" y="157" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="1080" y1="192" x2="1416" y2="192" stroke="#bfc0c0"/>
+<a href="#table-DongBan"><text x="1092" y="179" class="table-name">dbo.DongBan</text></a>
+<text x="1404" y="178" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maDongBan">
+<text x="1092" y="208" class="column-name">maDongBan</text>
+<rect x="1232" y="197" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="1235" y="207" class="key-badge">PK</text>
+<text x="1344" y="208" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="1404" y="208" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="DongTra" data-view="referenced">
+<rect x="1080" y="244" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="1081" y="245" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="1080" y1="280" x2="1416" y2="280" stroke="#bfc0c0"/>
+<a href="#table-DongTra"><text x="1092" y="267" class="table-name">dbo.DongTra</text></a>
+<text x="1404" y="266" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maDongTra">
+<text x="1092" y="296" class="column-name">maDongTra</text>
+<rect x="1232" y="285" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="1235" y="295" class="key-badge">PK</text>
+<text x="1344" y="296" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="1404" y="296" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+<g data-table="DongNhap" data-view="referenced">
+<rect x="1080" y="332" width="336" height="68" rx="6" fill="#fcfcfb" stroke="#4f5d75"/>
+<rect x="1081" y="333" width="334" height="35" rx="5" fill="#e5e8ee"/>
+<line x1="1080" y1="368" x2="1416" y2="368" stroke="#bfc0c0"/>
+<a href="#table-DongNhap"><text x="1092" y="355" class="table-name">dbo.DongNhap</text></a>
+<text x="1404" y="354" class="card-tag" text-anchor="end">CỘT ĐÍCH</text>
+<g data-column="maDongNhap">
+<text x="1092" y="384" class="column-name">maDongNhap</text>
+<rect x="1232" y="373" width="18" height="14" rx="2" fill="#dce2ec"/>
+<text x="1235" y="383" class="key-badge">PK</text>
+<text x="1344" y="384" class="sql-label" text-anchor="end">varchar(32)</text>
+<text x="1404" y="384" class="sql-label" text-anchor="end">NOT NULL</text>
+</g>
+</g>
+</svg>
+</div><figcaption><span><code>FK34</code> <code>(maHang)</code> → <code>dbo.MatHang (maHang)</code></span> · <span><code>FK35</code> <code>(maDongBan)</code> → <code>dbo.DongBan (maDongBan)</code></span> · <span><code>FK36</code> <code>(maDongTra)</code> → <code>dbo.DongTra (maDongTra)</code></span> · <span><code>FK37</code> <code>(maDongNhap)</code> → <code>dbo.DongNhap (maDongNhap)</code></span> · <span><code>FK38</code> <code>(maPhieuKiem, maHang)</code> → <code>dbo.DongKiem (maPhieuKiem, maHang)</code></span></figcaption></figure></article></section>
+<section id="ddl"><h2>DDL gốc</h2>
+<p><code>Database/01_Schema.sql</code></p>
+<pre tabindex="0"><code>-- SQL Server 2017+ | Execute inside a dedicated, empty POS database.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+SET ANSI_NULLS ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET QUOTED_IDENTIFIER ON;
+SET NUMERIC_ROUNDABORT OFF;
+
+IF DB_ID() &lt;= 4 OR EXISTS (SELECT 1 FROM sys.tables WHERE is_ms_shipped = 0)
+    THROW 50001, N&#x27;Run 01_Schema.sql in a dedicated empty database.&#x27;, 1;
+
+BEGIN TRY
+    BEGIN TRANSACTION;
+    CREATE SEQUENCE dbo.Seq_TaiKhoan AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_NhomHang AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_MatHang AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_NhaCungCap AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_CaBan AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_PhieuThuChi AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_HoaDon AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_DongBan AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_ThanhToanBan AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_PhieuTra AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_DongTra AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_KhoanHoan AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_PhieuNhap AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_DongNhap AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_TraNhaCungCap AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_PhieuKiem AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+    CREATE SEQUENCE dbo.Seq_BienDongKho AS bigint START WITH 1 INCREMENT BY 1 MINVALUE 1 NO CYCLE CACHE 32;
+
+    CREATE TABLE dbo.VaiTro (
+        maVaiTro varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        tenVaiTro nvarchar(150) NOT NULL,
+        CONSTRAINT PK_VaiTro PRIMARY KEY (maVaiTro),
+        CONSTRAINT UQ_VaiTro_tenVaiTro UNIQUE (tenVaiTro),
+        CONSTRAINT CK_VaiTro_tenVaiTro CHECK (LEN(TRIM(tenVaiTro)) &gt; 0)
+    );
+
+    CREATE TABLE dbo.Quyen (
+        maQuyen varchar(64) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        tenQuyen nvarchar(150) NOT NULL,
+        CONSTRAINT PK_Quyen PRIMARY KEY (maQuyen)
+    );
+
+    CREATE TABLE dbo.QuyenVaiTro (
+        maVaiTro varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maQuyen varchar(64) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        CONSTRAINT PK_QuyenVaiTro PRIMARY KEY (maVaiTro, maQuyen),
+        CONSTRAINT FK_QuyenVaiTro_maVaiTro FOREIGN KEY (maVaiTro)
+            REFERENCES dbo.VaiTro (maVaiTro) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_QuyenVaiTro_maQuyen FOREIGN KEY (maQuyen)
+            REFERENCES dbo.Quyen (maQuyen) ON DELETE NO ACTION ON UPDATE NO ACTION
+    );
+
+    CREATE TABLE dbo.TaiKhoan (
+        maTaiKhoan varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_TaiKhoan_maTaiKhoan DEFAULT (CONCAT(&#x27;TK-&#x27;, NEXT VALUE FOR dbo.Seq_TaiKhoan)),
+        maVaiTro varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        hoTen nvarchar(150) NOT NULL,
+        tenDangNhap nvarchar(64) COLLATE Latin1_General_100_CI_AS NOT NULL,
+        matKhauBam varchar(256) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_TaiKhoan_trangThai DEFAULT (&#x27;HoatDong&#x27;),
+        CONSTRAINT PK_TaiKhoan PRIMARY KEY (maTaiKhoan),
+        CONSTRAINT UQ_TaiKhoan_tenDangNhap UNIQUE (tenDangNhap),
+        CONSTRAINT FK_TaiKhoan_maVaiTro FOREIGN KEY (maVaiTro)
+            REFERENCES dbo.VaiTro (maVaiTro) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_TaiKhoan_tenDangNhap CHECK (LEN(TRIM(tenDangNhap)) &gt; 0),
+        CONSTRAINT CK_TaiKhoan_TrangThai CHECK (
+            trangThai IN (&#x27;HoatDong&#x27;, &#x27;BiKhoa&#x27;)
+        )
+    );
+
+    CREATE TABLE dbo.NhomHang (
+        maNhom varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_NhomHang_maNhom DEFAULT (CONCAT(&#x27;NH-&#x27;, NEXT VALUE FOR dbo.Seq_NhomHang)),
+        tenNhom nvarchar(150) NOT NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_NhomHang_trangThai DEFAULT (&#x27;HoatDong&#x27;),
+        CONSTRAINT PK_NhomHang PRIMARY KEY (maNhom),
+        CONSTRAINT UQ_NhomHang_tenNhom UNIQUE (tenNhom),
+        CONSTRAINT CK_NhomHang_tenNhom CHECK (LEN(TRIM(tenNhom)) &gt; 0),
+        CONSTRAINT CK_NhomHang_TrangThai CHECK (
+            trangThai IN (&#x27;HoatDong&#x27;, &#x27;NgungSuDung&#x27;)
+        )
+    );
+
+    CREATE TABLE dbo.MatHang (
+        maHang varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_MatHang_maHang DEFAULT (CONCAT(&#x27;MH-&#x27;, NEXT VALUE FOR dbo.Seq_MatHang)),
+        maNhom varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        tenHang nvarchar(150) NOT NULL,
+        donViTinh nvarchar(32) NOT NULL,
+        giaBanHienHanh decimal(19,0) NOT NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_MatHang_trangThai DEFAULT (&#x27;HoatDong&#x27;),
+        CONSTRAINT PK_MatHang PRIMARY KEY (maHang),
+        CONSTRAINT UQ_MatHang_tenHang UNIQUE (tenHang),
+        CONSTRAINT FK_MatHang_maNhom FOREIGN KEY (maNhom)
+            REFERENCES dbo.NhomHang (maNhom) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_MatHang_tenHang CHECK (LEN(TRIM(tenHang)) &gt; 0),
+        CONSTRAINT CK_MatHang_TrangThai CHECK (
+            trangThai IN (&#x27;HoatDong&#x27;, &#x27;NgungSuDung&#x27;)
+        ),
+        CONSTRAINT CK_MatHang_Gia CHECK (
+            giaBanHienHanh &gt;= 0
+        )
+    );
+
+    CREATE TABLE dbo.NhaCungCap (
+        maNhaCungCap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_NhaCungCap_maNhaCungCap DEFAULT (CONCAT(&#x27;NCC-&#x27;, NEXT VALUE FOR dbo.Seq_NhaCungCap)),
+        tenNhaCungCap nvarchar(150) NOT NULL,
+        thongTinLienHe nvarchar(500) NOT NULL,
+        CONSTRAINT PK_NhaCungCap PRIMARY KEY (maNhaCungCap),
+        CONSTRAINT UQ_NhaCungCap_tenNhaCungCap UNIQUE (tenNhaCungCap),
+        CONSTRAINT CK_NhaCungCap_tenNhaCungCap CHECK (LEN(TRIM(tenNhaCungCap)) &gt; 0)
+    );
+
+    CREATE TABLE dbo.CaBan (
+        maCa varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_CaBan_maCa DEFAULT (CONCAT(&#x27;CA-&#x27;, NEXT VALUE FOR dbo.Seq_CaBan)),
+        maNguoiMo varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiChot varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        lucMo datetime2(3) NOT NULL,
+        tienMatDauCa decimal(19,0) NOT NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_CaBan_trangThai DEFAULT (&#x27;DangMo&#x27;),
+        lucDong datetime2(3) NULL,
+        tienDuKienKhiChot decimal(19,0) NULL,
+        tienThucDem decimal(19,0) NULL,
+        CONSTRAINT PK_CaBan PRIMARY KEY (maCa),
+        CONSTRAINT FK_CaBan_maNguoiMo FOREIGN KEY (maNguoiMo)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_CaBan_maNguoiChot FOREIGN KEY (maNguoiChot)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_CaBan_Tien CHECK (
+            tienMatDauCa &gt;= 0 AND (tienThucDem IS NULL OR tienThucDem &gt;= 0)
+        ),
+        CONSTRAINT CK_CaBan_VongDoi CHECK (
+            (trangThai = &#x27;DangMo&#x27; AND maNguoiChot IS NULL AND lucDong IS NULL
+             AND tienDuKienKhiChot IS NULL AND tienThucDem IS NULL)
+        OR (trangThai = &#x27;DaDong&#x27; AND maNguoiChot IS NOT NULL AND maNguoiChot = maNguoiMo
+             AND lucDong IS NOT NULL AND lucDong &gt;= lucMo
+             AND tienDuKienKhiChot IS NOT NULL AND tienThucDem IS NOT NULL)
+        )
+    );
+
+    CREATE TABLE dbo.PhieuThuChi (
+        maPhieuThuChi varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_PhieuThuChi_maPhieuThuChi DEFAULT (CONCAT(&#x27;TC-&#x27;, NEXT VALUE FOR dbo.Seq_PhieuThuChi)),
+        maCa varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiLap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        lucGhi datetime2(3) NOT NULL,
+        loaiThuChi varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        nguonQuy varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        phuongThuc varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        soTien decimal(19,0) NOT NULL,
+        lyDo nvarchar(500) NOT NULL,
+        soChungTuKemTheo nvarchar(64) NULL,
+        CONSTRAINT PK_PhieuThuChi PRIMARY KEY (maPhieuThuChi),
+        CONSTRAINT FK_PhieuThuChi_maCa FOREIGN KEY (maCa)
+            REFERENCES dbo.CaBan (maCa) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_PhieuThuChi_maNguoiLap FOREIGN KEY (maNguoiLap)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_PhieuThuChi_lyDo CHECK (LEN(TRIM(lyDo)) &gt; 0),
+        CONSTRAINT CK_PhieuThuChi_Loai CHECK (
+            loaiThuChi IN (&#x27;Thu&#x27;, &#x27;Chi&#x27;)
+        ),
+        CONSTRAINT CK_PhieuThuChi_Nguon CHECK (
+            nguonQuy IN (&#x27;KetCa&#x27;, &#x27;QuyCuaHang&#x27;)
+        ),
+        CONSTRAINT CK_PhieuThuChi_Tien CHECK (
+            soTien &gt; 0
+        ),
+        CONSTRAINT CK_PhieuThuChi_PhuongThuc CHECK (
+            phuongThuc IN (&#x27;TienMat&#x27;, &#x27;ChuyenKhoan&#x27;)
+        )
+    );
+
+    CREATE TABLE dbo.HoaDon (
+        maHoaDon varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_HoaDon_maHoaDon DEFAULT (CONCAT(&#x27;HD-&#x27;, NEXT VALUE FOR dbo.Seq_HoaDon)),
+        maCa varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiLap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiHuy varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        maCaDao varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        lucLap datetime2(3) NOT NULL,
+        lucXacNhan datetime2(3) NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_HoaDon_trangThai DEFAULT (&#x27;Nhap&#x27;),
+        lucHuy datetime2(3) NULL,
+        lyDoHuy nvarchar(500) NULL,
+        CONSTRAINT PK_HoaDon PRIMARY KEY (maHoaDon),
+        CONSTRAINT FK_HoaDon_maCa FOREIGN KEY (maCa)
+            REFERENCES dbo.CaBan (maCa) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_HoaDon_maNguoiLap FOREIGN KEY (maNguoiLap)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_HoaDon_maNguoiHuy FOREIGN KEY (maNguoiHuy)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_HoaDon_maCaDao FOREIGN KEY (maCaDao)
+            REFERENCES dbo.CaBan (maCa) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_HoaDon_VongDoi CHECK (
+            (trangThai = &#x27;Nhap&#x27; AND lucXacNhan IS NULL AND lucHuy IS NULL
+             AND maNguoiHuy IS NULL AND lyDoHuy IS NULL AND maCaDao IS NULL)
+        OR (trangThai = &#x27;DaXacNhan&#x27; AND lucXacNhan IS NOT NULL AND lucHuy IS NULL
+             AND maNguoiHuy IS NULL AND lyDoHuy IS NULL AND maCaDao IS NULL)
+        OR (trangThai = &#x27;DaHuy&#x27; AND lucHuy IS NOT NULL AND lucHuy &gt;= lucLap
+             AND maNguoiHuy IS NOT NULL AND lyDoHuy IS NOT NULL
+             AND LEN(TRIM(lyDoHuy)) &gt; 0
+             AND (lucXacNhan IS NULL OR lucHuy &gt;= lucXacNhan) AND (lucXacNhan IS NOT NULL OR maCaDao IS NULL))
+        ),
+        CONSTRAINT CK_HoaDon_ThoiDiem CHECK (
+            lucXacNhan IS NULL OR lucXacNhan &gt;= lucLap
+        )
+    );
+
+    CREATE TABLE dbo.DongBan (
+        maDongBan varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_DongBan_maDongBan DEFAULT (CONCAT(&#x27;DB-&#x27;, NEXT VALUE FOR dbo.Seq_DongBan)),
+        maHoaDon varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maHang varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        soLuongBan int NOT NULL,
+        donGiaThucBan decimal(19,0) NOT NULL,
+        CONSTRAINT PK_DongBan PRIMARY KEY (maDongBan),
+        CONSTRAINT FK_DongBan_maHoaDon FOREIGN KEY (maHoaDon)
+            REFERENCES dbo.HoaDon (maHoaDon) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_DongBan_maHang FOREIGN KEY (maHang)
+            REFERENCES dbo.MatHang (maHang) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_DongBan_LuongGia CHECK (
+            soLuongBan &gt; 0 AND donGiaThucBan &gt;= 0
+        )
+    );
+
+    CREATE TABLE dbo.ThanhToanBan (
+        maThanhToan varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_ThanhToanBan_maThanhToan DEFAULT (CONCAT(&#x27;TT-&#x27;, NEXT VALUE FOR dbo.Seq_ThanhToanBan)),
+        maHoaDon varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        phuongThuc varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        soTienThanhToan decimal(19,0) NOT NULL,
+        tienKhachDua decimal(19,0) NULL,
+        CONSTRAINT PK_ThanhToanBan PRIMARY KEY (maThanhToan),
+        CONSTRAINT FK_ThanhToanBan_maHoaDon FOREIGN KEY (maHoaDon)
+            REFERENCES dbo.HoaDon (maHoaDon) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_ThanhToanBan_Tien CHECK (
+            soTienThanhToan &gt; 0 AND (
+            (phuongThuc = &#x27;TienMat&#x27; AND tienKhachDua IS NOT NULL AND tienKhachDua &gt;= soTienThanhToan)
+         OR (phuongThuc = &#x27;ChuyenKhoan&#x27; AND tienKhachDua IS NULL))
+        )
+    );
+
+    CREATE TABLE dbo.PhieuTra (
+        maPhieuTra varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_PhieuTra_maPhieuTra DEFAULT (CONCAT(&#x27;PT-&#x27;, NEXT VALUE FOR dbo.Seq_PhieuTra)),
+        maHoaDon varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maCaNhan varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiNhan varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        lucLap datetime2(3) NOT NULL,
+        lucXacNhan datetime2(3) NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_PhieuTra_trangThai DEFAULT (&#x27;Nhap&#x27;),
+        CONSTRAINT PK_PhieuTra PRIMARY KEY (maPhieuTra),
+        CONSTRAINT FK_PhieuTra_maHoaDon FOREIGN KEY (maHoaDon)
+            REFERENCES dbo.HoaDon (maHoaDon) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_PhieuTra_maCaNhan FOREIGN KEY (maCaNhan)
+            REFERENCES dbo.CaBan (maCa) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_PhieuTra_maNguoiNhan FOREIGN KEY (maNguoiNhan)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_PhieuTra_VongDoi CHECK (
+            (trangThai = &#x27;Nhap&#x27; AND lucXacNhan IS NULL)
+         OR (trangThai = &#x27;DaXacNhan&#x27; AND lucXacNhan IS NOT NULL AND lucXacNhan &gt;= lucLap)
+        )
+    );
+
+    CREATE TABLE dbo.DongTra (
+        maDongTra varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_DongTra_maDongTra DEFAULT (CONCAT(&#x27;DT-&#x27;, NEXT VALUE FOR dbo.Seq_DongTra)),
+        maPhieuTra varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maDongBan varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        soLuongTra int NOT NULL,
+        soLuongNhapLai int NOT NULL,
+        CONSTRAINT PK_DongTra PRIMARY KEY (maDongTra),
+        CONSTRAINT FK_DongTra_maPhieuTra FOREIGN KEY (maPhieuTra)
+            REFERENCES dbo.PhieuTra (maPhieuTra) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_DongTra_maDongBan FOREIGN KEY (maDongBan)
+            REFERENCES dbo.DongBan (maDongBan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_DongTra_Luong CHECK (
+            soLuongTra &gt; 0 AND soLuongNhapLai BETWEEN 0 AND soLuongTra
+        )
+    );
+
+    CREATE TABLE dbo.KhoanHoan (
+        maKhoanHoan varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_KhoanHoan_maKhoanHoan DEFAULT (CONCAT(&#x27;KH-&#x27;, NEXT VALUE FOR dbo.Seq_KhoanHoan)),
+        maPhieuTra varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        phuongThuc varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        soTienHoan decimal(19,0) NOT NULL,
+        CONSTRAINT PK_KhoanHoan PRIMARY KEY (maKhoanHoan),
+        CONSTRAINT FK_KhoanHoan_maPhieuTra FOREIGN KEY (maPhieuTra)
+            REFERENCES dbo.PhieuTra (maPhieuTra) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_KhoanHoan_Tien CHECK (
+            soTienHoan &gt; 0
+        ),
+        CONSTRAINT CK_KhoanHoan_PhuongThuc CHECK (
+            phuongThuc IN (&#x27;TienMat&#x27;, &#x27;ChuyenKhoan&#x27;)
+        )
+    );
+
+    CREATE TABLE dbo.PhieuNhap (
+        maPhieuNhap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_PhieuNhap_maPhieuNhap DEFAULT (CONCAT(&#x27;PN-&#x27;, NEXT VALUE FOR dbo.Seq_PhieuNhap)),
+        maNhaCungCap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiLap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiHuy varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        lucLap datetime2(3) NOT NULL,
+        lucXacNhan datetime2(3) NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_PhieuNhap_trangThai DEFAULT (&#x27;Nhap&#x27;),
+        lucHuy datetime2(3) NULL,
+        lyDoHuy nvarchar(500) NULL,
+        hanThanhToan date NULL,
+        CONSTRAINT PK_PhieuNhap PRIMARY KEY (maPhieuNhap),
+        CONSTRAINT FK_PhieuNhap_maNhaCungCap FOREIGN KEY (maNhaCungCap)
+            REFERENCES dbo.NhaCungCap (maNhaCungCap) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_PhieuNhap_maNguoiLap FOREIGN KEY (maNguoiLap)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_PhieuNhap_maNguoiHuy FOREIGN KEY (maNguoiHuy)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_PhieuNhap_VongDoi CHECK (
+            (trangThai = &#x27;Nhap&#x27; AND lucXacNhan IS NULL AND lucHuy IS NULL
+             AND maNguoiHuy IS NULL AND lyDoHuy IS NULL)
+        OR (trangThai = &#x27;DaXacNhan&#x27; AND lucXacNhan IS NOT NULL AND lucHuy IS NULL
+             AND maNguoiHuy IS NULL AND lyDoHuy IS NULL)
+        OR (trangThai = &#x27;DaHuy&#x27; AND lucHuy IS NOT NULL AND lucHuy &gt;= lucLap
+             AND maNguoiHuy IS NOT NULL AND lyDoHuy IS NOT NULL
+             AND LEN(TRIM(lyDoHuy)) &gt; 0
+             AND (lucXacNhan IS NULL OR lucHuy &gt;= lucXacNhan))
+        ),
+        CONSTRAINT CK_PhieuNhap_ThoiDiem CHECK (
+            lucXacNhan IS NULL OR lucXacNhan &gt;= lucLap
+        )
+    );
+
+    CREATE TABLE dbo.DongNhap (
+        maDongNhap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_DongNhap_maDongNhap DEFAULT (CONCAT(&#x27;DN-&#x27;, NEXT VALUE FOR dbo.Seq_DongNhap)),
+        maPhieuNhap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maHang varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        soLuongNhap int NOT NULL,
+        donGiaNhap decimal(19,0) NOT NULL,
+        CONSTRAINT PK_DongNhap PRIMARY KEY (maDongNhap),
+        CONSTRAINT FK_DongNhap_maPhieuNhap FOREIGN KEY (maPhieuNhap)
+            REFERENCES dbo.PhieuNhap (maPhieuNhap) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_DongNhap_maHang FOREIGN KEY (maHang)
+            REFERENCES dbo.MatHang (maHang) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_DongNhap_LuongGia CHECK (
+            soLuongNhap &gt; 0 AND donGiaNhap &gt;= 0
+        )
+    );
+
+    CREATE TABLE dbo.TraNhaCungCap (
+        maKhoanTra varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_TraNhaCungCap_maKhoanTra DEFAULT (CONCAT(&#x27;TNCC-&#x27;, NEXT VALUE FOR dbo.Seq_TraNhaCungCap)),
+        maPhieuNhap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiGhi varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maCaChi varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        lucTra datetime2(3) NOT NULL,
+        soTienTra decimal(19,0) NOT NULL,
+        phuongThuc varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        nguonChi varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        CONSTRAINT PK_TraNhaCungCap PRIMARY KEY (maKhoanTra),
+        CONSTRAINT FK_TraNhaCungCap_maPhieuNhap FOREIGN KEY (maPhieuNhap)
+            REFERENCES dbo.PhieuNhap (maPhieuNhap) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_TraNhaCungCap_maNguoiGhi FOREIGN KEY (maNguoiGhi)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_TraNhaCungCap_maCaChi FOREIGN KEY (maCaChi)
+            REFERENCES dbo.CaBan (maCa) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_TraNhaCungCap_Tien CHECK (
+            soTienTra &gt; 0
+        ),
+        CONSTRAINT CK_TraNhaCungCap_PhuongThuc CHECK (
+            phuongThuc IN (&#x27;TienMat&#x27;, &#x27;ChuyenKhoan&#x27;)
+        ),
+        CONSTRAINT CK_TraNhaCungCap_Nguon CHECK (
+            (nguonChi = &#x27;KetCa&#x27; AND phuongThuc = &#x27;TienMat&#x27; AND maCaChi IS NOT NULL)
+        OR (nguonChi = &#x27;QuyCuaHang&#x27; AND maCaChi IS NULL)
+        )
+    );
+
+    CREATE TABLE dbo.PhieuKiem (
+        maPhieuKiem varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_PhieuKiem_maPhieuKiem DEFAULT (CONCAT(&#x27;PK-&#x27;, NEXT VALUE FOR dbo.Seq_PhieuKiem)),
+        maNguoiLap varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maNguoiDuyet varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        mocKiem datetime2(3) NOT NULL,
+        lucHoanTat datetime2(3) NULL,
+        trangThai varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_PhieuKiem_trangThai DEFAULT (&#x27;DangKiem&#x27;),
+        CONSTRAINT PK_PhieuKiem PRIMARY KEY (maPhieuKiem),
+        CONSTRAINT FK_PhieuKiem_maNguoiLap FOREIGN KEY (maNguoiLap)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_PhieuKiem_maNguoiDuyet FOREIGN KEY (maNguoiDuyet)
+            REFERENCES dbo.TaiKhoan (maTaiKhoan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_PhieuKiem_VongDoi CHECK (
+            (trangThai IN (&#x27;DangKiem&#x27;, &#x27;ChoDuyet&#x27;, &#x27;DaHuy&#x27;) AND maNguoiDuyet IS NULL AND lucHoanTat IS NULL)
+        OR (trangThai = &#x27;HoanTat&#x27; AND maNguoiDuyet IS NOT NULL
+             AND lucHoanTat IS NOT NULL AND lucHoanTat &gt;= mocKiem)
+        )
+    );
+
+    CREATE TABLE dbo.DongKiem (
+        maPhieuKiem varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maHang varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        tonSoTaiMoc int NOT NULL,
+        soLuongDem int NULL,
+        giaiTrinh nvarchar(500) NULL,
+        CONSTRAINT PK_DongKiem PRIMARY KEY (maPhieuKiem, maHang),
+        CONSTRAINT FK_DongKiem_maPhieuKiem FOREIGN KEY (maPhieuKiem)
+            REFERENCES dbo.PhieuKiem (maPhieuKiem) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_DongKiem_maHang FOREIGN KEY (maHang)
+            REFERENCES dbo.MatHang (maHang) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_DongKiem_Luong CHECK (
+            tonSoTaiMoc &gt;= 0 AND (soLuongDem IS NULL OR soLuongDem &gt;= 0)
+        )
+    );
+
+    CREATE TABLE dbo.BienDongKho (
+        maBienDong varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_BienDongKho_maBienDong DEFAULT (CONCAT(&#x27;BD-&#x27;, NEXT VALUE FOR dbo.Seq_BienDongKho)),
+        maHang varchar(32) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        maDongBan varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        maDongTra varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        maDongNhap varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        maPhieuKiem varchar(32) COLLATE Latin1_General_100_BIN2 NULL,
+        loaiSuKien varchar(24) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        soLuongThayDoi int NOT NULL,
+        thoiDiemGhi datetime2(3) NOT NULL,
+        khoaSuKien varchar(256) COLLATE Latin1_General_100_BIN2 NOT NULL,
+        CONSTRAINT PK_BienDongKho PRIMARY KEY (maBienDong),
+        CONSTRAINT UQ_BienDongKho_khoaSuKien UNIQUE (khoaSuKien),
+        CONSTRAINT FK_BienDongKho_maHang FOREIGN KEY (maHang)
+            REFERENCES dbo.MatHang (maHang) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_BienDongKho_maDongBan FOREIGN KEY (maDongBan)
+            REFERENCES dbo.DongBan (maDongBan) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_BienDongKho_maDongTra FOREIGN KEY (maDongTra)
+            REFERENCES dbo.DongTra (maDongTra) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_BienDongKho_maDongNhap FOREIGN KEY (maDongNhap)
+            REFERENCES dbo.DongNhap (maDongNhap) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT FK_BienDongKho_maPhieuKiem_maHang FOREIGN KEY (maPhieuKiem, maHang)
+            REFERENCES dbo.DongKiem (maPhieuKiem, maHang) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_BienDongKho_MotNguon CHECK (
+            (CASE WHEN maDongBan IS NULL THEN 0 ELSE 1 END
+          + CASE WHEN maDongTra IS NULL THEN 0 ELSE 1 END
+          + CASE WHEN maDongNhap IS NULL THEN 0 ELSE 1 END
+          + CASE WHEN maPhieuKiem IS NULL THEN 0 ELSE 1 END) = 1
+        ),
+        CONSTRAINT CK_BienDongKho_LoaiVaDau CHECK (
+            (loaiSuKien = &#x27;XuatBan&#x27; AND maDongBan IS NOT NULL AND soLuongThayDoi &lt; 0)
+        OR (loaiSuKien = &#x27;DaoXuatBan&#x27; AND maDongBan IS NOT NULL AND soLuongThayDoi &gt; 0)
+        OR (loaiSuKien = &#x27;NhapTraHang&#x27; AND maDongTra IS NOT NULL AND soLuongThayDoi &gt; 0)
+        OR (loaiSuKien = &#x27;NhapKho&#x27; AND maDongNhap IS NOT NULL AND soLuongThayDoi &gt; 0)
+        OR (loaiSuKien = &#x27;DaoNhapKho&#x27; AND maDongNhap IS NOT NULL AND soLuongThayDoi &lt; 0)
+        OR (loaiSuKien = &#x27;DieuChinhKiemKho&#x27; AND maPhieuKiem IS NOT NULL AND soLuongThayDoi &lt;&gt; 0)
+        ),
+        CONSTRAINT CK_BienDongKho_KhoaSuKien CHECK (
+            khoaSuKien = CASE WHEN maPhieuKiem IS NOT NULL
+            THEN CONCAT(loaiSuKien, &#x27;:&#x27;, maPhieuKiem, &#x27;:&#x27;, maHang)
+            ELSE CONCAT(loaiSuKien, &#x27;:&#x27;, COALESCE(maDongBan, maDongTra, maDongNhap))
+        END
+        )
+    );
+
+    CREATE UNIQUE INDEX UX_CaBan_NguoiMo_DangMo ON dbo.CaBan (maNguoiMo)
+        WHERE trangThai = &#x27;DangMo&#x27;;
+    CREATE INDEX IX_HoaDon_Ca_XacNhan ON dbo.HoaDon (maCa, lucXacNhan);
+    CREATE INDEX IX_HoaDon_CaDao_Huy ON dbo.HoaDon (maCaDao, lucHuy);
+    CREATE INDEX IX_DongBan_HoaDon ON dbo.DongBan (maHoaDon);
+    CREATE INDEX IX_ThanhToanBan_HoaDon ON dbo.ThanhToanBan (maHoaDon);
+    CREATE INDEX IX_PhieuTra_HoaDon ON dbo.PhieuTra (maHoaDon, trangThai);
+    CREATE INDEX IX_PhieuTra_CaNhan ON dbo.PhieuTra (maCaNhan, lucXacNhan);
+    CREATE INDEX IX_DongTra_PhieuTra ON dbo.DongTra (maPhieuTra);
+    CREATE INDEX IX_DongTra_DongBan ON dbo.DongTra (maDongBan);
+    CREATE INDEX IX_KhoanHoan_PhieuTra ON dbo.KhoanHoan (maPhieuTra);
+    CREATE INDEX IX_PhieuThuChi_Ca ON dbo.PhieuThuChi (maCa, lucGhi);
+    CREATE INDEX IX_PhieuNhap_NCC_XacNhan ON dbo.PhieuNhap (maNhaCungCap, lucXacNhan);
+    CREATE INDEX IX_DongNhap_PhieuNhap ON dbo.DongNhap (maPhieuNhap);
+    CREATE INDEX IX_TraNhaCungCap_PhieuNhap ON dbo.TraNhaCungCap (maPhieuNhap, lucTra);
+    CREATE INDEX IX_TraNhaCungCap_CaChi ON dbo.TraNhaCungCap (maCaChi, lucTra);
+    CREATE INDEX IX_BienDongKho_Hang_ThoiDiem ON dbo.BienDongKho (maHang, thoiDiemGhi, maBienDong)
+        INCLUDE (soLuongThayDoi, loaiSuKien);
+
+    -- Assign the application&#x27;s database user to this role during deployment.
+    CREATE ROLE pos_app AUTHORIZATION dbo;
+    DENY UPDATE, DELETE ON dbo.BienDongKho TO pos_app;
+
+    -- The simple source FKs establish existence. This insert trigger also checks the SKU.
+    EXEC sys.sp_executesql N&#x27;
+        CREATE TRIGGER dbo.TR_BienDongKho_KiemHangNguon
+        ON dbo.BienDongKho
+        AFTER INSERT
+        AS
+        BEGIN
+            SET NOCOUNT ON;
+            IF EXISTS (
+                SELECT 1
+                FROM inserted AS i
+                LEFT JOIN dbo.DongBan AS ban ON ban.maDongBan = i.maDongBan
+                LEFT JOIN dbo.DongTra AS tra ON tra.maDongTra = i.maDongTra
+                LEFT JOIN dbo.DongBan AS goc ON goc.maDongBan = tra.maDongBan
+                LEFT JOIN dbo.DongNhap AS nhap ON nhap.maDongNhap = i.maDongNhap
+                WHERE (i.maDongBan IS NOT NULL AND ban.maHang &lt;&gt; i.maHang)
+                   OR (i.maDongTra IS NOT NULL AND goc.maHang &lt;&gt; i.maHang)
+                   OR (i.maDongNhap IS NOT NULL AND nhap.maHang &lt;&gt; i.maHang)
+            )
+                THROW 50002, N&#x27;&#x27;Stock event item differs from its source item.&#x27;&#x27;, 1;
+        END;&#x27;;
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF XACT_STATE() &lt;&gt; 0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+</code></pre>
+</section>
+</main>
+</body>
+</html>

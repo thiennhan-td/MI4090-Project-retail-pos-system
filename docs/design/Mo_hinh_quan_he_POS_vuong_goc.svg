@@ -1,0 +1,514 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1910" height="1767" viewBox="0 0 1910 1767"><title>Lược đồ quan hệ POS · 21 bảng</title><rect width="100%" height="100%" fill="white" />
+<text x="34" y="40" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="29" fill="#183348">POS bán lẻ  /  Mô hình quan hệ</text>
+<text x="35" y="70" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="16" fill="#183348">38 liên kết FK → PK   ·   Nét đứt: tham chiếu tùy chọn   ·   ? cho phép NULL   ·   Mỗi dòng cha có 0..n dòng con   ·   Các đường cắt nhau không tạo liên kết.</text>
+<g><title>DongKiem (maPhieuKiem) → PhieuKiem</title><path d="M 718 1563 L 836 1563 L 836 1554 L 848 1554" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 1563 L 836 1563 L 836 1554 L 848 1554" stroke="#586937" stroke-width="1.4" fill="none" />
+<path d="M848,1554 l-6,-3 v6 Z" fill="#586937" /></g>
+<g><title>QuyenVaiTro (maVaiTro) → VaiTro</title><path d="M 718 161 L 848 161" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 161 L 848 161" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M848,161 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>PhieuTra (maHoaDon) → HoaDon</title><path d="M 718 538 L 728 538 L 728 837 L 848 837" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 538 L 728 538 L 728 837 L 848 837" stroke="#305e96" stroke-width="1.4" fill="none" />
+<path d="M848,837 l-6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>KhoanHoan (maPhieuTra) → PhieuTra</title><path d="M 328 538 L 446 538 L 446 506 L 458 506" stroke="white" stroke-width="4.5" fill="none" /><path d="M 328 538 L 446 538 L 446 506 L 458 506" stroke="#305e96" stroke-width="1.4" fill="none" />
+<path d="M458,506 l-6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>QuyenVaiTro (maQuyen) → Quyen</title><path d="M 458 184 L 340 184 L 340 161 L 328 161" stroke="white" stroke-width="4.5" fill="none" /><path d="M 458 184 L 340 184 L 340 161 L 328 161" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M328,161 l6,-3 v6 Z" fill="#216778" /></g>
+<g><title>PhieuNhap (maNhaCungCap) → NhaCungCap</title><path d="M 1498 869 L 1616 869 L 1616 846 L 1628 846" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1498 869 L 1616 869 L 1616 846 L 1628 846" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M1628,846 l-6,-3 v6 Z" fill="#885524" /></g>
+<g><title>MatHang (maNhom) → NhomHang</title><path d="M 458 1223 L 340 1223 L 340 1200 L 328 1200" stroke="white" stroke-width="4.5" fill="none" /><path d="M 458 1223 L 340 1223 L 340 1200 L 328 1200" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M328,1200 l6,-3 v6 Z" fill="#885524" /></g>
+<g><title>TaiKhoan (maVaiTro) → VaiTro</title><path d="M 1238 538 L 1226 538 L 1226 546 L 1128 546 L 1128 161 L 1108 161" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1238 538 L 1226 538 L 1226 546 L 1128 546 L 1128 161 L 1108 161" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1108,161 l6,-3 v6 Z" fill="#216778" /></g>
+<g><title>BienDongKho (maHang) → MatHang</title><path d="M 848 1223 L 730 1223 L 730 1197 L 718 1197" stroke="white" stroke-width="4.5" fill="none" /><path d="M 848 1223 L 730 1223 L 730 1197 L 718 1197" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M718,1197 l6,-3 v6 Z" fill="#885524" /></g>
+<g><title>HoaDon (maCa) → CaBan</title><path d="M 1108 869 L 1118 869 L 1118 518 L 1108 518" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 869 L 1118 869 L 1118 518 L 1108 518" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1108,518 l6,-3 v6 Z" fill="#216778" /></g>
+<g><title>DongTra (maDongBan) → DongBan</title><path d="M 328 892 L 446 892 L 446 846 L 458 846" stroke="white" stroke-width="4.5" fill="none" /><path d="M 328 892 L 446 892 L 446 846 L 458 846" stroke="#305e96" stroke-width="1.4" fill="none" />
+<path d="M458,846 l-6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>PhieuThuChi (maNguoiLap) → TaiKhoan</title><path d="M 1238 207 L 1226 207 L 1226 506 L 1238 506" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1238 207 L 1226 207 L 1226 506 L 1238 506" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1238,506 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>TraNhaCungCap (maCaChi) → CaBan</title><path d="M 1628 584 L 1508 584 L 1508 447 L 1138 447 L 1138 512 L 1108 512" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1628 584 L 1508 584 L 1508 447 L 1138 447 L 1138 512 L 1108 512" stroke="#216778" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M1108,512 l6,-3 v6 Z" fill="#216778" /></g>
+<g><title>HoaDon (maCaDao) → CaBan</title><path d="M 1108 938 L 1120 938 L 1120 524 L 1108 524" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 938 L 1120 938 L 1120 524 L 1108 524" stroke="#216778" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M1108,524 l6,-3 v6 Z" fill="#216778" /></g>
+<g><title>BienDongKho (maPhieuKiem, maHang) → DongKiem</title><path d="M 848 1315 L 730 1315 L 730 1545 L 718 1545" stroke="white" stroke-width="4.5" fill="none" /><path d="M 848 1315 L 730 1315 L 730 1545 L 718 1545" stroke="#586937" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M718,1545 l6,-3 v6 Z" fill="#586937" /></g>
+<g><title>DongBan (maHang) → MatHang</title><path d="M 718 892 L 730 892 L 730 1191 L 718 1191" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 892 L 730 892 L 730 1191 L 718 1191" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M718,1191 l6,-3 v6 Z" fill="#885524" /></g>
+<g><title>ThanhToanBan (maHoaDon) → HoaDon</title><path d="M 1628 1223 L 1508 1223 L 1508 1074 L 1128 1074 L 1128 846 L 1108 846" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1628 1223 L 1508 1223 L 1508 1074 L 1128 1074 L 1128 846 L 1108 846" stroke="#305e96" stroke-width="1.4" fill="none" />
+<path d="M1108,846 l6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>DongNhap (maPhieuNhap) → PhieuNhap</title><path d="M 1238 1223 L 1228 1223 L 1228 846 L 1238 846" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1238 1223 L 1228 1223 L 1228 846 L 1238 846" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M1238,846 l-6,-3 v6 Z" fill="#885524" /></g>
+<g><title>CaBan (maNguoiMo) → TaiKhoan</title><path d="M 1108 538 L 1226 538 L 1226 508 L 1238 508" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 538 L 1226 538 L 1226 508 L 1238 508" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1238,508 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>CaBan (maNguoiChot) → TaiKhoan</title><path d="M 1108 561 L 1228 561 L 1228 510 L 1238 510" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 561 L 1228 561 L 1228 510 L 1238 510" stroke="#216778" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M1238,510 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>BienDongKho (maDongTra) → DongTra</title><path d="M 848 1269 L 748 1269 L 748 964 L 448 964 L 448 843 L 340 843 L 340 846 L 328 846" stroke="white" stroke-width="4.5" fill="none" /><path d="M 848 1269 L 748 1269 L 748 964 L 448 964 L 448 843 L 340 843 L 340 846 L 328 846" stroke="#305e96" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M328,846 l6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>PhieuThuChi (maCa) → CaBan</title><path d="M 1238 184 L 1120 184 L 1120 506 L 1108 506" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1238 184 L 1120 184 L 1120 506 L 1108 506" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1108,506 l6,-3 v6 Z" fill="#216778" /></g>
+<g><title>TraNhaCungCap (maPhieuNhap) → PhieuNhap</title><path d="M 1628 538 L 1618 538 L 1618 843 L 1510 843 L 1510 846 L 1498 846" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1628 538 L 1618 538 L 1618 843 L 1510 843 L 1510 846 L 1498 846" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M1498,846 l6,-3 v6 Z" fill="#885524" /></g>
+<g><title>DongTra (maPhieuTra) → PhieuTra</title><path d="M 328 869 L 338 869 L 338 524 L 458 524" stroke="white" stroke-width="4.5" fill="none" /><path d="M 328 869 L 338 869 L 338 524 L 458 524" stroke="#305e96" stroke-width="1.4" fill="none" />
+<path d="M458,524 l-6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>DongBan (maHoaDon) → HoaDon</title><path d="M 718 869 L 836 869 L 836 855 L 848 855" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 869 L 836 869 L 836 855 L 848 855" stroke="#305e96" stroke-width="1.4" fill="none" />
+<path d="M848,855 l-6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>DongKiem (maHang) → MatHang</title><path d="M 718 1577 L 728 1577 L 728 1209 L 718 1209" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 1577 L 728 1577 L 728 1209 L 718 1209" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M718,1209 l6,-3 v6 Z" fill="#885524" /></g>
+<g><title>BienDongKho (maDongBan) → DongBan</title><path d="M 848 1246 L 838 1246 L 838 846 L 718 846" stroke="white" stroke-width="4.5" fill="none" /><path d="M 848 1246 L 838 1246 L 838 846 L 718 846" stroke="#305e96" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M718,846 l6,-3 v6 Z" fill="#305e96" /></g>
+<g><title>HoaDon (maNguoiLap) → TaiKhoan</title><path d="M 1108 892 L 1198 892 L 1198 514 L 1238 514" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 892 L 1198 892 L 1198 514 L 1238 514" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1238,514 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>TraNhaCungCap (maNguoiGhi) → TaiKhoan</title><path d="M 1628 561 L 1510 561 L 1510 515 L 1498 515" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1628 561 L 1510 561 L 1510 515 L 1498 515" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1498,515 l6,-3 v6 Z" fill="#216778" /></g>
+<g><title>PhieuTra (maCaNhan) → CaBan</title><path d="M 718 561 L 836 561 L 836 515 L 848 515" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 561 L 836 561 L 836 515 L 848 515" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M848,515 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>HoaDon (maNguoiHuy) → TaiKhoan</title><path d="M 1108 915 L 1188 915 L 1188 516 L 1238 516" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 915 L 1188 915 L 1188 516 L 1238 516" stroke="#216778" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M1238,516 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>DongNhap (maHang) → MatHang</title><path d="M 1238 1246 L 1118 1246 L 1118 1140 L 738 1140 L 738 1203 L 718 1203" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1238 1246 L 1118 1246 L 1118 1140 L 738 1140 L 738 1203 L 718 1203" stroke="#885524" stroke-width="1.4" fill="none" />
+<path d="M718,1203 l6,-3 v6 Z" fill="#885524" /></g>
+<g><title>PhieuNhap (maNguoiLap) → TaiKhoan</title><path d="M 1238 892 L 1218 892 L 1218 518 L 1238 518" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1238 892 L 1218 892 L 1218 518 L 1238 518" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1238,518 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>PhieuNhap (maNguoiHuy) → TaiKhoan</title><path d="M 1238 915 L 1208 915 L 1208 520 L 1238 520" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1238 915 L 1208 915 L 1208 520 L 1238 520" stroke="#216778" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M1238,520 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>PhieuTra (maNguoiNhan) → TaiKhoan</title><path d="M 718 584 L 838 584 L 838 447 L 1118 447 L 1118 513 L 1218 513 L 1218 512 L 1238 512" stroke="white" stroke-width="4.5" fill="none" /><path d="M 718 584 L 838 584 L 838 447 L 1118 447 L 1118 513 L 1218 513 L 1218 512 L 1238 512" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1238,512 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>BienDongKho (maDongNhap) → DongNhap</title><path d="M 1108 1292 L 1226 1292 L 1226 1200 L 1238 1200" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 1292 L 1226 1292 L 1226 1200 L 1238 1200" stroke="#885524" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M1238,1200 l-6,-3 v6 Z" fill="#885524" /></g>
+<g><title>PhieuKiem (maNguoiLap) → TaiKhoan</title><path d="M 1108 1577 L 1178 1577 L 1178 522 L 1238 522" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 1577 L 1178 1577 L 1178 522 L 1238 522" stroke="#216778" stroke-width="1.4" fill="none" />
+<path d="M1238,522 l-6,-3 v6 Z" fill="#216778" /></g>
+<g><title>PhieuKiem (maNguoiDuyet) → TaiKhoan</title><path d="M 1108 1600 L 1118 1600 L 1118 1250 L 1168 1250 L 1168 524 L 1238 524" stroke="white" stroke-width="4.5" fill="none" /><path d="M 1108 1600 L 1118 1600 L 1118 1250 L 1168 1250 L 1168 524 L 1238 524" stroke="#216778" stroke-width="1.4" stroke-dasharray="5 3" fill="none" />
+<path d="M1238,524 l-6,-3 v6 Z" fill="#216778" /></g>
+<g id="TaiKhoan" transform="translate(-18 358)"><rect x="1256" y="108" width="260" height="176" fill="white" stroke="#216778" /><rect x="1256" y="108" width="260" height="38" fill="#216778" />
+<text x="1266" y="133" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">TaiKhoan</text>
+<path d="M1256,146h260" stroke="#d6dee4" />
+<text x="1264" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">PK</text>
+<text x="1316" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maTaiKhoan</text>
+<path d="M1256,169h260" stroke="#d6dee4" />
+<text x="1264" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">FK</text>
+<text x="1316" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maVaiTro</text>
+<path d="M1256,192h260" stroke="#d6dee4" />
+<text x="1264" y="208" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="208" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">hoTen</text>
+<path d="M1256,215h260" stroke="#d6dee4" />
+<text x="1264" y="231" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">UK</text>
+<text x="1316" y="231" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tenDangNhap</text>
+<path d="M1256,238h260" stroke="#d6dee4" />
+<text x="1264" y="254" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="254" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">matKhauBam</text>
+<path d="M1256,261h260" stroke="#d6dee4" />
+<text x="1264" y="277" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="277" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+</g>
+<g id="VaiTro" transform="translate(-18 4)"><rect x="866" y="108" width="260" height="84" fill="white" stroke="#216778" /><rect x="866" y="108" width="260" height="38" fill="#216778" />
+<text x="876" y="133" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">VaiTro</text>
+<path d="M866,146h260" stroke="#d6dee4" />
+<text x="874" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">PK</text>
+<text x="926" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maVaiTro</text>
+<path d="M866,169h260" stroke="#d6dee4" />
+<text x="874" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">UK</text>
+<text x="926" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tenVaiTro</text>
+</g>
+<g id="QuyenVaiTro" transform="translate(-18 4)"><rect x="476" y="108" width="260" height="84" fill="white" stroke="#216778" /><rect x="476" y="108" width="260" height="38" fill="#216778" />
+<text x="486" y="133" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">QuyenVaiTro</text>
+<path d="M476,146h260" stroke="#d6dee4" />
+<text x="484" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">PK/FK</text>
+<text x="536" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maVaiTro</text>
+<path d="M476,169h260" stroke="#d6dee4" />
+<text x="484" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">PK/FK</text>
+<text x="536" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maQuyen</text>
+</g>
+<g id="Quyen" transform="translate(-18 4)"><rect x="86" y="108" width="260" height="84" fill="white" stroke="#216778" /><rect x="86" y="108" width="260" height="38" fill="#216778" />
+<text x="96" y="133" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">Quyen</text>
+<path d="M86,146h260" stroke="#d6dee4" />
+<text x="94" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">PK</text>
+<text x="146" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maQuyen</text>
+<path d="M86,169h260" stroke="#d6dee4" />
+<text x="94" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="146" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tenQuyen</text>
+</g>
+<g id="CaBan" transform="translate(-408 -6)"><rect x="1256" y="472" width="260" height="245" fill="white" stroke="#216778" /><rect x="1256" y="472" width="260" height="38" fill="#216778" />
+<text x="1266" y="497" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">CaBan</text>
+<path d="M1256,510h260" stroke="#d6dee4" />
+<text x="1264" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">PK</text>
+<text x="1316" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maCa</text>
+<path d="M1256,533h260" stroke="#d6dee4" />
+<text x="1264" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">FK</text>
+<text x="1316" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiMo</text>
+<path d="M1256,556h260" stroke="#d6dee4" />
+<text x="1264" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">FK</text>
+<text x="1316" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiChot ?</text>
+<path d="M1256,579h260" stroke="#d6dee4" />
+<text x="1264" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucMo</text>
+<path d="M1256,602h260" stroke="#d6dee4" />
+<text x="1264" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tienMatDauCa</text>
+<path d="M1256,625h260" stroke="#d6dee4" />
+<text x="1264" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+<path d="M1256,648h260" stroke="#d6dee4" />
+<text x="1264" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucDong ?</text>
+<path d="M1256,671h260" stroke="#d6dee4" />
+<text x="1264" y="687" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="687" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tienDuKienKhiChot ?</text>
+<path d="M1256,694h260" stroke="#d6dee4" />
+<text x="1264" y="710" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1316" y="710" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tienThucDem ?</text>
+</g>
+<g id="PhieuThuChi" transform="translate(-408 4)"><rect x="1646" y="108" width="260" height="268" fill="white" stroke="#216778" /><rect x="1646" y="108" width="260" height="38" fill="#216778" />
+<text x="1656" y="133" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">PhieuThuChi</text>
+<path d="M1646,146h260" stroke="#d6dee4" />
+<text x="1654" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">PK</text>
+<text x="1706" y="162" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuThuChi</text>
+<path d="M1646,169h260" stroke="#d6dee4" />
+<text x="1654" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">FK</text>
+<text x="1706" y="185" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maCa</text>
+<path d="M1646,192h260" stroke="#d6dee4" />
+<text x="1654" y="208" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778">FK</text>
+<text x="1706" y="208" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiLap</text>
+<path d="M1646,215h260" stroke="#d6dee4" />
+<text x="1654" y="231" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1706" y="231" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucGhi</text>
+<path d="M1646,238h260" stroke="#d6dee4" />
+<text x="1654" y="254" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1706" y="254" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">loaiThuChi</text>
+<path d="M1646,261h260" stroke="#d6dee4" />
+<text x="1654" y="277" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1706" y="277" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">nguonQuy</text>
+<path d="M1646,284h260" stroke="#d6dee4" />
+<text x="1654" y="300" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1706" y="300" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">phuongThuc</text>
+<path d="M1646,307h260" stroke="#d6dee4" />
+<text x="1654" y="323" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1706" y="323" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soTien</text>
+<path d="M1646,330h260" stroke="#d6dee4" />
+<text x="1654" y="346" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1706" y="346" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lyDo</text>
+<path d="M1646,353h260" stroke="#d6dee4" />
+<text x="1654" y="369" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#216778" />
+<text x="1706" y="369" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soChungTuKemTheo ?</text>
+</g>
+<g id="HoaDon" transform="translate(-18 325)"><rect x="866" y="472" width="260" height="268" fill="white" stroke="#305e96" /><rect x="866" y="472" width="260" height="38" fill="#305e96" />
+<text x="876" y="497" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">HoaDon</text>
+<path d="M866,510h260" stroke="#d6dee4" />
+<text x="874" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">PK</text>
+<text x="926" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHoaDon</text>
+<path d="M866,533h260" stroke="#d6dee4" />
+<text x="874" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="926" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maCa</text>
+<path d="M866,556h260" stroke="#d6dee4" />
+<text x="874" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="926" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiLap</text>
+<path d="M866,579h260" stroke="#d6dee4" />
+<text x="874" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="926" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiHuy ?</text>
+<path d="M866,602h260" stroke="#d6dee4" />
+<text x="874" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="926" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maCaDao ?</text>
+<path d="M866,625h260" stroke="#d6dee4" />
+<text x="874" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucLap</text>
+<path d="M866,648h260" stroke="#d6dee4" />
+<text x="874" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucXacNhan ?</text>
+<path d="M866,671h260" stroke="#d6dee4" />
+<text x="874" y="687" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="687" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+<path d="M866,694h260" stroke="#d6dee4" />
+<text x="874" y="710" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="710" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucHuy ?</text>
+<path d="M866,717h260" stroke="#d6dee4" />
+<text x="874" y="733" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="733" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lyDoHuy ?</text>
+</g>
+<g id="DongBan" transform="translate(-18 -39)"><rect x="476" y="836" width="260" height="153" fill="white" stroke="#305e96" /><rect x="476" y="836" width="260" height="38" fill="#305e96" />
+<text x="486" y="861" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">DongBan</text>
+<path d="M476,874h260" stroke="#d6dee4" />
+<text x="484" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">PK</text>
+<text x="536" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maDongBan</text>
+<path d="M476,897h260" stroke="#d6dee4" />
+<text x="484" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="536" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHoaDon</text>
+<path d="M476,920h260" stroke="#d6dee4" />
+<text x="484" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="536" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHang</text>
+<path d="M476,943h260" stroke="#d6dee4" />
+<text x="484" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="536" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soLuongBan</text>
+<path d="M476,966h260" stroke="#d6dee4" />
+<text x="484" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="536" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">donGiaThucBan</text>
+</g>
+<g id="ThanhToanBan" transform="translate(762 315)"><rect x="866" y="836" width="260" height="153" fill="white" stroke="#305e96" /><rect x="866" y="836" width="260" height="38" fill="#305e96" />
+<text x="876" y="861" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">ThanhToanBan</text>
+<path d="M866,874h260" stroke="#d6dee4" />
+<text x="874" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">PK</text>
+<text x="926" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maThanhToan</text>
+<path d="M866,897h260" stroke="#d6dee4" />
+<text x="874" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="926" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHoaDon</text>
+<path d="M866,920h260" stroke="#d6dee4" />
+<text x="874" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">phuongThuc</text>
+<path d="M866,943h260" stroke="#d6dee4" />
+<text x="874" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soTienThanhToan</text>
+<path d="M866,966h260" stroke="#d6dee4" />
+<text x="874" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="926" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tienKhachDua ?</text>
+</g>
+<g id="PhieuTra" transform="translate(-18 -6)"><rect x="476" y="472" width="260" height="199" fill="white" stroke="#305e96" /><rect x="476" y="472" width="260" height="38" fill="#305e96" />
+<text x="486" y="497" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">PhieuTra</text>
+<path d="M476,510h260" stroke="#d6dee4" />
+<text x="484" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">PK</text>
+<text x="536" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuTra</text>
+<path d="M476,533h260" stroke="#d6dee4" />
+<text x="484" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="536" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHoaDon</text>
+<path d="M476,556h260" stroke="#d6dee4" />
+<text x="484" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="536" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maCaNhan</text>
+<path d="M476,579h260" stroke="#d6dee4" />
+<text x="484" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="536" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiNhan</text>
+<path d="M476,602h260" stroke="#d6dee4" />
+<text x="484" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="536" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucLap</text>
+<path d="M476,625h260" stroke="#d6dee4" />
+<text x="484" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="536" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucXacNhan ?</text>
+<path d="M476,648h260" stroke="#d6dee4" />
+<text x="484" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="536" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+</g>
+<g id="DongTra" transform="translate(-18 -39)"><rect x="86" y="836" width="260" height="153" fill="white" stroke="#305e96" /><rect x="86" y="836" width="260" height="38" fill="#305e96" />
+<text x="96" y="861" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">DongTra</text>
+<path d="M86,874h260" stroke="#d6dee4" />
+<text x="94" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">PK</text>
+<text x="146" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maDongTra</text>
+<path d="M86,897h260" stroke="#d6dee4" />
+<text x="94" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="146" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuTra</text>
+<path d="M86,920h260" stroke="#d6dee4" />
+<text x="94" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="146" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maDongBan</text>
+<path d="M86,943h260" stroke="#d6dee4" />
+<text x="94" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="146" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soLuongTra</text>
+<path d="M86,966h260" stroke="#d6dee4" />
+<text x="94" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="146" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soLuongNhapLai</text>
+</g>
+<g id="KhoanHoan" transform="translate(-18 -6)"><rect x="86" y="472" width="260" height="130" fill="white" stroke="#305e96" /><rect x="86" y="472" width="260" height="38" fill="#305e96" />
+<text x="96" y="497" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">KhoanHoan</text>
+<path d="M86,510h260" stroke="#d6dee4" />
+<text x="94" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">PK</text>
+<text x="146" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maKhoanHoan</text>
+<path d="M86,533h260" stroke="#d6dee4" />
+<text x="94" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96">FK</text>
+<text x="146" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuTra</text>
+<path d="M86,556h260" stroke="#d6dee4" />
+<text x="94" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="146" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">phuongThuc</text>
+<path d="M86,579h260" stroke="#d6dee4" />
+<text x="94" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#305e96" />
+<text x="146" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soTienHoan</text>
+</g>
+<g id="NhaCungCap" transform="translate(-18 -39)"><rect x="1646" y="836" width="260" height="107" fill="white" stroke="#885524" /><rect x="1646" y="836" width="260" height="38" fill="#885524" />
+<text x="1656" y="861" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">NhaCungCap</text>
+<path d="M1646,874h260" stroke="#d6dee4" />
+<text x="1654" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">PK</text>
+<text x="1706" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNhaCungCap</text>
+<path d="M1646,897h260" stroke="#d6dee4" />
+<text x="1654" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">UK</text>
+<text x="1706" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tenNhaCungCap</text>
+<path d="M1646,920h260" stroke="#d6dee4" />
+<text x="1654" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1706" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">thongTinLienHe</text>
+</g>
+<g id="PhieuNhap" transform="translate(-18 -39)"><rect x="1256" y="836" width="260" height="268" fill="white" stroke="#885524" /><rect x="1256" y="836" width="260" height="38" fill="#885524" />
+<text x="1266" y="861" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">PhieuNhap</text>
+<path d="M1256,874h260" stroke="#d6dee4" />
+<text x="1264" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">PK</text>
+<text x="1316" y="890" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuNhap</text>
+<path d="M1256,897h260" stroke="#d6dee4" />
+<text x="1264" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1316" y="913" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNhaCungCap</text>
+<path d="M1256,920h260" stroke="#d6dee4" />
+<text x="1264" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1316" y="936" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiLap</text>
+<path d="M1256,943h260" stroke="#d6dee4" />
+<text x="1264" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1316" y="959" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiHuy ?</text>
+<path d="M1256,966h260" stroke="#d6dee4" />
+<text x="1264" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="982" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucLap</text>
+<path d="M1256,989h260" stroke="#d6dee4" />
+<text x="1264" y="1005" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="1005" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucXacNhan ?</text>
+<path d="M1256,1012h260" stroke="#d6dee4" />
+<text x="1264" y="1028" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="1028" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+<path d="M1256,1035h260" stroke="#d6dee4" />
+<text x="1264" y="1051" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="1051" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucHuy ?</text>
+<path d="M1256,1058h260" stroke="#d6dee4" />
+<text x="1264" y="1074" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="1074" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lyDoHuy ?</text>
+<path d="M1256,1081h260" stroke="#d6dee4" />
+<text x="1264" y="1097" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="1097" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">hanThanhToan ?</text>
+</g>
+<g id="DongNhap" transform="translate(-18 -49)"><rect x="1256" y="1200" width="260" height="153" fill="white" stroke="#885524" /><rect x="1256" y="1200" width="260" height="38" fill="#885524" />
+<text x="1266" y="1225" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">DongNhap</text>
+<path d="M1256,1238h260" stroke="#d6dee4" />
+<text x="1264" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">PK</text>
+<text x="1316" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maDongNhap</text>
+<path d="M1256,1261h260" stroke="#d6dee4" />
+<text x="1264" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1316" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuNhap</text>
+<path d="M1256,1284h260" stroke="#d6dee4" />
+<text x="1264" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1316" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHang</text>
+<path d="M1256,1307h260" stroke="#d6dee4" />
+<text x="1264" y="1323" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="1323" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soLuongNhap</text>
+<path d="M1256,1330h260" stroke="#d6dee4" />
+<text x="1264" y="1346" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1316" y="1346" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">donGiaNhap</text>
+</g>
+<g id="TraNhaCungCap" transform="translate(-18 -6)"><rect x="1646" y="472" width="260" height="222" fill="white" stroke="#885524" /><rect x="1646" y="472" width="260" height="38" fill="#885524" />
+<text x="1656" y="497" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">TraNhaCungCap</text>
+<path d="M1646,510h260" stroke="#d6dee4" />
+<text x="1654" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">PK</text>
+<text x="1706" y="526" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maKhoanTra</text>
+<path d="M1646,533h260" stroke="#d6dee4" />
+<text x="1654" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1706" y="549" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuNhap</text>
+<path d="M1646,556h260" stroke="#d6dee4" />
+<text x="1654" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1706" y="572" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiGhi</text>
+<path d="M1646,579h260" stroke="#d6dee4" />
+<text x="1654" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="1706" y="595" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maCaChi ?</text>
+<path d="M1646,602h260" stroke="#d6dee4" />
+<text x="1654" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1706" y="618" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucTra</text>
+<path d="M1646,625h260" stroke="#d6dee4" />
+<text x="1654" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1706" y="641" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soTienTra</text>
+<path d="M1646,648h260" stroke="#d6dee4" />
+<text x="1654" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1706" y="664" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">phuongThuc</text>
+<path d="M1646,671h260" stroke="#d6dee4" />
+<text x="1654" y="687" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="1706" y="687" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">nguonChi</text>
+</g>
+<g id="NhomHang" transform="translate(-798 -49)"><rect x="866" y="1200" width="260" height="107" fill="white" stroke="#885524" /><rect x="866" y="1200" width="260" height="38" fill="#885524" />
+<text x="876" y="1225" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">NhomHang</text>
+<path d="M866,1238h260" stroke="#d6dee4" />
+<text x="874" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">PK</text>
+<text x="926" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNhom</text>
+<path d="M866,1261h260" stroke="#d6dee4" />
+<text x="874" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">UK</text>
+<text x="926" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tenNhom</text>
+<path d="M866,1284h260" stroke="#d6dee4" />
+<text x="874" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="926" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+</g>
+<g id="MatHang" transform="translate(-18 -49)"><rect x="476" y="1200" width="260" height="176" fill="white" stroke="#885524" /><rect x="476" y="1200" width="260" height="38" fill="#885524" />
+<text x="486" y="1225" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">MatHang</text>
+<path d="M476,1238h260" stroke="#d6dee4" />
+<text x="484" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">PK</text>
+<text x="536" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHang</text>
+<path d="M476,1261h260" stroke="#d6dee4" />
+<text x="484" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">FK</text>
+<text x="536" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNhom</text>
+<path d="M476,1284h260" stroke="#d6dee4" />
+<text x="484" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524">UK</text>
+<text x="536" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tenHang</text>
+<path d="M476,1307h260" stroke="#d6dee4" />
+<text x="484" y="1323" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="536" y="1323" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">donViTinh</text>
+<path d="M476,1330h260" stroke="#d6dee4" />
+<text x="484" y="1346" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="536" y="1346" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">giaBanHienHanh</text>
+<path d="M476,1353h260" stroke="#d6dee4" />
+<text x="484" y="1369" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#885524" />
+<text x="536" y="1369" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+</g>
+<g id="PhieuKiem" transform="translate(372 -59)"><rect x="476" y="1564" width="260" height="176" fill="white" stroke="#586937" /><rect x="476" y="1564" width="260" height="38" fill="#586937" />
+<text x="486" y="1589" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">PhieuKiem</text>
+<path d="M476,1602h260" stroke="#d6dee4" />
+<text x="484" y="1618" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">PK</text>
+<text x="536" y="1618" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuKiem</text>
+<path d="M476,1625h260" stroke="#d6dee4" />
+<text x="484" y="1641" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">FK</text>
+<text x="536" y="1641" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiLap</text>
+<path d="M476,1648h260" stroke="#d6dee4" />
+<text x="484" y="1664" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">FK</text>
+<text x="536" y="1664" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maNguoiDuyet ?</text>
+<path d="M476,1671h260" stroke="#d6dee4" />
+<text x="484" y="1687" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="536" y="1687" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">mocKiem</text>
+<path d="M476,1694h260" stroke="#d6dee4" />
+<text x="484" y="1710" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="536" y="1710" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">lucHoanTat ?</text>
+<path d="M476,1717h260" stroke="#d6dee4" />
+<text x="484" y="1733" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="536" y="1733" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">trangThai</text>
+</g>
+<g id="DongKiem" transform="translate(372 -59)"><rect x="86" y="1564" width="260" height="153" fill="white" stroke="#586937" /><rect x="86" y="1564" width="260" height="38" fill="#586937" />
+<text x="96" y="1589" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">DongKiem</text>
+<path d="M86,1602h260" stroke="#d6dee4" />
+<text x="94" y="1618" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">PK/FK</text>
+<text x="146" y="1618" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuKiem</text>
+<path d="M86,1625h260" stroke="#d6dee4" />
+<text x="94" y="1641" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">PK/FK</text>
+<text x="146" y="1641" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHang</text>
+<path d="M86,1648h260" stroke="#d6dee4" />
+<text x="94" y="1664" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="146" y="1664" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">tonSoTaiMoc</text>
+<path d="M86,1671h260" stroke="#d6dee4" />
+<text x="94" y="1687" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="146" y="1687" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soLuongDem ?</text>
+<path d="M86,1694h260" stroke="#d6dee4" />
+<text x="94" y="1710" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="146" y="1710" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">giaiTrinh ?</text>
+</g>
+<g id="BienDongKho" transform="translate(762 -49)"><rect x="86" y="1200" width="260" height="268" fill="white" stroke="#586937" /><rect x="86" y="1200" width="260" height="38" fill="#586937" />
+<text x="96" y="1225" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="18" fill="white">BienDongKho</text>
+<path d="M86,1238h260" stroke="#d6dee4" />
+<text x="94" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">PK</text>
+<text x="146" y="1254" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maBienDong</text>
+<path d="M86,1261h260" stroke="#d6dee4" />
+<text x="94" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">FK</text>
+<text x="146" y="1277" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maHang</text>
+<path d="M86,1284h260" stroke="#d6dee4" />
+<text x="94" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">FK</text>
+<text x="146" y="1300" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maDongBan ?</text>
+<path d="M86,1307h260" stroke="#d6dee4" />
+<text x="94" y="1323" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">FK</text>
+<text x="146" y="1323" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maDongTra ?</text>
+<path d="M86,1330h260" stroke="#d6dee4" />
+<text x="94" y="1346" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">FK</text>
+<text x="146" y="1346" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maDongNhap ?</text>
+<path d="M86,1353h260" stroke="#d6dee4" />
+<text x="94" y="1369" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">FK</text>
+<text x="146" y="1369" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">maPhieuKiem ? ¹</text>
+<path d="M86,1376h260" stroke="#d6dee4" />
+<text x="94" y="1392" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="146" y="1392" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">loaiSuKien</text>
+<path d="M86,1399h260" stroke="#d6dee4" />
+<text x="94" y="1415" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="146" y="1415" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">soLuongThayDoi</text>
+<path d="M86,1422h260" stroke="#d6dee4" />
+<text x="94" y="1438" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937" />
+<text x="146" y="1438" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">thoiDiemGhi</text>
+<path d="M86,1445h260" stroke="#d6dee4" />
+<text x="94" y="1461" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="11" fill="#586937">UK</text>
+<text x="146" y="1461" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="14" fill="#183348">khoaSuKien</text>
+</g>
+<text x="36" y="1741" font-family="Segoe UI,Arial,sans-serif" font-weight="400" font-size="15" fill="#183348">¹  BienDongKho (maPhieuKiem, maHang) → DongKiem (maPhieuKiem, maHang) là một khóa ngoại ghép. PK/FK đánh dấu cột đồng thời tham gia cả hai khóa.</text>
+</svg>

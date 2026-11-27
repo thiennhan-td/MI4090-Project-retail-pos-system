@@ -6,17 +6,23 @@ namespace Pos.Web.Controllers;
 
 public sealed class BanHangController : Controller
 {
-    private readonly BanHangDemoStore _store;
+    private readonly BanHangDemoSessionProvider _sessionProvider;
 
-    public BanHangController(BanHangDemoStore store)
+    public BanHangController(BanHangDemoSessionProvider sessionProvider)
     {
-        _store = store;
+        _sessionProvider = sessionProvider;
     }
+
+    private BanHangDemoStore LayKhoPhien() => _sessionProvider.LayKhoTheoPhien(HttpContext);
+
+    private static string ChuanHoaVaiTro(string? vaiTro) =>
+        string.Equals(vaiTro, "QuanLy", StringComparison.OrdinalIgnoreCase) ? "QuanLy" : "ThuNgan";
 
     [HttpGet]
     public IActionResult Index()
     {
-        var matHangs = _store.LayDanhSachMatHang();
+        var store = LayKhoPhien();
+        var matHangs = store.LayDanhSachMatHang();
         var vm = new BanHangPosViewModel
         {
             MaCaHienTai = "S-CA-1126",
@@ -52,7 +58,8 @@ public sealed class BanHangController : Controller
             return BadRequest(new { ok = false, field = "cart", message = "Giỏ hàng đang trống. Vui lòng chọn ít nhất một mặt hàng." });
         }
 
-        var catalog = _store.LayDanhSachMatHang().ToDictionary(m => m.MaHang, StringComparer.OrdinalIgnoreCase);
+        var store = LayKhoPhien();
+        var catalog = store.LayDanhSachMatHang().ToDictionary(m => m.MaHang, StringComparer.OrdinalIgnoreCase);
         var dongBans = new List<DongBanDemoRecord>();
 
         foreach (var line in req.DongBans)
@@ -114,7 +121,7 @@ public sealed class BanHangController : Controller
             });
         }
 
-        var (hoaDon, daTonTaiTruocDo) = _store.TaoHoacLayHoaDonDaXacNhan(req.MaYeuCau, dongBans, thanhToans);
+        var (hoaDon, daTonTaiTruocDo) = store.TaoHoacLayHoaDonDaXacNhan(req.MaYeuCau, dongBans, thanhToans);
         var traCuuUrl = Url.Action(nameof(TraCuu), "BanHang", new { chon = hoaDon.MaHoaDon, vaiTro = "ThuNgan" });
         var inUrl = Url.Action(nameof(InHoaDon), "BanHang", new { maHoaDon = hoaDon.MaHoaDon, vaiTro = "ThuNgan" });
 
@@ -144,22 +151,13 @@ public sealed class BanHangController : Controller
         bool? coCaDaoMo,
         string? chon)
     {
-        var vaiTroHienTai = string.Equals(vaiTro, "QuanLy", StringComparison.OrdinalIgnoreCase) ? "QuanLy" : "ThuNgan";
+        var store = LayKhoPhien();
+        var vaiTroHienTai = ChuanHoaVaiTro(vaiTro);
         var trangThaiLoc = string.IsNullOrWhiteSpace(trangThai) ? "TatCa" : trangThai;
         var caDaoMo = coCaDaoMo ?? true;
 
-        var tatCaCa = _store.LayDanhSachCaBan();
-        var caThuocVaiTro = vaiTroHienTai == "QuanLy"
-            ? tatCaCa
-            : tatCaCa.Where(c => c.MaNguoiMo == "S-TK-TN1").ToList();
-
-        var query = _store.LayDanhSachHoaDon().AsEnumerable();
-
-        if (vaiTroHienTai != "QuanLy")
-        {
-            var maCaCuaToi = caThuocVaiTro.Select(c => c.MaCa).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            query = query.Where(h => maCaCuaToi.Contains(h.MaCa));
-        }
+        var caThuocVaiTro = store.LayDanhSachCaBanTheoVaiTro(vaiTroHienTai);
+        var query = store.LayDanhSachHoaDonTheoPhamVi(vaiTroHienTai).AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(maHoaDon))
         {
@@ -225,7 +223,9 @@ public sealed class BanHangController : Controller
         }
         else
         {
-            var (thanhCong, thongBao) = _store.HuyHoaDon(req.MaHoaDon, req.LyDoHuy, req.VaiTroDemo, req.CoCaDaoMo);
+            var store = LayKhoPhien();
+            var vaiTroHienTai = ChuanHoaVaiTro(req.VaiTroDemo);
+            var (thanhCong, thongBao) = store.HuyHoaDon(req.MaHoaDon, req.LyDoHuy, vaiTroHienTai, req.CoCaDaoMo);
             if (thanhCong)
             {
                 TempData["F3Success"] = thongBao;
@@ -239,7 +239,7 @@ public sealed class BanHangController : Controller
         return RedirectToAction(nameof(TraCuu), new
         {
             chon = req.MaHoaDon,
-            vaiTro = req.VaiTroDemo,
+            vaiTro = ChuanHoaVaiTro(req.VaiTroDemo),
             coCaDaoMo = req.CoCaDaoMo
         });
     }
@@ -247,7 +247,14 @@ public sealed class BanHangController : Controller
     [HttpGet]
     public IActionResult InHoaDon(string maHoaDon, string? vaiTro)
     {
-        var hoaDon = _store.TimHoaDon(maHoaDon);
+        var store = LayKhoPhien();
+        var vaiTroHienTai = ChuanHoaVaiTro(vaiTro);
+        var (hoaDon, biChanPhamVi) = store.TimHoaDonTheoPhamVi(maHoaDon, vaiTroHienTai);
+        if (biChanPhamVi)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden);
+        }
+
         if (hoaDon is null)
         {
             return NotFound();
@@ -256,7 +263,7 @@ public sealed class BanHangController : Controller
         var vm = new InHoaDonViewModel
         {
             HoaDon = hoaDon,
-            QuayLaiUrl = Url.Action(nameof(TraCuu), "BanHang", new { chon = hoaDon.MaHoaDon, vaiTro = vaiTro ?? "ThuNgan" })
+            QuayLaiUrl = Url.Action(nameof(TraCuu), "BanHang", new { chon = hoaDon.MaHoaDon, vaiTro = vaiTroHienTai })
         };
 
         return View("~/Views/nv_BanHang/InHoaDon.cshtml", vm);

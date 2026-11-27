@@ -10,6 +10,7 @@
     let isConfirmed = false;
     let activeCategory = "all";
     let paymentMode = "TienMat";
+    let lastShiftOpenState = true;
 
     const cart = new Map();
     const productButtons = Array.from(document.querySelectorAll(".pos-product-card"));
@@ -58,6 +59,10 @@
         return moneyFmt.format(Math.round(amount || 0)) + " đ";
     }
 
+    function isLocked() {
+        return isSubmitting || isConfirmed;
+    }
+
     function parseMoneyInput(input) {
         const raw = (input.value || "").trim();
         if (raw === "") {
@@ -99,16 +104,46 @@
         setError(paymentError, "");
     }
 
+    function syncControlLocks() {
+        const locked = isLocked();
+
+        for (const btn of productButtons) {
+            btn.disabled = locked;
+        }
+        for (const ctrl of cartList.querySelectorAll("button, input")) {
+            ctrl.disabled = locked;
+        }
+        for (const btn of modeButtons) {
+            btn.disabled = locked;
+        }
+        for (const btn of denomButtons) {
+            btn.disabled = locked;
+        }
+
+        cashAllocInput.disabled = locked;
+        cashGivenInput.disabled = locked;
+        transferInput.disabled = locked;
+        fillCashBtn.disabled = locked;
+        fillTransferBtn.disabled = locked;
+        shiftToggle.disabled = locked;
+
+        // Trong lúc đang gửi: khóa cả nút xóa giỏ và nút tạo hóa đơn mới.
+        // Khi đã xác nhận xong: mở lại 2 nút này để thu ngân lập giao dịch mới.
+        clearCartBtn.disabled = isSubmitting;
+        newInvoiceBtn.disabled = isSubmitting;
+    }
+
     function filterProducts() {
         const keyword = (searchInput.value || "").trim().toLocaleLowerCase("vi");
         let visibleCount = 0;
+        const locked = isLocked();
         for (const btn of productButtons) {
             const matchCat = activeCategory === "all" || btn.dataset.nhom === activeCategory;
             const hay = `${btn.dataset.maHang} ${btn.dataset.tenHang}`.toLocaleLowerCase("vi");
             const matchText = hay.includes(keyword);
             const show = matchCat && matchText;
             btn.hidden = !show;
-            btn.disabled = isConfirmed;
+            btn.disabled = locked;
             if (show) {
                 visibleCount++;
             }
@@ -207,6 +242,7 @@
 
     function renderCart() {
         cartList.replaceChildren();
+        const locked = isLocked();
         if (cart.size === 0) {
             const p = document.createElement("p");
             p.className = "pos-muted pos-empty-cart";
@@ -236,8 +272,13 @@
                 decBtn.className = "pos-qty-btn";
                 decBtn.textContent = "−";
                 decBtn.setAttribute("aria-label", "Giảm số lượng " + line.name);
-                decBtn.disabled = isConfirmed;
-                decBtn.addEventListener("click", () => updateLineQuantity(line.code, line.qty - 1, true));
+                decBtn.disabled = locked;
+                decBtn.addEventListener("click", () => {
+                    if (isLocked()) {
+                        return;
+                    }
+                    updateLineQuantity(line.code, line.qty - 1, true);
+                });
 
                 const qtyInput = document.createElement("input");
                 qtyInput.type = "number";
@@ -247,9 +288,13 @@
                 qtyInput.step = "1";
                 qtyInput.inputMode = "numeric";
                 qtyInput.value = line.rawQty;
-                qtyInput.disabled = isConfirmed;
+                qtyInput.disabled = locked;
                 qtyInput.setAttribute("aria-label", "Số lượng " + line.name);
                 qtyInput.addEventListener("input", () => {
+                    if (isLocked()) {
+                        qtyInput.value = line.rawQty;
+                        return;
+                    }
                     line.rawQty = qtyInput.value;
                     const parsed = Number(qtyInput.value);
                     if (!qtyInput.value.trim() || !Number.isInteger(parsed) || parsed <= 0) {
@@ -274,16 +319,24 @@
                 incBtn.className = "pos-qty-btn";
                 incBtn.textContent = "+";
                 incBtn.setAttribute("aria-label", "Tăng số lượng " + line.name);
-                incBtn.disabled = isConfirmed;
-                incBtn.addEventListener("click", () => updateLineQuantity(line.code, line.qty + 1, true));
+                incBtn.disabled = locked;
+                incBtn.addEventListener("click", () => {
+                    if (isLocked()) {
+                        return;
+                    }
+                    updateLineQuantity(line.code, line.qty + 1, true);
+                });
 
                 const delBtn = document.createElement("button");
                 delBtn.type = "button";
                 delBtn.className = "pos-qty-del";
                 delBtn.textContent = "Xóa";
                 delBtn.setAttribute("aria-label", "Xóa " + line.name);
-                delBtn.disabled = isConfirmed;
+                delBtn.disabled = locked;
                 delBtn.addEventListener("click", () => {
+                    if (isLocked()) {
+                        return;
+                    }
                     cart.delete(line.code);
                     clearAllErrors();
                     renderCart();
@@ -299,9 +352,13 @@
             }
         }
         updateTotalsOnly();
+        syncControlLocks();
     }
 
     function updateLineQuantity(code, nextQty, rerender) {
+        if (isLocked()) {
+            return;
+        }
         const line = cart.get(code);
         if (!line) {
             return;
@@ -328,7 +385,7 @@
     }
 
     function addProduct(btn) {
-        if (isConfirmed) {
+        if (isLocked()) {
             return;
         }
         const code = btn.dataset.maHang;
@@ -352,6 +409,9 @@
     }
 
     function resetInvoice() {
+        if (isSubmitting) {
+            return;
+        }
         isConfirmed = false;
         isSubmitting = false;
         currentRequestId = (window.crypto && window.crypto.randomUUID)
@@ -366,28 +426,18 @@
         confirmBtn.disabled = false;
         confirmBtn.textContent = "Xác nhận bán hàng";
         draftStatus.textContent = "Nháp · Chưa xác nhận";
-        setInputsDisabled(false);
         clearAllErrors();
         applyModeUI();
         renderCart();
         filterProducts();
-    }
-
-    function setInputsDisabled(disabled) {
-        cashAllocInput.disabled = disabled;
-        cashGivenInput.disabled = disabled;
-        transferInput.disabled = disabled;
-        fillCashBtn.disabled = disabled;
-        fillTransferBtn.disabled = disabled;
-        for (const btn of modeButtons) {
-            btn.disabled = disabled;
-        }
-        for (const btn of denomButtons) {
-            btn.disabled = disabled;
-        }
+        syncControlLocks();
     }
 
     async function handleConfirm() {
+        if (isLocked()) {
+            return;
+        }
+
         clearAllErrors();
 
         if (!shiftToggle.checked) {
@@ -430,13 +480,12 @@
             return;
         }
 
-        if (isSubmitting) {
-            return;
-        }
-
+        // Khóa toàn bộ giỏ hàng, thanh toán, chuyển ca và nút làm mới ngay khi bắt đầu gửi.
         isSubmitting = true;
         confirmBtn.disabled = true;
         confirmBtn.textContent = "Đang xác nhận...";
+        draftStatus.textContent = "Đang gửi yêu cầu xác nhận...";
+        syncControlLocks();
 
         try {
             const payload = {
@@ -465,12 +514,16 @@
                 } else {
                     setError(paymentError, msg);
                 }
+                isSubmitting = false;
+                draftStatus.textContent = "Nháp · Chưa xác nhận";
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = "Xác nhận bán hàng";
+                syncControlLocks();
                 return;
             }
 
             isConfirmed = true;
+            isSubmitting = false;
             draftStatus.textContent = "Đã xác nhận · " + data.maHoaDon;
             confirmedCodeEl.textContent = data.maHoaDon;
             confirmedDetailEl.textContent =
@@ -479,15 +532,17 @@
             printLink.href = data.inUrl;
             confirmResult.hidden = false;
             confirmBtn.textContent = "Đã xác nhận (" + data.maHoaDon + ")";
-            setInputsDisabled(true);
             renderCart();
             filterProducts();
+            syncControlLocks();
         } catch {
-            setError(paymentError, "Mất kết nối tới máy chủ cục bộ khi xác nhận hóa đơn.");
+            // Giữ nguyên giỏ hàng, số tiền và currentRequestId để lần thử lại dùng đúng mã chống trùng.
+            isSubmitting = false;
+            setError(paymentError, "Mất kết nối tới máy chủ cục bộ khi xác nhận hóa đơn. Bạn có thể bấm Xác nhận bán hàng để thử lại.");
+            draftStatus.textContent = "Nháp · Chờ thử lại xác nhận";
             confirmBtn.disabled = false;
             confirmBtn.textContent = "Xác nhận bán hàng";
-        } finally {
-            isSubmitting = false;
+            syncControlLocks();
         }
     }
 
@@ -507,7 +562,7 @@
 
     for (const btn of modeButtons) {
         btn.addEventListener("click", () => {
-            if (isConfirmed) {
+            if (isLocked()) {
                 return;
             }
             paymentMode = btn.dataset.mode;
@@ -516,6 +571,9 @@
     }
 
     cashAllocInput.addEventListener("input", () => {
+        if (isLocked()) {
+            return;
+        }
         if (paymentMode === "HonHop") {
             const parsed = parseMoneyInput(cashAllocInput);
             const due = getGrandTotal();
@@ -527,6 +585,9 @@
     });
 
     transferInput.addEventListener("input", () => {
+        if (isLocked()) {
+            return;
+        }
         if (paymentMode === "HonHop") {
             const parsed = parseMoneyInput(transferInput);
             const due = getGrandTotal();
@@ -537,9 +598,17 @@
         updateTotalsOnly();
     });
 
-    cashGivenInput.addEventListener("input", updateTotalsOnly);
+    cashGivenInput.addEventListener("input", () => {
+        if (isLocked()) {
+            return;
+        }
+        updateTotalsOnly();
+    });
 
     fillCashBtn.addEventListener("click", () => {
+        if (isLocked()) {
+            return;
+        }
         const due = getGrandTotal();
         const tr = parseMoneyInput(transferInput);
         const rem = Math.max(0, due - (tr.valid ? tr.value : 0));
@@ -548,6 +617,9 @@
     });
 
     fillTransferBtn.addEventListener("click", () => {
+        if (isLocked()) {
+            return;
+        }
         const due = getGrandTotal();
         const ca = parseMoneyInput(cashAllocInput);
         const rem = Math.max(0, due - (ca.valid ? ca.value : 0));
@@ -557,7 +629,7 @@
 
     for (const btn of denomButtons) {
         btn.addEventListener("click", () => {
-            if (isConfirmed) {
+            if (isLocked()) {
                 return;
             }
             const p = getPaymentNumbers();
@@ -568,6 +640,11 @@
     }
 
     shiftToggle.addEventListener("change", () => {
+        if (isLocked()) {
+            shiftToggle.checked = lastShiftOpenState;
+            return;
+        }
+        lastShiftOpenState = shiftToggle.checked;
         if (shiftToggle.checked) {
             shiftBadge.textContent = "Ca đang mở · S-CA-1126";
             shiftBadge.classList.add("pos-pill-teal");
@@ -585,4 +662,5 @@
     applyModeUI();
     renderCart();
     filterProducts();
+    syncControlLocks();
 })();

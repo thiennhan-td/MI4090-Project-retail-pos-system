@@ -1,6 +1,30 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Pos.Web.Demo;
+
+public sealed class BanHangDemoSessionProvider
+{
+    private const string SessionInitKey = "PosDemoStoreInitialized";
+    private readonly IMemoryCache _cache;
+
+    public BanHangDemoSessionProvider(IMemoryCache cache)
+    {
+        _cache = cache;
+    }
+
+    public BanHangDemoStore LayKhoTheoPhien(HttpContext httpContext)
+    {
+        httpContext.Session.SetString(SessionInitKey, "1");
+        var sessionKey = $"pos-demo-store:{httpContext.Session.Id}";
+
+        return _cache.GetOrCreate(sessionKey, entry =>
+        {
+            entry.SlidingExpiration = TimeSpan.FromHours(4);
+            return new BanHangDemoStore();
+        })!;
+    }
+}
 
 public sealed class BanHangDemoStore
 {
@@ -137,30 +161,72 @@ public sealed class BanHangDemoStore
         }
     }
 
-    public IReadOnlyList<CaBanDemoItem> LayDanhSachCaBan()
+    public IReadOnlyList<CaBanDemoItem> LayDanhSachCaBanTheoVaiTro(string vaiTroDemo)
     {
         lock (_sync)
         {
-            return _caBans.ToList();
+            if (string.Equals(vaiTroDemo, "QuanLy", StringComparison.OrdinalIgnoreCase))
+            {
+                return _caBans.ToList();
+            }
+
+            return _caBans.Where(c => c.MaNguoiMo == "S-TK-TN1").ToList();
         }
     }
 
-    public IReadOnlyList<HoaDonDemoRecord> LayDanhSachHoaDon()
+    public bool CoQuyenXemHoaDon(HoaDonDemoRecord hoaDon, string vaiTroDemo)
+    {
+        if (string.Equals(vaiTroDemo, "QuanLy", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        lock (_sync)
+        {
+            return _caBans.Any(c =>
+                string.Equals(c.MaCa, hoaDon.MaCa, StringComparison.OrdinalIgnoreCase)
+                && c.MaNguoiMo == "S-TK-TN1");
+        }
+    }
+
+    public IReadOnlyList<HoaDonDemoRecord> LayDanhSachHoaDonTheoPhamVi(string vaiTroDemo)
     {
         lock (_sync)
         {
+            var isManager = string.Equals(vaiTroDemo, "QuanLy", StringComparison.OrdinalIgnoreCase);
+            HashSet<string>? caCuaToi = null;
+            if (!isManager)
+            {
+                caCuaToi = _caBans
+                    .Where(c => c.MaNguoiMo == "S-TK-TN1")
+                    .Select(c => c.MaCa)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            }
+
             return _hoaDons
+                .Where(h => isManager || caCuaToi!.Contains(h.MaCa))
                 .OrderByDescending(h => h.LucLap)
                 .ThenByDescending(h => h.MaHoaDon, StringComparer.Ordinal)
                 .ToList();
         }
     }
 
-    public HoaDonDemoRecord? TimHoaDon(string maHoaDon)
+    public (HoaDonDemoRecord? HoaDon, bool BiChanPhamVi) TimHoaDonTheoPhamVi(string maHoaDon, string vaiTroDemo)
     {
         lock (_sync)
         {
-            return _hoaDons.FirstOrDefault(h => string.Equals(h.MaHoaDon, maHoaDon, StringComparison.OrdinalIgnoreCase));
+            var hoaDon = _hoaDons.FirstOrDefault(h => string.Equals(h.MaHoaDon, maHoaDon, StringComparison.OrdinalIgnoreCase));
+            if (hoaDon is null)
+            {
+                return (null, false);
+            }
+
+            if (!CoQuyenXemHoaDon(hoaDon, vaiTroDemo))
+            {
+                return (null, true);
+            }
+
+            return (hoaDon, false);
         }
     }
 

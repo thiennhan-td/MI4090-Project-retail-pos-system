@@ -811,6 +811,10 @@ a.pos-nav-item.is-active {
     gap: 0.65rem;
 }
 
+.pos-success-banner[hidden] {
+    display: none;
+}
+
 .pos-success-links {
     display: flex;
     flex-wrap: wrap;

@@ -150,6 +150,11 @@
             <button type="button" class="pos-btn pos-btn-primary pos-btn-lg" id="pos-btn-confirm">Xác nhận bán hàng</button>
         </div>
 
+        <div class="pos-alert pos-alert-error" id="pos-conflict-result" hidden role="alert">
+            <strong>Mã yêu cầu đã dùng cho hóa đơn <span class="pos-num" id="pos-conflict-code"></span>.</strong>
+            <a asp-controller="BanHang" asp-action="TraCuu" id="pos-conflict-lookup">Tra cứu hóa đơn đã ghi</a>
+        </div>
+
         <div class="pos-success-banner" id="pos-confirm-result" hidden role="status">
             <div>
                 <strong>Đã xác nhận hóa đơn <span class="pos-num" id="pos-confirmed-code"></span></strong>

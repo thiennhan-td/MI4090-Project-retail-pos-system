@@ -51,6 +51,9 @@
     const shiftBadge = document.getElementById("pos-shift-badge");
 
     const confirmResult = document.getElementById("pos-confirm-result");
+    const conflictResult = document.getElementById("pos-conflict-result");
+    const conflictCodeEl = document.getElementById("pos-conflict-code");
+    const conflictLookupLink = document.getElementById("pos-conflict-lookup");
     const confirmedCodeEl = document.getElementById("pos-confirmed-code");
     const confirmedDetailEl = document.getElementById("pos-confirmed-detail");
     const lookupLink = document.getElementById("pos-link-lookup");
@@ -428,6 +431,7 @@
         transferInput.value = "";
         paymentMode = "TienMat";
         confirmResult.hidden = true;
+        conflictResult.hidden = true;
         confirmBtn.disabled = false;
         confirmBtn.textContent = "Xác nhận bán hàng";
         draftStatus.textContent = "Nháp · Chưa xác nhận";
@@ -525,18 +529,12 @@
                 isSubmitting = false;
                 isPendingRetry = false;
                 pendingPayload = null;
-                const msg = data.message || "Xung đột mã yêu cầu với hóa đơn đã ghi. Vui lòng tra cứu hóa đơn đã ghi.";
-                setError(paymentError, msg);
+                conflictCodeEl.textContent = data.maHoaDonDaGhi;
+                conflictLookupLink.href = data.traCuuUrl;
+                conflictResult.hidden = false;
                 draftStatus.textContent = "Xung đột yêu cầu · Vui lòng tra cứu hóa đơn đã ghi";
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = "Xung đột mã yêu cầu";
-                if (data.traCuuUrl) {
-                    lookupLink.href = data.traCuuUrl;
-                    confirmedCodeEl.textContent = data.maHoaDonDaGhi || "";
-                    confirmedDetailEl.textContent = msg;
-                    printLink.hidden = true;
-                    confirmResult.hidden = false;
-                }
                 syncControlLocks();
                 return;
             }

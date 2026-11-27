@@ -32,9 +32,16 @@ docs/
 │   ├── BFD-POS-31.png
 │   ├── Dac-ta-chuc-nang-POS-31.docx     # Đặc tả 31 chức năng đồng bộ QĐ01–QĐ06
 │   ├── Bao-cao-ERD-POS.docx             # Báo cáo ERD 21 thực thể, thẻ kho & vòng đời
-│   ├── ERD-POS-21.png
-│   ├── ERD-POS-21-phan-tang.png
 │   └── Quy-tac-nghiep-vu-va-RBAC-POS-da-chot.docx  # 12 QT, Ma trận RBAC 41 hàng, 5 kịch bản test dự kiến
+├── design/                              # Hồ sơ thiết kế hệ thống & OOP (Đã chốt)
+│   ├── So_do_ERD_POS.html               # Sơ đồ ERD 21 thực thể (6 sơ đồ cụm SVG)
+│   ├── Mo_hinh_du_lieu_quan_he_POS.svg  # Mô hình dữ liệu quan hệ tổng 21 bảng
+│   ├── Mo_hinh_quan_he_POS_vuong_goc.svg
+│   ├── Tu_dien_du_lieu_POS.md           # Từ điển dữ liệu vật lý SQL Server (21 bảng, 123 cột)
+│   ├── Bieu_mau_chung_tu_POS.html       # Biểu mẫu chứng từ bán, trả, nhập, kiểm kho, bàn giao
+│   ├── Thiet_ke_kien_truc_va_OOP_POS.md # Kiến trúc 4 tầng, Package Diagram, Hợp đồng TV1–TV2, LSP & 4 mẫu GoF
+│   ├── So_do_lop_UML_POS.html           # Sơ đồ lớp UML tổng (44 lớp/interface, đủ 6 quan hệ)
+│   └── So_do_tuan_tu_va_trang_thai_POS.html # 46 sơ đồ Sequence (38) & State (8)
 └── Bao_cao_tong_ket_phien_lam_viec.md   # Tổng kết tiến độ & danh mục đầu việc tiếp theo
 ```
 

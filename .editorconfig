@@ -1,0 +1,28 @@
+root = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:suggestion
+
+dotnet_naming_style.pascal.capitalization = pascal_case
+dotnet_naming_style.camel.capitalization = camel_case
+dotnet_naming_style.interface_name.required_prefix = I
+dotnet_naming_style.interface_name.capitalization = pascal_case
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_rule.interfaces.symbols = interfaces
+dotnet_naming_rule.interfaces.style = interface_name
+dotnet_naming_rule.interfaces.severity = warning
+
+dotnet_naming_symbols.types_and_members.applicable_kinds = class, struct, enum, delegate, method, property
+dotnet_naming_rule.types_and_members.symbols = types_and_members
+dotnet_naming_rule.types_and_members.style = pascal
+dotnet_naming_rule.types_and_members.severity = warning
+
+dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter, local
+dotnet_naming_rule.parameters_and_locals.symbols = parameters_and_locals
+dotnet_naming_rule.parameters_and_locals.style = camel
+dotnet_naming_rule.parameters_and_locals.severity = warning

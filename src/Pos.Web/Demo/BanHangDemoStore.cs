@@ -230,7 +230,7 @@ public sealed class BanHangDemoStore
         }
     }
 
-    public (HoaDonDemoRecord HoaDon, bool DaTonTaiTruocDo) TaoHoacLayHoaDonDaXacNhan(
+    public KetQuaTaoHoaDonDemo TaoHoacLayHoaDonDaXacNhan(
         string maYeuCau,
         IReadOnlyList<DongBanDemoRecord> dongBans,
         IReadOnlyList<ThanhToanDemoRecord> thanhToans)
@@ -240,7 +240,12 @@ public sealed class BanHangDemoStore
             if (_idempotencyKeys.TryGetValue(maYeuCau, out var existingCode))
             {
                 var existing = _hoaDons.First(h => h.MaHoaDon == existingCode);
-                return (existing, true);
+                if (LaCungNoiDungNghiepVu(existing, dongBans, thanhToans))
+                {
+                    return new KetQuaTaoHoaDonDemo(KetQuaIdempotency.GuiLaiTrungKhop, existing);
+                }
+
+                return new KetQuaTaoHoaDonDemo(KetQuaIdempotency.XungDotNoiDung, existing);
             }
 
             var now = DateTime.Now;
@@ -262,8 +267,49 @@ public sealed class BanHangDemoStore
 
             _hoaDons.Insert(0, record);
             _idempotencyKeys[maYeuCau] = maHoaDon;
-            return (record, false);
+            return new KetQuaTaoHoaDonDemo(KetQuaIdempotency.TaoMoi, record);
         }
+    }
+
+    private static bool LaCungNoiDungNghiepVu(
+        HoaDonDemoRecord existing,
+        IReadOnlyList<DongBanDemoRecord> dongBans,
+        IReadOnlyList<ThanhToanDemoRecord> thanhToans)
+    {
+        var existingLines = existing.DongBans
+            .GroupBy(d => (MaHang: d.MaHang.ToUpperInvariant(), d.DonGiaThucBan))
+            .Select(g => (g.Key.MaHang, SoLuong: g.Sum(x => x.SoLuongBan), g.Key.DonGiaThucBan))
+            .OrderBy(x => x.MaHang, StringComparer.Ordinal)
+            .ThenBy(x => x.DonGiaThucBan)
+            .ToList();
+
+        var incomingLines = dongBans
+            .GroupBy(d => (MaHang: d.MaHang.ToUpperInvariant(), d.DonGiaThucBan))
+            .Select(g => (g.Key.MaHang, SoLuong: g.Sum(x => x.SoLuongBan), g.Key.DonGiaThucBan))
+            .OrderBy(x => x.MaHang, StringComparer.Ordinal)
+            .ThenBy(x => x.DonGiaThucBan)
+            .ToList();
+
+        if (!existingLines.SequenceEqual(incomingLines))
+        {
+            return false;
+        }
+
+        var existingPayments = existing.ThanhToans
+            .Select(t => (PhuongThuc: t.PhuongThuc.ToUpperInvariant(), t.SoTienThanhToan, t.TienKhachDua))
+            .OrderBy(x => x.PhuongThuc, StringComparer.Ordinal)
+            .ThenBy(x => x.SoTienThanhToan)
+            .ThenBy(x => x.TienKhachDua ?? -1m)
+            .ToList();
+
+        var incomingPayments = thanhToans
+            .Select(t => (PhuongThuc: t.PhuongThuc.ToUpperInvariant(), t.SoTienThanhToan, t.TienKhachDua))
+            .OrderBy(x => x.PhuongThuc, StringComparer.Ordinal)
+            .ThenBy(x => x.SoTienThanhToan)
+            .ThenBy(x => x.TienKhachDua ?? -1m)
+            .ToList();
+
+        return existingPayments.SequenceEqual(incomingPayments);
     }
 
     public (bool ThanhCong, string ThongBao) HuyHoaDon(
@@ -342,6 +388,17 @@ public sealed class BanHangDemoStore
         }
     }
 }
+
+public enum KetQuaIdempotency
+{
+    TaoMoi,
+    GuiLaiTrungKhop,
+    XungDotNoiDung
+}
+
+public sealed record KetQuaTaoHoaDonDemo(
+    KetQuaIdempotency TrangThai,
+    HoaDonDemoRecord HoaDon);
 
 public sealed record MatHangDemoItem(
     string MaHang,

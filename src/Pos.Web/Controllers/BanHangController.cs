@@ -121,8 +121,23 @@ public sealed class BanHangController : Controller
             });
         }
 
-        var (hoaDon, daTonTaiTruocDo) = store.TaoHoacLayHoaDonDaXacNhan(req.MaYeuCau, dongBans, thanhToans);
+        var ketQua = store.TaoHoacLayHoaDonDaXacNhan(req.MaYeuCau, dongBans, thanhToans);
+        var hoaDon = ketQua.HoaDon;
         var traCuuUrl = Url.Action(nameof(TraCuu), "BanHang", new { chon = hoaDon.MaHoaDon, vaiTro = "ThuNgan" });
+
+        if (ketQua.TrangThai == KetQuaIdempotency.XungDotNoiDung)
+        {
+            return Conflict(new
+            {
+                ok = false,
+                conflict = true,
+                field = "payment",
+                maHoaDonDaGhi = hoaDon.MaHoaDon,
+                traCuuUrl,
+                message = $"Mã yêu cầu đã được dùng cho hóa đơn {hoaDon.MaHoaDon} với nội dung khác. Hóa đơn gốc được giữ nguyên; vui lòng mở Tra cứu hóa đơn để kiểm tra."
+            });
+        }
+
         var inUrl = Url.Action(nameof(InHoaDon), "BanHang", new { maHoaDon = hoaDon.MaHoaDon, vaiTro = "ThuNgan" });
 
         return Ok(new
@@ -134,7 +149,7 @@ public sealed class BanHangController : Controller
             tienChuyenKhoan = hoaDon.TongChuyenKhoan,
             tienKhachDua = hoaDon.TongTienKhachDua,
             tienThua = hoaDon.TienThua,
-            daTonTaiTruocDo,
+            daTonTaiTruocDo = ketQua.TrangThai == KetQuaIdempotency.GuiLaiTrungKhop,
             traCuuUrl,
             inUrl
         });

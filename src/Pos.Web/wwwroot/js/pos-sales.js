@@ -8,6 +8,8 @@
     let currentRequestId = app.dataset.requestId;
     let isSubmitting = false;
     let isConfirmed = false;
+    let isPendingRetry = false;
+    let pendingPayload = null;
     let activeCategory = "all";
     let paymentMode = "TienMat";
     let lastShiftOpenState = true;
@@ -60,7 +62,7 @@
     }
 
     function isLocked() {
-        return isSubmitting || isConfirmed;
+        return isSubmitting || isConfirmed || isPendingRetry;
     }
 
     function parseMoneyInput(input) {
@@ -127,10 +129,11 @@
         fillTransferBtn.disabled = locked;
         shiftToggle.disabled = locked;
 
-        // Trong lúc đang gửi: khóa cả nút xóa giỏ và nút tạo hóa đơn mới.
+        // Trong lúc đang gửi hoặc mất phản hồi chưa rõ kết quả: khóa cả nút xóa giỏ và nút tạo hóa đơn mới.
         // Khi đã xác nhận xong: mở lại 2 nút này để thu ngân lập giao dịch mới.
-        clearCartBtn.disabled = isSubmitting;
-        newInvoiceBtn.disabled = isSubmitting;
+        const blockReset = isSubmitting || isPendingRetry;
+        clearCartBtn.disabled = blockReset;
+        newInvoiceBtn.disabled = blockReset;
     }
 
     function filterProducts() {
@@ -409,11 +412,13 @@
     }
 
     function resetInvoice() {
-        if (isSubmitting) {
+        if (isSubmitting || isPendingRetry) {
             return;
         }
         isConfirmed = false;
         isSubmitting = false;
+        isPendingRetry = false;
+        pendingPayload = null;
         currentRequestId = (window.crypto && window.crypto.randomUUID)
             ? window.crypto.randomUUID().replaceAll("-", "")
             : String(Date.now()) + Math.random().toString(16).slice(2);
@@ -434,50 +439,67 @@
     }
 
     async function handleConfirm() {
-        if (isLocked()) {
+        if (isSubmitting || isConfirmed) {
             return;
         }
 
         clearAllErrors();
 
-        if (!shiftToggle.checked) {
-            setError(paymentError, "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi xác nhận bán hàng.");
-            return;
-        }
-
-        if (cart.size === 0) {
-            setError(cartError, "Giỏ hàng đang trống. Vui lòng chọn ít nhất một mặt hàng.");
-            return;
-        }
-
-        const lines = [];
-        for (const line of cart.values()) {
-            if (line.invalid || !Number.isInteger(line.qty) || line.qty <= 0) {
-                setError(cartError, `Số lượng của ${line.name} không hợp lệ (cần số nguyên dương).`);
+        let payload = null;
+        if (isPendingRetry && pendingPayload) {
+            // Thử lại sau khi mất phản hồi: gửi lại đúng bản chụp payload và đúng maYeuCau ban đầu.
+            payload = pendingPayload;
+        } else {
+            if (!shiftToggle.checked) {
+                setError(paymentError, "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi xác nhận bán hàng.");
                 return;
             }
-            if (line.qty > line.stock) {
-                setError(cartError, `Số lượng của ${line.name} vượt tồn mẫu hiện có (${line.stock} ${line.unit}).`);
+
+            if (cart.size === 0) {
+                setError(cartError, "Giỏ hàng đang trống. Vui lòng chọn ít nhất một mặt hàng.");
                 return;
             }
-            lines.push({ maHang: line.code, soLuong: line.qty });
-        }
 
-        const p = getPaymentNumbers();
-        if (!p.cashAllocParsed.valid || !p.transfer.valid || !p.cashGiven.valid) {
-            setError(paymentError, "Số tiền thanh toán phải là số nguyên VND không âm.");
-            return;
-        }
+            const lines = [];
+            for (const line of cart.values()) {
+                if (line.invalid || !Number.isInteger(line.qty) || line.qty <= 0) {
+                    setError(cartError, `Số lượng của ${line.name} không hợp lệ (cần số nguyên dương).`);
+                    return;
+                }
+                if (line.qty > line.stock) {
+                    setError(cartError, `Số lượng của ${line.name} vượt tồn mẫu hiện có (${line.stock} ${line.unit}).`);
+                    return;
+                }
+                lines.push({ maHang: line.code, soLuong: line.qty });
+            }
 
-        const allocated = p.cashAlloc + p.transfer.value;
-        if (allocated !== p.due) {
-            setError(paymentError, `Tổng phân bổ (${formatMoney(allocated)}) phải bằng đúng giá trị hóa đơn (${formatMoney(p.due)}).`);
-            return;
-        }
+            const p = getPaymentNumbers();
+            if (!p.cashAllocParsed.valid || !p.transfer.valid || !p.cashGiven.valid) {
+                setError(paymentError, "Số tiền thanh toán phải là số nguyên VND không âm.");
+                return;
+            }
 
-        if (p.cashAlloc > 0 && (p.cashGiven.empty || p.cashGiven.value < p.cashAlloc)) {
-            setError(cashGivenError, `Tiền mặt khách đưa phải lớn hơn hoặc bằng tiền mặt phân bổ (${formatMoney(p.cashAlloc)}).`);
-            return;
+            const allocated = p.cashAlloc + p.transfer.value;
+            if (allocated !== p.due) {
+                setError(paymentError, `Tổng phân bổ (${formatMoney(allocated)}) phải bằng đúng giá trị hóa đơn (${formatMoney(p.due)}).`);
+                return;
+            }
+
+            if (p.cashAlloc > 0 && (p.cashGiven.empty || p.cashGiven.value < p.cashAlloc)) {
+                setError(cashGivenError, `Tiền mặt khách đưa phải lớn hơn hoặc bằng tiền mặt phân bổ (${formatMoney(p.cashAlloc)}).`);
+                return;
+            }
+
+            payload = {
+                maYeuCau: currentRequestId,
+                cheDoThanhToan: paymentMode,
+                tienMatPhanBo: p.cashAlloc,
+                tienKhachDua: p.cashAlloc > 0 ? p.cashGiven.value : null,
+                tienChuyenKhoan: p.transfer.value,
+                caDangMo: shiftToggle.checked,
+                dongBans: lines
+            };
+            pendingPayload = payload;
         }
 
         // Khóa toàn bộ giỏ hàng, thanh toán, chuyển ca và nút làm mới ngay khi bắt đầu gửi.
@@ -488,24 +510,42 @@
         syncControlLocks();
 
         try {
-            const payload = {
-                maYeuCau: currentRequestId,
-                cheDoThanhToan: paymentMode,
-                tienMatPhanBo: p.cashAlloc,
-                tienKhachDua: p.cashAlloc > 0 ? p.cashGiven.value : null,
-                tienChuyenKhoan: p.transfer.value,
-                caDangMo: shiftToggle.checked,
-                dongBans: lines
-            };
-
             const res = await fetch(confirmUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
 
+            if (res.status >= 500) {
+                throw new Error("Server error " + res.status);
+            }
+
             const data = await res.json();
+            if (res.status === 409 || data.conflict) {
+                isSubmitting = false;
+                isPendingRetry = false;
+                pendingPayload = null;
+                const msg = data.message || "Xung đột mã yêu cầu với hóa đơn đã ghi. Vui lòng tra cứu hóa đơn đã ghi.";
+                setError(paymentError, msg);
+                draftStatus.textContent = "Xung đột yêu cầu · Vui lòng tra cứu hóa đơn đã ghi";
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = "Xung đột mã yêu cầu";
+                if (data.traCuuUrl) {
+                    lookupLink.href = data.traCuuUrl;
+                    confirmedCodeEl.textContent = data.maHoaDonDaGhi || "";
+                    confirmedDetailEl.textContent = msg;
+                    printLink.hidden = true;
+                    confirmResult.hidden = false;
+                }
+                syncControlLocks();
+                return;
+            }
+
             if (!res.ok || !data.ok) {
+                // Lỗi kiểm tra hợp lệ (400): máy chủ xác định chưa ghi hóa đơn -> mở lại để thu ngân sửa.
+                isSubmitting = false;
+                isPendingRetry = false;
+                pendingPayload = null;
                 const msg = data.message || "Không thể xác nhận hóa đơn.";
                 if (data.field === "cart") {
                     setError(cartError, msg);
@@ -514,7 +554,6 @@
                 } else {
                     setError(paymentError, msg);
                 }
-                isSubmitting = false;
                 draftStatus.textContent = "Nháp · Chưa xác nhận";
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = "Xác nhận bán hàng";
@@ -524,24 +563,28 @@
 
             isConfirmed = true;
             isSubmitting = false;
+            isPendingRetry = false;
+            pendingPayload = null;
             draftStatus.textContent = "Đã xác nhận · " + data.maHoaDon;
             confirmedCodeEl.textContent = data.maHoaDon;
             confirmedDetailEl.textContent =
                 `Tổng thu: ${formatMoney(data.tongTien)} (Tiền mặt: ${formatMoney(data.tienMatPhanBo)}, Chuyển khoản: ${formatMoney(data.tienChuyenKhoan)}) · Tiền thừa: ${formatMoney(data.tienThua)}`;
             lookupLink.href = data.traCuuUrl;
             printLink.href = data.inUrl;
+            printLink.hidden = false;
             confirmResult.hidden = false;
             confirmBtn.textContent = "Đã xác nhận (" + data.maHoaDon + ")";
             renderCart();
             filterProducts();
             syncControlLocks();
         } catch {
-            // Giữ nguyên giỏ hàng, số tiền và currentRequestId để lần thử lại dùng đúng mã chống trùng.
+            // Mất phản hồi hoặc lỗi không rõ máy chủ đã ghi chưa: giữ bản chụp & khóa giỏ, chỉ mở nút "Thử lại".
             isSubmitting = false;
-            setError(paymentError, "Mất kết nối tới máy chủ cục bộ khi xác nhận hóa đơn. Bạn có thể bấm Xác nhận bán hàng để thử lại.");
-            draftStatus.textContent = "Nháp · Chờ thử lại xác nhận";
+            isPendingRetry = true;
+            setError(paymentError, "Mất phản hồi từ máy chủ, chưa rõ hóa đơn đã được ghi hay chưa. Bấm \"Thử lại\" để kiểm tra và xác nhận lại đúng giao dịch này.");
+            draftStatus.textContent = "Chờ thử lại · Giỏ đang được khóa";
             confirmBtn.disabled = false;
-            confirmBtn.textContent = "Xác nhận bán hàng";
+            confirmBtn.textContent = "Thử lại";
             syncControlLocks();
         }
     }

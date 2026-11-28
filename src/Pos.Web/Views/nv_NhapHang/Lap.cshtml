@@ -1,6 +1,7 @@
 @model PhieuNhapFormViewModel
 @{
     var ma = ViewData["Ma"] as string;
+    var xungDot = ViewData["XungDot"] is true;
     var nccs = (NhaCungCapDemo[])ViewData["NhaCungCaps"]!;
     var items = (MatHangKhoDemo[])ViewData["MatHangs"]!;
     ViewData["Title"] = ma is null ? "Lập phiếu nhập kho" : "Sửa phiếu nhập nháp";
@@ -10,6 +11,7 @@
     @if (ma is not null) { <span class="kho-badge">@ma</span> }
 </div>
 <form asp-action="Lap" asp-route-id="@ma" method="post" class="kho-stack" data-kho-receipt>
+    @if (ma is not null) { <input asp-for="PhienBan" type="hidden" /> }
     <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
     <section class="kho-card">
         <div class="kho-card-head"><h2>Thông tin phiếu nhập</h2></div>
@@ -61,7 +63,14 @@
         <a asp-action="Index" class="pos-btn pos-btn-secondary">Quay lại</a>
         <div class="kho-actions">
             <strong>Tổng tiền <output class="kho-num" data-kho-total>0 ₫</output></strong>
-            <button type="submit" class="pos-btn pos-btn-primary">Lưu phiếu nháp</button>
+            @if (xungDot)
+            {
+                <a asp-action="Lap" asp-route-id="@ma" class="pos-btn pos-btn-primary">Mở phiên bản hiện tại</a>
+            }
+            else
+            {
+                <button type="submit" class="pos-btn pos-btn-primary">Lưu phiếu nháp</button>
+            }
         </div>
     </div>
 </form>

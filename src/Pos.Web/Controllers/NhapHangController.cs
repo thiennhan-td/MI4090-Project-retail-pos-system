@@ -29,14 +29,7 @@ public sealed class NhapHangController(KhoDemoSessionProvider sessions) : KhoDem
     public IActionResult ChiTiet(string? id) => TrongPhien(store =>
     {
         var phieu = id is null ? null : store.PhieuNhap(id);
-        if (phieu is null) return NotFound();
-        var xemNo = store.CoQuyen("NCC_TRA_NO");
-        var traTien = store.CoQuyen("NCC_GHI_TRA_TIEN", KhoDemoStore.QuanLy);
-        return View("~/Views/nv_NhapHang/ChiTiet.cshtml", new ChiTietNhapViewModel(Dong(store, phieu, xemNo),
-            phieu.Dongs.ToDictionary(x => x.MaHang, x => store.TenHang(x.MaHang)),
-            xemNo ? store.LichSuTra(phieu.Ma) : [],
-            store.CoQuyen("NCC_GHI_TRA_TIEN", KhoDemoStore.QuanLy) ? store.CaDangMo() : [],
-            store.CoTheDaoNhap(phieu), traTien ? store.DuNo(phieu) : null, Guid.NewGuid()));
+        return phieu is null ? NotFound() : HienChiTiet(store, phieu);
     }, "NHAP_TRA_CUU");
 
     [HttpGet]
@@ -49,6 +42,7 @@ public sealed class NhapHangController(KhoDemoSessionProvider sessions) : KhoDem
         if (phieu.TrangThai != KhoDemoStore.Nhap) return RedirectToAction(nameof(ChiTiet), new { id });
         return HienForm(store, id, new PhieuNhapFormViewModel
         {
+            PhienBan = phieu.PhienBan,
             MaNcc = phieu.MaNcc, HanThanhToan = phieu.HanThanhToan,
             Dongs = phieu.Dongs.Select(x => new DongNhapFormViewModel
             { MaHang = x.MaHang, SoLuong = x.SoLuong, DonGia = x.DonGia }).ToList()
@@ -59,16 +53,24 @@ public sealed class NhapHangController(KhoDemoSessionProvider sessions) : KhoDem
     public IActionResult Lap([FromRoute] string? id, PhieuNhapFormViewModel form) => TrongPhien(store =>
     {
         if (id is not null && store.PhieuNhap(id) is null) return NotFound();
+        if (id is not null && form.PhienBan is null)
+            ModelState.AddModelError(nameof(form.PhienBan), "Mở lại phiếu nhập để lấy phiên bản hiện tại.");
         if (form.Dongs.Count is < 1 or > 100)
             ModelState.AddModelError("", "Phiếu nhập cần từ 1 đến 100 dòng.");
         if (ModelState.IsValid)
         {
             try
             {
-                var ma = store.LuuNhap(id, form.MaNcc, form.HanThanhToan,
+                var ma = store.LuuNhap(id, form.PhienBan, form.MaNcc, form.HanThanhToan,
                     form.Dongs.Select(x => (x.MaHang, x.SoLuong!.Value, x.DonGia!.Value)));
                 TempData["KhoSuccess"] = "Đã lưu phiếu nhập nháp.";
                 return RedirectToAction(nameof(ChiTiet), new { id = ma });
+            }
+            catch (XungDotPhienBanKhoDemoException ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                Response.StatusCode = StatusCodes.Status409Conflict;
+                return HienForm(store, id, form, xungDot: true);
             }
             catch (ThaoTacKhoDemoException ex) { ModelState.AddModelError("", ex.Message); }
         }
@@ -91,20 +93,36 @@ public sealed class NhapHangController(KhoDemoSessionProvider sessions) : KhoDem
         var duocHuy = phieu.LucXacNhan is null ? store.CoQuyen("NHAP_HUY_NHAP")
             : store.CoQuyen("NHAP_HUY_XAC_NHAN", KhoDemoStore.QuanLy);
         if (!duocHuy) return ThieuQuyen();
-        return Luu(nameof(ChiTiet), () => store.HuyNhap(id, form.LyDo), id);
+        return Luu(nameof(ChiTiet), () => store.HuyNhap(id, form.LyDo), id,
+            () => HienChiTiet(store, phieu, huyDaNhap: form));
     });
 
     [HttpPost]
     public IActionResult TraTien([FromRoute] string id, TraTienNccViewModel form) => TrongPhien(store =>
     {
+        var phieu = store.PhieuNhap(id);
+        if (phieu is null) return NotFound();
         if (form.KhoaYeuCau == Guid.Empty) ModelState.AddModelError("", "Tải lại trang trước khi ghi khoản trả.");
         return Luu(nameof(ChiTiet), () => store.TraNcc(id, form.SoTien!.Value, form.PhuongThuc, form.Nguon,
-            form.MaCa, form.KhoaYeuCau!.Value), id);
+            form.MaCa, form.KhoaYeuCau!.Value), id,
+            () => HienChiTiet(store, phieu, traTienDaNhap: form));
     }, "NCC_GHI_TRA_TIEN", KhoDemoStore.QuanLy);
 
-    private IActionResult HienForm(KhoDemoStore store, string? id, PhieuNhapFormViewModel form)
+    private IActionResult HienChiTiet(KhoDemoStore store, PhieuNhapDemo phieu,
+        TraTienNccViewModel? traTienDaNhap = null, HuyNhapFormViewModel? huyDaNhap = null)
+    {
+        var xemNo = store.CoQuyen("NCC_TRA_NO");
+        var traTien = store.CoQuyen("NCC_GHI_TRA_TIEN", KhoDemoStore.QuanLy);
+        return View("~/Views/nv_NhapHang/ChiTiet.cshtml", new ChiTietNhapViewModel(Dong(store, phieu, xemNo),
+            phieu.Dongs.ToDictionary(x => x.MaHang, x => store.TenHang(x.MaHang)),
+            xemNo ? store.LichSuTra(phieu.Ma) : [], traTien ? store.CaDangMo() : [],
+            store.CoTheDaoNhap(phieu), traTien ? store.DuNo(phieu) : null, Guid.NewGuid(), traTienDaNhap, huyDaNhap));
+    }
+
+    private IActionResult HienForm(KhoDemoStore store, string? id, PhieuNhapFormViewModel form, bool xungDot = false)
     {
         ViewData["Ma"] = id;
+        ViewData["XungDot"] = xungDot;
         ViewData["NhaCungCaps"] = store.NhaCungCaps();
         ViewData["MatHangs"] = store.MatHangDangDung();
         return View("~/Views/nv_NhapHang/Lap.cshtml", form);

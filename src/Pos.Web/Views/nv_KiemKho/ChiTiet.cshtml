@@ -1,6 +1,7 @@
 @model ChiTietKiemViewModel
 @{
     var phieu = Model.Phieu;
+    var xungDot = ViewData["XungDot"] is true;
     var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
     var duocDem = phieu.TrangThai == KhoDemoStore.DangKiem && user?.CoQuyen("KHO_LAP_KIEM", KhoDemoStore.NhanVienKho) == true;
     var gui = user?.CoQuyen("KHO_GIAI_TRINH_KIEM", KhoDemoStore.NhanVienKho) == true;
@@ -12,13 +13,13 @@
 <div class="kho-toolbar">
     <a asp-action="Index" class="kho-back">← Danh sách phiếu kiểm</a>
     <div class="kho-actions">
-        @if (duyet)
+        @if (duyet && !xungDot)
         {
             <form asp-action="Duyet" asp-route-id="@phieu.Ma" method="post">
                 <button type="submit" class="pos-btn pos-btn-primary">Duyệt và điều chỉnh tồn</button>
             </form>
         }
-        @if (huy)
+        @if (huy && !xungDot)
         {
             <form asp-action="Huy" asp-route-id="@phieu.Ma" method="post">
                 <button type="submit" class="pos-btn pos-btn-danger">Hủy phiếu kiểm</button>
@@ -36,6 +37,7 @@
     </dl>
 </section>
 <form asp-action="GhiDem" asp-route-id="@phieu.Ma" method="post" class="kho-card kho-stack">
+    @if (duocDem || xungDot) { @Html.Hidden("PhienBan", xungDot ? ViewData["PhienBanDaNhap"] : phieu.PhienBan) }
     <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
     <div class="kho-card-head"><h2>Số thực đếm</h2>
         @if (duocDem) { <p>Giải trình các dòng có chênh lệch trước khi gửi duyệt.</p> }
@@ -48,7 +50,7 @@
             var dong = phieu.Dongs[i];
             <tr><td><strong>@Model.TenHangs[dong.MaHang]</strong><br /><small>@dong.MaHang</small></td>
                 <td class="kho-num">@HienThiKho.So(dong.TonSo)</td>
-                @if (duocDem)
+                @if (duocDem || xungDot)
                 {
                     <td class="kho-num">
                         <input type="hidden" name="Dongs[@i].MaHang" value="@dong.MaHang" />
@@ -69,7 +71,13 @@
         }
         </tbody>
     </table></div>
-    @if (duocDem)
+    @if (xungDot)
+    {
+        <div class="kho-actions">
+            <a asp-action="ChiTiet" asp-route-id="@phieu.Ma" class="pos-btn pos-btn-primary">Mở phiên bản hiện tại</a>
+        </div>
+    }
+    else if (duocDem)
     {
         <div class="kho-actions">
             <button class="pos-btn pos-btn-secondary" type="submit" name="GuiDuyet" value="false">Lưu số đếm</button>

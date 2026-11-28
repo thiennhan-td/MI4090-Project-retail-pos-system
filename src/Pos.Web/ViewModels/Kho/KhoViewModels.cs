@@ -65,6 +65,8 @@ public sealed record DanhMucViewModel(string TieuDe, string? TuKhoa, string? Tra
 
 public sealed class PhieuNhapFormViewModel
 {
+    [Range(0, int.MaxValue)]
+    public int? PhienBan { get; set; }
     [Required(ErrorMessage = "Chọn nhà cung cấp.")]
     public string MaNcc { get; set; } = "";
     [ModelBinder(BinderType = typeof(NgayKhoModelBinder))]
@@ -110,7 +112,10 @@ public sealed record SoNhapViewModel(string? TuKhoa, string? MaNcc, string? Tran
 
 public sealed record ChiTietNhapViewModel(PhieuNhapDongViewModel Dong, IReadOnlyDictionary<string, string> TenHangs,
     IReadOnlyList<TraNhaCungCapDemo> LichSuTra, IReadOnlyList<CaChiDemo> CaDangMo, bool CoTheHuy,
-    decimal? DuNoCoTheTra, Guid KhoaYeuCau);
+    decimal? DuNoCoTheTra, Guid KhoaYeuCau, TraTienNccViewModel? TraTienDaNhap = null,
+    HuyNhapFormViewModel? HuyDaNhap = null);
+
+public sealed record KhoRejectedViewModel(string TieuDe, string? ThongBao, string? Url, string NhanLienKet);
 
 public sealed class LapKiemFormViewModel
 {
@@ -119,6 +124,8 @@ public sealed class LapKiemFormViewModel
 
 public sealed class GhiDemFormViewModel
 {
+    [Required(ErrorMessage = "Mở lại phiếu kiểm để lấy phiên bản hiện tại."), Range(0, int.MaxValue)]
+    public int? PhienBan { get; set; }
     public List<DongKiemFormViewModel> Dongs { get; set; } = [];
     public bool GuiDuyet { get; set; }
 }

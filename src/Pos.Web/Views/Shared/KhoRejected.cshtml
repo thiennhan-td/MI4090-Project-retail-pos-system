@@ -1,6 +1,7 @@
-@model string
-@{ ViewData["Title"] = "Dữ liệu cần kiểm tra"; }
+@model KhoRejectedViewModel
+@{ ViewData["Title"] = Model.TieuDe; }
 <section class="kho-card">
     <div class="kho-validation" asp-validation-summary="All" role="alert"></div>
-    <a class="pos-btn pos-btn-secondary" href="@Model">Quay lại</a>
+    @if (Model.ThongBao is not null) { <p role="alert">@Model.ThongBao</p> }
+    @if (Model.Url is not null) { <a class="pos-btn pos-btn-secondary" href="@Model.Url">@Model.NhanLienKet</a> }
 </section>

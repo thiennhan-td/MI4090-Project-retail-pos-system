@@ -59,9 +59,17 @@ public sealed class KiemKhoController(KhoDemoSessionProvider sessions) : KhoDemo
         {
             try
             {
-                store.GhiDem(id, form.Dongs.Select(x => (x.MaHang, x.SoLuong, x.GiaiTrinh)), form.GuiDuyet);
+                store.GhiDem(id, form.PhienBan!.Value,
+                    form.Dongs.Select(x => (x.MaHang, x.SoLuong, x.GiaiTrinh)), form.GuiDuyet);
                 TempData["KhoSuccess"] = form.GuiDuyet ? "Đã gửi duyệt phiếu kiểm." : "Đã lưu số đếm.";
                 return RedirectToAction(nameof(ChiTiet), new { id });
+            }
+            catch (XungDotPhienBanKhoDemoException ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                Response.StatusCode = StatusCodes.Status409Conflict;
+                ViewData["PhienBanDaNhap"] = form.PhienBan;
+                return HienChiTiet(store, phieu, xungDot: true);
             }
             catch (ThaoTacKhoDemoException ex) { ModelState.AddModelError("", ex.Message); }
         }
@@ -88,7 +96,10 @@ public sealed class KiemKhoController(KhoDemoSessionProvider sessions) : KhoDemo
         return View("~/Views/nv_KiemKho/Lap.cshtml", store.MatHangDangDung());
     }
 
-    private IActionResult HienChiTiet(KhoDemoStore store, PhieuKiemDemo phieu) =>
-        View("~/Views/nv_KiemKho/ChiTiet.cshtml",
+    private IActionResult HienChiTiet(KhoDemoStore store, PhieuKiemDemo phieu, bool xungDot = false)
+    {
+        ViewData["XungDot"] = xungDot;
+        return View("~/Views/nv_KiemKho/ChiTiet.cshtml",
             new ChiTietKiemViewModel(phieu, phieu.Dongs.ToDictionary(x => x.MaHang, x => store.TenHang(x.MaHang))));
+    }
 }

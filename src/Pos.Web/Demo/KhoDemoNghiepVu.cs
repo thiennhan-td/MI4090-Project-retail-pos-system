@@ -8,12 +8,13 @@ public sealed partial class KhoDemoStore
     public PhieuNhapDemo? PhieuNhap(string? ma) => ma is null ? null : _phieuNhaps.GetValueOrDefault(ma);
     public TraNhaCungCapDemo[] LichSuTra(string ma) => _khoanTras.Where(x => x.MaPhieu == ma).OrderBy(x => x.LucTra).ToArray();
 
-    public string LuuNhap(string? ma, string maNcc, DateOnly? han, IEnumerable<(string MaHang, int SoLuong, decimal DonGia)> lines)
+    public string LuuNhap(string? ma, int? phienBan, string maNcc, DateOnly? han,
+        IEnumerable<(string MaHang, int SoLuong, decimal DonGia)> lines)
     {
         KiemTraQuyen("NHAP_LAP_NHAP");
         var cu = ma is null ? null : Tim(_phieuNhaps, ma, "Không tìm thấy phiếu nhập.");
-        if (cu is not null && cu.TrangThai != Nhap)
-            throw new ThaoTacKhoDemoException("Chỉ sửa được phiếu nhập nháp.");
+        if (cu is not null && (cu.TrangThai != Nhap || cu.PhienBan != phienBan))
+            throw new XungDotPhienBanKhoDemoException("Phiếu nhập đã thay đổi. Mở phiếu hiện tại trước khi sửa lại.");
 
         var ncc = Tim(_nhaCungCaps, maNcc, "Chọn nhà cung cấp hợp lệ.");
         var dongNhaps = lines.Select(x =>
@@ -129,12 +130,12 @@ public sealed partial class KhoDemoStore
         return phieu.Ma;
     }
 
-    public void GhiDem(string ma, IEnumerable<(string MaHang, int? SoLuong, string? GiaiTrinh)> counts, bool guiDuyet)
+    public void GhiDem(string ma, int phienBan, IEnumerable<(string MaHang, int? SoLuong, string? GiaiTrinh)> counts, bool guiDuyet)
     {
         KiemTraQuyen("KHO_LAP_KIEM", NhanVienKho);
         var phieu = Tim(_phieuKiems, ma, "Không tìm thấy phiếu kiểm.");
-        if (phieu.TrangThai != DangKiem)
-            throw new ThaoTacKhoDemoException("Chỉ cập nhật số đếm trên phiếu đang kiểm.");
+        if (phieu.TrangThai != DangKiem || phieu.PhienBan != phienBan)
+            throw new XungDotPhienBanKhoDemoException("Phiếu kiểm đã thay đổi. Mở phiếu hiện tại trước khi cập nhật số đếm.");
 
         var nhom = counts.GroupBy(x => x.MaHang, StringComparer.OrdinalIgnoreCase).ToArray();
         if (nhom.Length != phieu.Dongs.Count || nhom.Any(x => x.Count() != 1)
@@ -158,7 +159,12 @@ public sealed partial class KhoDemoStore
             || (x.ChenhLech != 0 && string.IsNullOrWhiteSpace(x.GiaiTrinh))))
             throw new ThaoTacKhoDemoException("Cần điền đủ số đếm và giải trình từng dòng chênh lệch.");
 
-        _phieuKiems[phieu.Ma] = phieu with { Dongs = dongs, TrangThai = guiDuyet ? ChoDuyet : DangKiem };
+        _phieuKiems[phieu.Ma] = phieu with
+        {
+            Dongs = dongs,
+            TrangThai = guiDuyet ? ChoDuyet : DangKiem,
+            PhienBan = phieu.PhienBan + 1
+        };
     }
 
     public void DuyetKiem(string ma)
@@ -286,7 +292,9 @@ public sealed record DongKiemDemo(string MaHang, int TonSo, int? SoLuongDem, str
 }
 
 public sealed record PhieuKiemDemo(string Ma, string NguoiLap, string? NguoiDuyet, DateTimeOffset MocKiem,
-    DateTimeOffset? LucHoanTat, string TrangThai, IReadOnlyList<DongKiemDemo> Dongs);
+    DateTimeOffset? LucHoanTat, string TrangThai, IReadOnlyList<DongKiemDemo> Dongs, int PhienBan = 0);
+
+internal sealed class XungDotPhienBanKhoDemoException(string message) : Exception(message);
 
 public sealed record BienDongKhoDemo(string Ma, string MaHang, string Loai, int SoLuong, DateTimeOffset LucGhi,
     string Nguon, string KhoaSuKien);

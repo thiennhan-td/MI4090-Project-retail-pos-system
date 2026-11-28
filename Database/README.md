@@ -1,5 +1,9 @@
 # Cơ sở dữ liệu POS
 
+Khi chạy backend Quầy Chặng 2, chạy thêm `04_CounterRequests.sql` sau `01_Schema.sql` trên cùng CSDL, cả với CSDL đã cài từ trước. Script tạo bảng kỹ thuật `YeuCauGhiQuay` để lưu kết quả gửi lại trong cùng giao dịch với chứng từ. Số 21 bảng nghiệp vụ bên dưới áp dụng cho schema gốc.
+
+Khi tích hợp Web, đăng ký `ICounterRequestRepository` bằng `SqlCounterRequestRepository` dùng chung `SqlUnitOfWork` với các repository ghi chứng từ. Gửi lại cùng `maYeuCau` và nội dung nếu chưa nhận được kết quả. `lucUtc` do tầng gọi cấp ở máy chủ và không dùng để phân biệt hai lần gửi. Màn xác nhận bán và sửa/xác nhận trả cần giữ phiên bản được tính từ chứng từ đã hiển thị bằng `PhienBanNhap`.
+
 Bộ script dùng **SQL Server 2017 trở lên** và khởi tạo **21 bảng, 124 cột, 38 khóa ngoại** theo [từ điển dữ liệu](../docs/design/Tu_dien_du_lieu_POS.md). Chạy `01_Schema.sql` rồi `02_SeedData.sql` trên cùng một cơ sở dữ liệu trống dành riêng cho POS. Với SSMS, chọn cơ sở dữ liệu đích trước khi chạy. Với SQL Server đặt tên máy chủ hoặc instance khác, thay đối số `-S`.
 
 ```powershell

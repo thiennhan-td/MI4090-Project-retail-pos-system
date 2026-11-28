@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Pos.Domain.Constants;
 using Pos.Domain.Exceptions;
 
@@ -24,6 +25,7 @@ public sealed class PhieuKiem : ChungTuNghiepVu
     public DateTime MocKiem { get; }
     public DateTime? LucHoanTat { get; private set; }
     public string TrangThai { get; private set; }
+    public string PhienBan => TaoPhienBan();
 
     public override decimal TinhGiaTriAnhHuong() => 0m;
     public override bool CoTheHuy() => TrangThai is TrangThaiChungTu.DangKiem or TrangThaiChungTu.ChoDuyet;
@@ -62,9 +64,14 @@ public sealed class PhieuKiem : ChungTuNghiepVu
     public void GuiDuyet()
     {
         QuyTac.TrangThai(TrangThai == TrangThaiChungTu.DangKiem);
+        KiemTraMocDem("Hãy đếm lại hoặc hủy và lập phiếu mới.");
         KiemTraKetQuaDem();
         TrangThai = TrangThaiChungTu.ChoDuyet;
     }
+
+    private void KiemTraMocDem(string huongDan)
+        => QuyTac.Dat(_dongKiems.All(dong => !dong.SoLuongDem.HasValue || dong.LucDem.HasValue),
+            $"Phiếu kiểm có số đếm cũ thiếu thời điểm đếm. {huongDan}");
 
     private void KiemTraKetQuaDem()
     {
@@ -74,9 +81,17 @@ public sealed class PhieuKiem : ChungTuNghiepVu
             "Phải giải trình từng dòng kiểm kho có chênh lệch trước khi gửi duyệt.");
     }
 
-    public void Duyet(string maNguoiDuyet, DateTime lucHoanTat)
+    public void KiemTraCoTheDuyet()
     {
         QuyTac.TrangThai(TrangThai == TrangThaiChungTu.ChoDuyet);
+        KiemTraMocDem("Hãy hủy và lập phiếu mới để đếm lại.");
+    }
+
+    public void Duyet(string maNguoiDuyet, DateTime lucHoanTat)
+    {
+        KiemTraCoTheDuyet();
+        QuyTac.Dat(_dongKiems.All(dong => dong.LucDem <= lucHoanTat),
+            "Thời điểm hoàn tất không được trước thời điểm đếm.");
         LuuThongTinDuyet(maNguoiDuyet, lucHoanTat);
         TrangThai = TrangThaiChungTu.HoanTat;
     }
@@ -98,7 +113,7 @@ public sealed class PhieuKiem : ChungTuNghiepVu
 
     public IReadOnlyList<DongKiem> DongKiems => _dongKiems.AsReadOnly();
 
-    public void GhiSoLuongDem(string maHang, int? soLuongDem, string? giaiTrinh = null)
+    public void GhiSoLuongDem(string maHang, int? soLuongDem, DateTime? lucDem, string? giaiTrinh = null)
     {
         QuyTac.TrangThai(TrangThai == TrangThaiChungTu.DangKiem);
         var index = _dongKiems.FindIndex(dong => dong.MaHang == maHang);
@@ -108,7 +123,12 @@ public sealed class PhieuKiem : ChungTuNghiepVu
         }
 
         var dong = _dongKiems[index];
-        _dongKiems[index] = new DongKiem(MaPhieuKiem, dong.MaHang, dong.TonSoTaiMoc, soLuongDem, giaiTrinh);
+        QuyTac.Dat(soLuongDem.HasValue == lucDem.HasValue, "Số đếm mới phải đi cùng thời điểm đếm.");
+        if (lucDem.HasValue)
+        {
+            QuyTac.Utc(lucDem.Value, MocKiem);
+        }
+        _dongKiems[index] = new DongKiem(MaPhieuKiem, dong.MaHang, dong.TonSoTaiMoc, soLuongDem, giaiTrinh, lucDem);
     }
 
     public void ThemDongKiem(DongKiem dong)
@@ -123,5 +143,29 @@ public sealed class PhieuKiem : ChungTuNghiepVu
         ArgumentNullException.ThrowIfNull(dong);
         QuyTac.Dat(dong.MaPhieuKiem == MaPhieuKiem, "Dòng không thuộc chứng từ này.");
         QuyTac.Dat(_dongKiems.All(hienCo => hienCo.MaHang != dong.MaHang), "Dòng đã tồn tại.");
+        QuyTac.Dat(!dong.LucDem.HasValue || dong.LucDem.Value >= MocKiem, "Thời điểm đếm không được trước mốc kiểm.");
+    }
+
+    private string TaoPhienBan()
+    {
+        using var duLieu = new MemoryStream();
+        using var ghi = new BinaryWriter(duLieu);
+        ghi.Write(MaPhieuKiem);
+        ghi.Write(MaNguoiLap);
+        ghi.Write(MaNguoiDuyet ?? string.Empty);
+        ghi.Write(MocKiem.Ticks);
+        ghi.Write(LucHoanTat?.Ticks ?? -1);
+        ghi.Write(TrangThai);
+        ghi.Write(_dongKiems.Count);
+        foreach (var dong in _dongKiems.OrderBy(dong => dong.MaHang, StringComparer.Ordinal))
+        {
+            ghi.Write(dong.MaHang);
+            ghi.Write(dong.TonSoTaiMoc);
+            ghi.Write(dong.SoLuongDem ?? -1);
+            ghi.Write(dong.GiaiTrinh ?? string.Empty);
+            ghi.Write(dong.LucDem?.Ticks ?? -1);
+        }
+        ghi.Flush();
+        return Convert.ToHexString(SHA256.HashData(duLieu.GetBuffer().AsSpan(0, checked((int)duLieu.Length))));
     }
 }

@@ -55,7 +55,70 @@ public sealed class InventoryLedgerServiceTests
         Assert.Equal(new KetQuaGhiTheKhoDto(0, 1), await TaoService().GhiNhanXuatBanAsync(yeuCau, default));
         _danhMuc.Verify(repo => repo.LayMatHangAsync(It.IsAny<string>(), default), Times.Never);
         _bienDong.Verify(repo => repo.LayTonHienHanhAsync(It.IsAny<string>(), default), Times.Never);
+        _bienDong.Verify(repo => repo.LayMocGhiAsync(It.IsAny<string>(), default), Times.Never);
         _bienDong.Verify(repo => repo.ThemAsync(It.IsAny<BienDongKho>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task XuatBan_TuChoiGhiLuiTruocLanNhapDaCommit()
+    {
+        var yeuCau = new YeuCauXuatBanDto("HD-1", Luc, [new("DB-1", "MH-A", 2)]);
+        CaiNguonBan(yeuCau);
+        var nhapSau = BienDongKho.Tao("BD-1", "MH-A", LoaiBienDongKho.NhapKho, 10,
+            Luc.AddMilliseconds(1), maDongNhap: "DN-1");
+        var daKhoaHang = false;
+        _danhMuc.Setup(repo => repo.KhoaMatHangAsync("MH-A", default))
+            .Callback(() => daKhoaHang = true).Returns(Task.CompletedTask);
+        _bienDong.Setup(repo => repo.LayMocGhiAsync("MH-A", default)).ReturnsAsync(() =>
+        {
+            Assert.True(daKhoaHang);
+            return new MocGhiBienDongKho(nhapSau.ThoiDiemGhi, null, null);
+        });
+        _bienDong.Setup(repo => repo.LayTonHienHanhAsync("MH-A", default)).ReturnsAsync(nhapSau.SoLuongThayDoi);
+
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => TaoService().GhiNhanXuatBanAsync(yeuCau, default));
+
+        _bienDong.Verify(repo => repo.ThemAsync(It.IsAny<BienDongKho>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task XuatBan_TuChoiCungMiliGiayVoiMocChupTonCuaPhieuChuaDem()
+    {
+        var yeuCau = new YeuCauXuatBanDto("HD-1", Luc.AddTicks(9_000), [new("DB-1", "MH-A", 2)]);
+        CaiNguonBan(yeuCau);
+        _bienDong.Setup(repo => repo.LayMocGhiAsync("MH-A", default))
+            .ReturnsAsync(new MocGhiBienDongKho(Luc, null, Luc));
+        _bienDong.Setup(repo => repo.LayTonHienHanhAsync("MH-A", default)).ReturnsAsync(9);
+
+        var loi = await Assert.ThrowsAsync<ConcurrencyConflictException>(() => TaoService().GhiNhanXuatBanAsync(yeuCau, default));
+
+        Assert.Contains("mốc chụp tồn", loi.Message);
+        _bienDong.Verify(repo => repo.ThemAsync(It.IsAny<BienDongKho>(), default), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(-1, true)]
+    [InlineData(0, true)]
+    [InlineData(1, false)]
+    public async Task XuatBan_TuChoiThoiDiemTruocHoacTrungMocDemDuocBaoVe(int lechMiliGiay, bool biTuChoi)
+    {
+        var lucBan = Luc.AddMilliseconds(lechMiliGiay);
+        var yeuCau = new YeuCauXuatBanDto("HD-1", lucBan.AddTicks(9_000), [new("DB-1", "MH-A", 2)]);
+        CaiNguonBan(yeuCau, lucNguonUtc: lucBan);
+        _bienDong.Setup(repo => repo.LayMocGhiAsync("MH-A", default))
+            .ReturnsAsync(new MocGhiBienDongKho(Luc.AddMilliseconds(-2), Luc, null));
+        _bienDong.Setup(repo => repo.LayTonHienHanhAsync("MH-A", default)).ReturnsAsync(5);
+
+        if (biTuChoi)
+        {
+            await Assert.ThrowsAsync<ConcurrencyConflictException>(() => TaoService().GhiNhanXuatBanAsync(yeuCau, default));
+        }
+        else
+        {
+            Assert.Equal(new KetQuaGhiTheKhoDto(1, 0), await TaoService().GhiNhanXuatBanAsync(yeuCau, default));
+        }
+
+        _bienDong.Verify(repo => repo.ThemAsync(It.IsAny<BienDongKho>(), default), biTuChoi ? Times.Never() : Times.Once());
     }
 
     [Theory]
@@ -96,6 +159,8 @@ public sealed class InventoryLedgerServiceTests
         var yeuCau = new YeuCauXuatBanDto("HD-1", dauNgayMoiUtc.AddTicks(-4_000), [new("DB-1", "MH-A", 2)]);
         var lucNguonUtc = dauNgayMoiUtc.AddMilliseconds(-1);
         CaiNguonBan(yeuCau, lucNguonUtc: lucNguonUtc);
+        _bienDong.Setup(repo => repo.LayMocGhiAsync("MH-A", default))
+            .ReturnsAsync(new MocGhiBienDongKho(lucNguonUtc, null, null));
         _bienDong.Setup(repo => repo.LayTonHienHanhAsync("MH-A", default)).ReturnsAsync(2);
 
         Assert.Equal(new KetQuaGhiTheKhoDto(1, 0), await TaoService().GhiNhanXuatBanAsync(yeuCau, default));

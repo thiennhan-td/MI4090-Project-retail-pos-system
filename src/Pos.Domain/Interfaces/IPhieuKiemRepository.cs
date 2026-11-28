@@ -8,7 +8,6 @@ public interface IPhieuKiemRepository
     Task<PhieuKiem?> LayTheoMaAsync(string ma, CancellationToken ct);
     Task<PhieuKiem?> KhoaTheoMaAsync(string ma, CancellationToken ct);
     Task<IReadOnlyList<PhieuKiem>> LayLichSuAsync(CancellationToken ct);
-    Task<DateTime?> LayMocKiemDangMoMoiNhatAsync(string maHang, CancellationToken ct);
     Task ThemAsync(PhieuKiem entity, CancellationToken ct);
     Task CapNhatAsync(PhieuKiem entity, CancellationToken ct);
     Task CapNhatDemAsync(DongKiem dong, CancellationToken ct);

@@ -30,6 +30,30 @@ public sealed class PhieuTra : ChungTuNghiepVu
     public DateTime? LucXacNhan { get; private set; }
     public string TrangThai { get; private set; }
 
+    /// <summary>Dựng lại phiếu đã lưu theo trạng thái và các dòng lịch sử.</summary>
+    public static PhieuTra KhoiPhuc(string maPhieuTra, string maHoaDon, string maCaNhan, string maNguoiNhan,
+        DateTime lucLap, string trangThai, DateTime? lucXacNhan,
+        IEnumerable<DongTra> dongTra, IEnumerable<KhoanHoan> khoanHoan)
+    {
+        var phieu = new PhieuTra(maPhieuTra, maHoaDon, maCaNhan, maNguoiNhan, lucLap);
+        QuyTac.Dat((trangThai == TrangThaiChungTu.Nhap && lucXacNhan is null) ||
+            (trangThai == TrangThaiChungTu.DaXacNhan && lucXacNhan.HasValue),
+            "Trạng thái và dấu thời gian của phiếu trả đã lưu không nhất quán.");
+
+        foreach (var dong in dongTra)
+        {
+            phieu.ThemDongTra(dong);
+        }
+        foreach (var khoan in khoanHoan)
+        {
+            phieu.ThemKhoanHoan(khoan);
+        }
+
+        phieu.LucXacNhan = lucXacNhan is { } xacNhan ? QuyTac.Utc(xacNhan, lucLap) : null;
+        phieu.TrangThai = trangThai;
+        return phieu;
+    }
+
     public override decimal TinhGiaTriAnhHuong() => -_khoanHoans.Sum(khoan => khoan.SoTienHoan);
     public override bool CoTheHuy() => TrangThai == TrangThaiChungTu.Nhap;
     public override string TaoTomTatHienThi() => $"Phiếu trả {MaPhieuTra}";

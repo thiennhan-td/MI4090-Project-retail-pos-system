@@ -199,8 +199,10 @@ Ví dụ luồng `SaleService.XacNhanBanAsync(maHoaDon, maTaiKhoan)`:
 2. `SaleService` gọi `await _unitOfWork.BeginTransactionAsync(ct)` mở **01 SQL Transaction chung**.
 3. `SaleService` khóa dòng `CaBan` và `HoaDon` theo thứ tự khóa chuẩn, kiểm tra `QT01` (tổng thanh toán khớp tổng dòng bán), chuyển `HoaDon` sang `DaXacNhan`, lưu cập nhật qua `IHoaDonRepository`.
 4. `SaleService` gọi `_inventoryService.GhiNhanXuatBanAsync(req, ct)` (TV2). Vì `IInventoryLedgerRepository` dùng **cùng instance `SqlUnitOfWork` đang giữ `SqlTransaction`**, TV2 khóa các dòng `MatHang` theo thứ tự mã `maHang` tăng dần (`UPDLOCK, HOLDLOCK`), đọc lại tồn kho và ghi `BienDongKho` với `khoaSuKien = "XuatBan:{maDongBan}"`.
-5. Nếu một mặt hàng thiếu tồn (`TC-IT-04`), TV2 ném `InsufficientStockException` → khối `catch` của `SaleService` gọi `await _unitOfWork.RollbackAsync(ct)` → **hoàn tác 100% cả `HoaDon`, `ThanhToanBan` (TV1) lẫn mọi dòng `BienDongKho` đã ghi trước đó (TV2)** rồi ném lại ngoại lệ nguyên vẹn (không `catch` rỗng).
+5. Nếu một mặt hàng thiếu tồn (`TC-IT-04`), TV2 ném `InsufficientStockException` → khối `catch` của `SaleService` gọi `await _unitOfWork.RollbackAsync(CancellationToken.None)` → **hoàn tác 100% cả `HoaDon`, `ThanhToanBan` (TV1) lẫn mọi dòng `BienDongKho` đã ghi trước đó (TV2)** rồi ném lại ngoại lệ gốc. Nếu rollback cũng lỗi, lưu lỗi rollback vào `Exception.Data` của ngoại lệ gốc để giữ thông tin chẩn đoán.
 6. Nếu toàn bộ hợp lệ → `await _unitOfWork.CommitAsync(ct)`.
+
+Nếu SQL Server đã kết thúc transaction, `SqlUnitOfWork` từ chối tạo lệnh mới trên transaction đó. Nếu có cơ chế thử lại cho lỗi tạm thời như deadlock, thử lại toàn bộ nghiệp vụ trong một transaction mới.
 
 ### 2.3. Áp dụng SOLID (SRP, ISP, DIP) & Chứng minh khả năng hoán đổi
 

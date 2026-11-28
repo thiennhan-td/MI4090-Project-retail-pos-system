@@ -1,4 +1,5 @@
 using Pos.Domain.Constants;
+using Pos.Domain.Exceptions;
 
 namespace Pos.Domain.Entities;
 
@@ -33,6 +34,8 @@ public sealed class PhieuKiem : ChungTuNghiepVu
         QuyTac.TrangThai(TrangThai == TrangThaiChungTu.DangKiem);
         QuyTac.Dat(_dongKiems.Count > 0 && _dongKiems.All(dong => dong.SoLuongDem.HasValue),
             "Phải đếm tất cả các dòng trước khi gửi duyệt.");
+        QuyTac.Dat(_dongKiems.All(dong => dong.ChenhLech == 0 || !string.IsNullOrWhiteSpace(dong.GiaiTrinh)),
+            "Phải giải trình từng dòng kiểm kho có chênh lệch trước khi gửi duyệt.");
         TrangThai = TrangThaiChungTu.ChoDuyet;
     }
 
@@ -54,6 +57,19 @@ public sealed class PhieuKiem : ChungTuNghiepVu
     }
 
     public IReadOnlyList<DongKiem> DongKiems => _dongKiems.AsReadOnly();
+
+    public void GhiSoLuongDem(string maHang, int soLuongDem, string? giaiTrinh = null)
+    {
+        QuyTac.TrangThai(TrangThai == TrangThaiChungTu.DangKiem);
+        var index = _dongKiems.FindIndex(dong => dong.MaHang == maHang);
+        if (index < 0)
+        {
+            throw new EntityNotFoundException($"Mặt hàng {maHang} không có trong phiếu kiểm.");
+        }
+
+        var dong = _dongKiems[index];
+        _dongKiems[index] = new DongKiem(MaPhieuKiem, dong.MaHang, dong.TonSoTaiMoc, soLuongDem, giaiTrinh);
+    }
 
     public void ThemDongKiem(DongKiem dong)
     {

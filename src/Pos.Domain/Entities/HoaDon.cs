@@ -31,6 +31,40 @@ public sealed class HoaDon : ChungTuNghiepVu
     public DateTime? LucHuy { get; private set; }
     public string? LyDoHuy { get; private set; }
 
+    /// <summary>Dựng lại lịch sử đã lưu. Dùng các phương thức nghiệp vụ để tạo và chuyển trạng thái mới.</summary>
+    public static HoaDon KhoiPhuc(string maHoaDon, string maCa, string maNguoiLap, DateTime lucLap,
+        string trangThai, DateTime? lucXacNhan, DateTime? lucHuy, string? maNguoiHuy, string? lyDoHuy,
+        string? maCaDao, IEnumerable<DongBan> dongBan, IEnumerable<ThanhToanBan> thanhToan)
+    {
+        var hoaDon = new HoaDon(maHoaDon, maCa, maNguoiLap, lucLap);
+        var khongCoDauHuy = lucHuy is null && maNguoiHuy is null && lyDoHuy is null && maCaDao is null;
+        QuyTac.Dat(trangThai switch
+        {
+            TrangThaiChungTu.Nhap => lucXacNhan is null && khongCoDauHuy,
+            TrangThaiChungTu.DaXacNhan => lucXacNhan.HasValue && khongCoDauHuy,
+            TrangThaiChungTu.DaHuy => lucHuy.HasValue && maNguoiHuy is not null && lyDoHuy is not null &&
+                (lucXacNhan.HasValue || maCaDao is null),
+            _ => false
+        }, "Trạng thái và dấu thời gian của hóa đơn đã lưu không nhất quán.");
+
+        foreach (var dong in dongBan)
+        {
+            hoaDon.ThemDongBan(dong);
+        }
+        foreach (var khoan in thanhToan)
+        {
+            hoaDon.ThemThanhToanBan(khoan);
+        }
+
+        hoaDon.LucXacNhan = lucXacNhan is { } xacNhan ? QuyTac.Utc(xacNhan, lucLap) : null;
+        hoaDon.LucHuy = lucHuy is { } huy ? QuyTac.Utc(huy, lucXacNhan ?? lucLap) : null;
+        hoaDon.MaNguoiHuy = maNguoiHuy is null ? null : QuyTac.Chuoi(maNguoiHuy, 32);
+        hoaDon.LyDoHuy = lyDoHuy is null ? null : QuyTac.Chuoi(lyDoHuy, 500);
+        hoaDon.MaCaDao = maCaDao is null ? null : QuyTac.Chuoi(maCaDao, 32);
+        hoaDon.TrangThai = trangThai;
+        return hoaDon;
+    }
+
     public override decimal TinhGiaTriAnhHuong() => _dongBans.Sum(dong => dong.ThanhTien);
     public override bool CoTheHuy() => TrangThai is TrangThaiChungTu.Nhap or TrangThaiChungTu.DaXacNhan;
     public override string TaoTomTatHienThi() => $"Hóa đơn {MaHoaDon}";

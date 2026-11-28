@@ -38,7 +38,11 @@ public sealed class SqlUnitOfWork(SqlConnectionFactory factory) : IUnitOfWork
         ObjectDisposedException.ThrowIf(_disposed, this);
         var transaction = _transaction
             ?? throw new InvalidOperationException("Cần mở giao dịch trước khi tạo lệnh.");
-        return new SqlCommand(commandText, _connection, transaction);
+        if (transaction.Connection is not { } connection || !ReferenceEquals(connection, _connection))
+        {
+            throw new InvalidOperationException("Giao dịch SQL đã kết thúc. Hãy thử lại toàn bộ nghiệp vụ trong giao dịch mới.");
+        }
+        return new SqlCommand(commandText, connection, transaction);
     }
 
     public async Task CommitAsync(CancellationToken ct = default)
@@ -63,7 +67,8 @@ public sealed class SqlUnitOfWork(SqlConnectionFactory factory) : IUnitOfWork
         {
             if (transaction.Connection is not null)
             {
-                await transaction.RollbackAsync(ct);
+                // Dọn dẹp giao dịch kể cả khi request đã bị hủy.
+                await transaction.RollbackAsync(CancellationToken.None);
             }
         }
         finally

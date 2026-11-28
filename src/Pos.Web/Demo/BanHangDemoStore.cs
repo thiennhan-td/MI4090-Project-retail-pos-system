@@ -26,7 +26,7 @@ public sealed class BanHangDemoSessionProvider
     }
 }
 
-public sealed class BanHangDemoStore
+public sealed partial class BanHangDemoStore
 {
     private readonly object _sync = new();
     private readonly List<MatHangDemoItem> _matHangs;
@@ -443,8 +443,8 @@ public sealed class HoaDonDemoRecord
     public string? TenNguoiHuy { get; set; }
     public string? MaCaDao { get; set; }
     public string? LyDoHuy { get; set; }
-    public bool CoPhieuTraHieuLuc { get; init; }
-    public string? MaPhieuTraLienQuan { get; init; }
+    public bool CoPhieuTraHieuLuc { get; set; }
+    public string? MaPhieuTraLienQuan { get; set; }
     public List<DongBanDemoRecord> DongBans { get; init; } = [];
     public List<ThanhToanDemoRecord> ThanhToans { get; init; } = [];
 

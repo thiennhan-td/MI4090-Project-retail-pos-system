@@ -1,0 +1,223 @@
+@using System.Globalization
+@model Pos.Web.ViewModels.TraHang.TraCuuTraViewModel
+@{
+    ViewData["Title"] = "Tra cứu phiếu trả hàng";
+    var loc = Model.Loc;
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var successMsg = TempData["F4Success"] as string;
+}
+
+<section class="pos-f3-toolbar">
+    <div class="pos-f3-meta-row">
+        <span class="pos-pill">@(loc.VaiTro == "QuanLy" ? "Vai trò demo: Quản lý (Nguyễn An · Toàn cửa hàng)" : "Vai trò demo: Thu ngân (Lê Linh · Các ca của mình)")</span>
+    </div>
+    <div class="pos-f3-toolbar-actions">
+        <a class="pos-btn pos-btn-secondary" asp-controller="TraHang" asp-action="Index">Lập phiếu trả mới</a>
+    </div>
+</section>
+
+@if ((ViewData["FilterError"] ?? TempData["F4Error"]) is string error)
+{
+    <p class="pos-alert pos-alert-error" role="alert">@error</p>
+}
+@if (!string.IsNullOrWhiteSpace(successMsg))
+{
+    <div class="pos-alert pos-alert-success" role="status">@successMsg</div>
+}
+
+<section class="pos-card" style="margin-bottom: 1rem;">
+    <form method="get" class="pos-filter-grid">
+        <div class="pos-field">
+            <label for="f-vaiTro">Vai trò demo</label>
+            <select id="f-vaiTro" name="vaiTro" class="pos-input">
+                <option value="ThuNgan" selected="@(loc.VaiTro != "QuanLy")">Thu ngân · Lê Linh</option>
+                <option value="QuanLy" selected="@(loc.VaiTro == "QuanLy")">Quản lý · Nguyễn An</option>
+            </select>
+        </div>
+        <div class="pos-field">
+            <label for="f-ma">Mã phiếu trả</label>
+            <input id="f-ma" class="pos-input" name="ma" value="@loc.Ma" placeholder="VD: S-PT-01, PT-..." />
+        </div>
+        <div class="pos-field">
+            <label for="f-hoaDon">Hóa đơn gốc</label>
+            <input id="f-hoaDon" class="pos-input" name="hoaDon" value="@loc.HoaDon" placeholder="VD: S-HD-01" />
+        </div>
+        <div class="pos-field">
+            <label for="f-tuNgay">Từ ngày</label>
+            <input id="f-tuNgay" type="date" name="tuNgay" class="pos-input" value="@loc.TuNgay?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="pos-field">
+            <label for="f-denNgay">Đến ngày</label>
+            <input id="f-denNgay" type="date" name="denNgay" class="pos-input" value="@loc.DenNgay?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="pos-field">
+            <label for="f-ca">Ca nhận trả</label>
+            <select id="f-ca" name="ca" class="pos-input">
+                <option value="">Tất cả</option>
+                @foreach (var c in Model.CacCa)
+                {
+                    <option value="@c" selected="@(loc.Ca == c)">@c</option>
+                }
+            </select>
+        </div>
+        <div class="pos-field">
+            <label for="f-trangThai">Trạng thái</label>
+            <select id="f-trangThai" name="trangThai" class="pos-input">
+                <option value="">Tất cả</option>
+                <option value="Nhap" selected="@(loc.TrangThai == "Nhap")">Nháp</option>
+                <option value="DaXacNhan" selected="@(loc.TrangThai == "DaXacNhan")">Đã xác nhận</option>
+            </select>
+        </div>
+        <div class="pos-field">
+            <label for="f-caMo">Ca hiện tại</label>
+            <select id="f-caMo" name="caMo" class="pos-input">
+                <option value="true" selected="@loc.CaMo">Đang mở</option>
+                <option value="false" selected="@(!loc.CaMo)">Đã đóng</option>
+            </select>
+        </div>
+        <div class="pos-filter-actions">
+            <button type="submit" class="pos-btn pos-btn-primary">Tra cứu</button>
+            <a class="pos-btn pos-btn-ghost" asp-action="TraCuu" asp-route-vaiTro="@loc.VaiTro" asp-route-caMo="@(loc.CaMo ? "true" : "false")">Xóa lọc</a>
+        </div>
+    </form>
+</section>
+
+<section class="pos-card" style="margin-bottom: 1rem;">
+    <div class="pos-pane-head" style="margin-bottom: 0.75rem;">
+        <h2 class="pos-h2" style="margin: 0;">Danh sách phiếu trả</h2>
+        <span class="pos-pill pos-num">@Model.Phieu.Length kết quả</span>
+    </div>
+    <div class="pos-table-wrap">
+        <table class="pos-table">
+            <thead>
+                <tr>
+                    <th>Phiếu trả</th>
+                    <th>Hóa đơn gốc</th>
+                    <th>Ca nhận trả</th>
+                    <th>Thu ngân</th>
+                    <th>Ngày lập</th>
+                    <th class="pos-num-col">Tổng hoàn</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Phieu)
+                {
+                    var tongHoan = p.TienMat + p.ChuyenKhoan;
+                    <tr>
+                        <td class="pos-num">
+                            <a asp-action="TraCuu"
+                               asp-route-ma="@loc.Ma"
+                               asp-route-hoaDon="@loc.HoaDon"
+                               asp-route-tuNgay="@(loc.TuNgay?.ToString("yyyy-MM-dd"))"
+                               asp-route-denNgay="@(loc.DenNgay?.ToString("yyyy-MM-dd"))"
+                               asp-route-ca="@loc.Ca"
+                               asp-route-trangThai="@loc.TrangThai"
+                               asp-route-vaiTro="@loc.VaiTro"
+                               asp-route-caMo="@(loc.CaMo ? "true" : "false")"
+                               asp-route-chon="@p.Ma"><strong>@p.Ma</strong></a>
+                        </td>
+                        <td class="pos-num">@p.HoaDon</td>
+                        <td class="pos-num">@p.Ca</td>
+                        <td>@p.Nguoi</td>
+                        <td class="pos-num">@p.Ngay.ToString("dd/MM/yyyy")</td>
+                        <td class="pos-num-col pos-num">@tongHoan.ToString("N0", vi) đ</td>
+                        <td>
+                            <span class="pos-badge @(p.XacNhan ? "pos-badge-teal" : "pos-badge-amber")">
+                                @(p.XacNhan ? "Đã xác nhận" : "Nháp")
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Phieu.Length == 0)
+    {
+        <p class="pos-muted" style="margin-top: 0.75rem;">Chưa có phiếu trả phù hợp.</p>
+    }
+</section>
+
+@if (Model.Chon is { } ph)
+{
+    <section class="pos-card">
+        <div class="pos-pane-head" style="margin-bottom: 0.75rem;">
+            <div>
+                <div class="pos-f3-meta-row">
+                    <h2 class="pos-h2 pos-num" style="margin: 0;">Phiếu trả @ph.Ma</h2>
+                    <span class="pos-badge @(ph.XacNhan ? "pos-badge-teal" : "pos-badge-amber")">
+                        @(ph.XacNhan ? "Đã xác nhận" : "Nháp")
+                    </span>
+                </div>
+                <p class="pos-muted" style="margin-top: 0.25rem; font-size: 0.85rem;">
+                    @ph.Nguoi · Ca @ph.Ca · @ph.Ngay.ToString("dd/MM/yyyy") · Hóa đơn gốc @ph.HoaDon
+                </p>
+            </div>
+        </div>
+
+        <div class="pos-table-wrap">
+            <table class="pos-table">
+                <thead>
+                    <tr>
+                        <th>Hàng trả</th>
+                        <th class="pos-num-col">SL trả</th>
+                        <th class="pos-num-col">SL nhập lại kho</th>
+                        <th class="pos-num-col">Đơn giá gốc</th>
+                        <th class="pos-num-col">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in ph.Dong)
+                    {
+                        <tr>
+                            <td>@d.TenHang</td>
+                            <td class="pos-num-col pos-num">@d.SoLuong</td>
+                            <td class="pos-num-col pos-num">@d.NhapLai</td>
+                            <td class="pos-num-col pos-num">@d.Gia.ToString("N0", vi) đ</td>
+                            <td class="pos-num-col pos-num"><strong>@((d.Gia * d.SoLuong).ToString("N0", vi)) đ</strong></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pos-detail-summary">
+            <div class="pos-detail-row">
+                <span>Hoàn Tiền mặt</span>
+                <strong class="pos-num">@ph.TienMat.ToString("N0", vi) đ</strong>
+            </div>
+            <div class="pos-detail-row">
+                <span>Hoàn Chuyển khoản</span>
+                <strong class="pos-num">@ph.ChuyenKhoan.ToString("N0", vi) đ</strong>
+            </div>
+            <div class="pos-detail-row">
+                <span>Tổng tiền hoàn</span>
+                <strong class="pos-num pos-text-teal">@((ph.TienMat + ph.ChuyenKhoan).ToString("N0", vi)) đ</strong>
+            </div>
+        </div>
+
+        @if (!ph.XacNhan && loc.CaMo && loc.VaiTro != "QuanLy" && ph.Ca == "S-CA-1126" && ph.Nguoi == "Lê Linh")
+        {
+            <div class="pos-f3-toolbar-actions" style="margin-top: 1rem;">
+                <a class="pos-btn pos-btn-primary"
+                   asp-action="Index"
+                   asp-route-maHoaDon="@ph.HoaDon"
+                   asp-route-maNhap="@ph.Ma">Mở phiếu nháp để xác nhận</a>
+
+                <form asp-action="Xoa" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="loc.Ma" value="@loc.Ma" />
+                    <input type="hidden" name="loc.HoaDon" value="@loc.HoaDon" />
+                    <input type="hidden" name="loc.Ca" value="@loc.Ca" />
+                    <input type="hidden" name="loc.TrangThai" value="@loc.TrangThai" />
+                    <input type="hidden" name="loc.TuNgay" value="@loc.TuNgay?.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="loc.DenNgay" value="@loc.DenNgay?.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="ma" value="@ph.Ma" />
+                    <input type="hidden" name="caMo" value="@(loc.CaMo ? "true" : "false")" />
+                    <input type="hidden" name="vaiTro" value="@(loc.VaiTro ?? "ThuNgan")" />
+                    <button type="submit" class="pos-btn pos-btn-danger">Xóa phiếu nháp</button>
+                </form>
+            </div>
+        }
+    </section>
+}

@@ -5,6 +5,13 @@
     query["vaiTro"] = "QuanLy";
 }
 <section class="pos-card">
-    <h2>Chỉ Quản lý được xem báo cáo Quầy</h2>
-    <a class="pos-btn pos-btn-primary" asp-action="@ViewContext.RouteData.Values["action"]" asp-all-route-data="query">Chuyển sang vai trò Quản lý</a>
+    @if (ViewData["KhoDanhTinh"] is not null)
+    {
+        <h2>Tài khoản hiện tại không có quyền xem báo cáo này</h2>
+    }
+    else
+    {
+        <h2>Chỉ vai trò demo Quản lý được xem báo cáo Quầy</h2>
+        <a class="pos-btn pos-btn-primary" asp-action="@ViewContext.RouteData.Values["action"]" asp-all-route-data="query">Chuyển sang vai trò Quản lý</a>
+    }
 </section>

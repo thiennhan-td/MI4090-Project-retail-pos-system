@@ -27,26 +27,20 @@ public sealed partial class BanHangDemoStore
                 new("Hóa đơn bị hủy", dao.Length, false),
                 new("Giá trị đảo bán", dao.Sum(h => h.TongTienHang))
             };
-            var chungTu = trongNgay.Select(d => new
+            var chungTu = trongNgay.OrderBy(d => d.Luc).Select(d => new object?[]
             {
-                d.Luc,
-                Dong = new object?[] { d.Luc, d.Ma, d.MaCa, d.Loai, TenQuy(d.Nguon), TenPhuongThuc(d.PhuongThuc), d.LyDo, d.GiaTri }
-            });
-            // DocSo đã có đảo tiền mặt. Bổ sung phần chuyển khoản để truy vết chứng từ hủy.
-            var daoChuyenKhoan = dao.Where(h => h.TongChuyenKhoan > 0).Select(h => new
-            {
-                Luc = h.LucHuy!.Value,
-                Dong = new object?[] { h.LucHuy, h.MaHoaDon, h.MaCaDao, "Đảo hủy", "Quỹ cửa hàng",
-                    "Chuyển khoản", h.LyDoHuy, -h.TongChuyenKhoan }
-            });
-            var ca = _caBans.Where(c => TrongKy(c.LucMo, ngay, ngay) || TrongKy(_banGiao[c.MaCa].Dong, ngay, ngay));
+                d.Luc, d.Ma, d.MaCa, d.Loai, TenQuy(d.Nguon), TenPhuongThuc(d.PhuongThuc), d.LyDo, d.GiaTri
+            }).ToArray();
+            var caCoButToan = trongNgay.Select(d => d.MaCa).ToHashSet();
+            var ca = _caBans.Where(c => TrongKy(c.LucMo, ngay, ngay)
+                || TrongKy(_banGiao[c.MaCa].Dong, ngay, ngay) || caCoButToan.Contains(c.MaCa));
             return new(loc, "CuoiNgay", "Báo cáo cuối ngày", chiSo,
             [
                 BangThanhToan(trongNgay, "Thu chi két ca và quỹ cửa hàng", chiThuChi: true),
                 new("Chi tiết chứng từ trong ngày",
                     ["Thời điểm", "Chứng từ", "Ca", "Nghiệp vụ", "Nguồn quỹ", "Phương thức", "Diễn giải", "Giá trị"],
-                    chungTu.Concat(daoChuyenKhoan).OrderBy(d => d.Luc).Select(d => d.Dong).ToArray(), 7),
-                BangLechCa(ca, so, "Ca mở hoặc đóng trong ngày")
+                    chungTu, 7),
+                BangLechCa(ca, so, ngay, "Ca mở, đóng hoặc phát sinh giao dịch trong ngày")
             ]);
         }
     }
@@ -100,31 +94,37 @@ public sealed partial class BanHangDemoStore
             var so = DocSo().ToArray();
             var caLoc = _caBans.Where(c =>
                 (loc.MaCa is null || c.MaCa.Equals(loc.MaCa, StringComparison.OrdinalIgnoreCase))
-                && (loc.TrangThaiCa is null || c.TrangThai == loc.TrangThaiCa)).ToArray();
+                && (loc.TrangThaiCa is null || (DaChotDen(c, den) ? "DaDong" : "DangMo") == loc.TrangThaiCa)).ToArray();
             var maCaLoc = caLoc.Select(c => c.MaCa).ToHashSet();
             var trongKy = so.Where(d => maCaLoc.Contains(d.MaCa) && TrongKy(d.Luc, tu, den)).ToArray();
             var caCoButToan = trongKy.Select(d => d.MaCa).ToHashSet();
             var caTrongKy = caLoc.Where(c => TrongKy(c.LucMo, tu, den)
                 || TrongKy(_banGiao[c.MaCa].Dong, tu, den) || caCoButToan.Contains(c.MaCa));
             return new(loc, "ThanhToanLechCa", "Thanh toán và chênh lệch ca", [],
-                [BangThanhToan(trongKy, "Phương thức thanh toán trong kỳ"), BangLechCa(caTrongKy, so, "Đối soát từng ca")],
+                [BangThanhToan(trongKy, "Phương thức thanh toán trong kỳ"), BangLechCa(caTrongKy, so, den, "Đối soát từng ca")],
                 _caBans.Select(c => c.MaCa).ToArray());
         }
     }
 
-    private BangBaoCaoQuayViewModel BangLechCa(IEnumerable<CaBanDemoItem> ca, DongQuyViewModel[] so, string tieuDe)
+    private bool DaChotDen(CaBanDemoItem ca, DateOnly den) =>
+        _banGiao[ca.MaCa].Dong is { } lucDong && DateOnly.FromDateTime(lucDong) <= den;
+
+    private BangBaoCaoQuayViewModel BangLechCa(IEnumerable<CaBanDemoItem> ca, DongQuyViewModel[] so, DateOnly den, string tieuDe)
     {
-        var rong = so.GroupBy(d => d.MaCa).ToDictionary(g => g.Key, g => g.Sum(d => d.TienKet));
+        var rong = so.Where(d => DateOnly.FromDateTime(d.Luc) <= den)
+            .GroupBy(d => d.MaCa).ToDictionary(g => g.Key, g => g.Sum(d => d.TienKet));
         var tongLech = 0m;
         var dong = new List<object?[]>();
         foreach (var c in ca.OrderBy(c => c.LucMo))
         {
             var b = _banGiao[c.MaCa];
-            var duKien = b.Chot ?? b.Dau + rong.GetValueOrDefault(c.MaCa);
-            var lech = b.Dem - duKien;
+            var daChot = DaChotDen(c, den);
+            var duKien = (daChot ? b.Chot : null) ?? b.Dau + rong.GetValueOrDefault(c.MaCa);
+            var thucDem = daChot ? b.Dem : null;
+            var lech = thucDem - duKien;
             tongLech += lech ?? 0;
-            dong.Add([c.MaCa, c.TenNguoiMo, c.TrangThai == "DangMo" ? "Đang mở" : "Đã đóng",
-                c.LucMo, b.Dong, b.Dau, duKien - b.Dau, duKien, b.Dem, lech]);
+            dong.Add([c.MaCa, c.TenNguoiMo, daChot ? "Đã đóng" : "Đang mở",
+                c.LucMo, daChot ? b.Dong : null, b.Dau, duKien - b.Dau, duKien, thucDem, lech]);
         }
 
         return new(tieuDe, ["Mã ca", "Thu ngân", "Trạng thái", "Mở lúc", "Đóng lúc", "Tiền đầu ca",
@@ -137,8 +137,8 @@ public sealed partial class BanHangDemoStore
         var dong = new List<object?[]>();
         if (!chiThuChi)
         {
-            foreach (var (nhan, loai) in new[] { ("Thu bán", "Thu bán"), ("Đảo hủy tiền mặt", "Đảo hủy"), ("Hoàn trả", "Hoàn trả") })
-                dong.Add([nhan, TongQuy(so, loai, "TienMat"), loai == "Đảo hủy" ? null : TongQuy(so, loai, "ChuyenKhoan")]);
+            foreach (var loai in new[] { "Thu bán", "Đảo hủy", "Hoàn trả" })
+                dong.Add([loai, TongQuy(so, loai, "TienMat"), TongQuy(so, loai, "ChuyenKhoan")]);
         }
         foreach (var (nguon, ten) in new[] { ("KetCa", "két ca"), ("QuyCuaHang", "quỹ cửa hàng") })
         {

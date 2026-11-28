@@ -33,10 +33,13 @@
             <option value="DaDong" selected="@(loc.TrangThaiCa == "DaDong")">Đã đóng</option>
         </select></label>
     }
-    <label>Vai trò demo <select class="pos-input" name="vaiTro">
-        <option value="QuanLy">Quản lý</option>
-        <option value="ThuNgan">Thu ngân</option>
-    </select></label>
+    @if (ViewData["KhoDanhTinh"] is null)
+    {
+        <label>Vai trò demo <select class="pos-input" name="vaiTro">
+            <option value="QuanLy">Quản lý</option>
+            <option value="ThuNgan">Thu ngân</option>
+        </select></label>
+    }
     <button class="pos-btn pos-btn-primary" type="submit">Xem báo cáo</button>
     <a class="pos-btn pos-btn-secondary" asp-action="@Model.HanhDong" asp-all-route-data="csv">Tải CSV</a>
     @if (loc.Ngay.HasValue)

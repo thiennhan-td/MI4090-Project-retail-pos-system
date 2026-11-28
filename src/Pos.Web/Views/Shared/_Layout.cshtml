@@ -124,9 +124,9 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f8"></use></svg>
                         <span>F8 · Báo cáo thống kê</span>
                     </h2>
-                    <a class="pos-nav-item @(currentController == "BaoCaoQuay" && currentAction == "CuoiNgay" ? "is-active" : "")" asp-controller="BaoCaoQuay" asp-action="CuoiNgay">Báo cáo cuối ngày</a>
-                    <a class="pos-nav-item @(currentController == "BaoCaoQuay" && currentAction == "BanTra" ? "is-active" : "")" asp-controller="BaoCaoQuay" asp-action="BanTra">Thống kê bán và trả hàng</a>
-                    <a class="pos-nav-item @(currentController == "BaoCaoQuay" && currentAction == "ThanhToanLechCa" ? "is-active" : "")" asp-controller="BaoCaoQuay" asp-action="ThanhToanLechCa">Thanh toán và chênh lệch ca</a>
+                    <partial name="_KhoNav" model='(("BaoCaoQuay", "CuoiNgay", "Báo cáo cuối ngày", currentController == "BaoCaoQuay" && currentAction == "CuoiNgay", khoUser is null || khoUser.CoQuyen("BC_CUOI_NGAY")))' />
+                    <partial name="_KhoNav" model='(("BaoCaoQuay", "BanTra", "Thống kê bán và trả hàng", currentController == "BaoCaoQuay" && currentAction == "BanTra", khoUser is null || khoUser.CoQuyen("BC_BAN_TRA")))' />
+                    <partial name="_KhoNav" model='(("BaoCaoQuay", "ThanhToanLechCa", "Thanh toán và chênh lệch ca", currentController == "BaoCaoQuay" && currentAction == "ThanhToanLechCa", khoUser is null || khoUser.CoQuyen("BC_THANH_TOAN_CA")))' />
                     <partial name="_KhoNav" model='(("BaoCao", "XuatNhapTon", "Thống kê xuất, nhập, tồn", currentController == "BaoCao" && (currentAction == "XuatNhapTon"), khoUser is null || khoUser.CoQuyen("BC_XUAT_NHAP_TON")))' />
                     <partial name="_KhoNav" model='(("BaoCao", "CongNoNcc", "Nhập hàng và công nợ NCC", currentController == "BaoCao" && (currentAction == "CongNoNcc"), khoUser is null || khoUser.CoQuyen("BC_NHAP_CONG_NO")))' />
                 </section>

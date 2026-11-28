@@ -6,33 +6,37 @@ using Pos.Web.ViewModels.BaoCaoQuay;
 
 namespace Pos.Web.Controllers;
 
-public sealed class BaoCaoQuayController(BanHangDemoSessionProvider sessions) : Controller
+public sealed class BaoCaoQuayController(BanHangDemoSessionProvider sessions, KhoDemoSessionProvider khoSessions) : Controller
 {
     [HttpGet]
     public IActionResult CuoiNgay([FromQuery] LocBaoCaoQuayViewModel loc, bool csv = false)
     {
         var ngay = loc.Ngay ?? new DateOnly(2026, 10, 10);
-        return HienThi(loc with { Ngay = ngay }, csv, store => store.BaoCaoCuoiNgay(loc with { Ngay = ngay }, ngay));
+        loc = loc with { Ngay = ngay };
+        return HienThi(loc, csv, "BC_CUOI_NGAY", store => store.BaoCaoCuoiNgay(loc, ngay));
     }
 
     [HttpGet]
     public IActionResult BanTra([FromQuery] LocBaoCaoQuayViewModel loc, bool csv = false)
     {
         loc = loc with { Tu = loc.Tu ?? new(2026, 10, 1), Den = loc.Den ?? new(2026, 10, 31) };
-        return HienThi(loc, csv, store => store.BaoCaoBanTra(loc, loc.Tu!.Value, loc.Den!.Value));
+        return HienThi(loc, csv, "BC_BAN_TRA", store => store.BaoCaoBanTra(loc, loc.Tu!.Value, loc.Den!.Value));
     }
 
     [HttpGet]
     public IActionResult ThanhToanLechCa([FromQuery] LocBaoCaoQuayViewModel loc, bool csv = false)
     {
         loc = loc with { Tu = loc.Tu ?? new(2026, 10, 1), Den = loc.Den ?? new(2026, 11, 30) };
-        return HienThi(loc, csv, store => store.BaoCaoThanhToanCa(loc, loc.Tu!.Value, loc.Den!.Value));
+        return HienThi(loc, csv, "BC_THANH_TOAN_CA", store => store.BaoCaoThanhToanCa(loc, loc.Tu!.Value, loc.Den!.Value));
     }
 
     private IActionResult HienThi(
-        LocBaoCaoQuayViewModel loc, bool csv, Func<BanHangDemoStore, BaoCaoQuayViewModel> doc)
+        LocBaoCaoQuayViewModel loc, bool csv, string maQuyen, Func<BanHangDemoStore, BaoCaoQuayViewModel> doc)
     {
-        if (loc.VaiTro != "QuanLy")
+        var danhTinh = khoSessions.DanhTinhHienTai(HttpContext);
+        ViewData["KhoDanhTinh"] = danhTinh;
+        var duocXem = danhTinh?.CoQuyen(maQuyen) ?? loc.VaiTro == "QuanLy";
+        if (!duocXem)
         {
             Response.StatusCode = StatusCodes.Status403Forbidden;
             return View("~/Views/nv_BaoCao/TuChoiQuay.cshtml", loc);

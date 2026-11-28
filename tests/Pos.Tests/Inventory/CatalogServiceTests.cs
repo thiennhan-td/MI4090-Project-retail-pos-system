@@ -4,12 +4,25 @@ using Pos.Domain.Constants;
 using Pos.Domain.Entities;
 using Pos.Domain.Exceptions;
 using Pos.Domain.Interfaces;
+using Pos.Infrastructure.Persistence;
+using Pos.Infrastructure.Repositories.Inventory;
 using Pos.Inventory.Services;
 
 namespace Pos.Tests.Inventory;
 
 public sealed class CatalogServiceTests
 {
+    [Fact]
+    public async Task LayMatHang_TuChoiMaQuaDaiTruocKhiGuiThamSoSql()
+    {
+        var factory = new SqlConnectionFactory("Server=localhost;Database=RetailCorePosDemo;Integrated Security=True");
+        await using var work = new SqlUnitOfWork(factory);
+        var repository = new SqlDanhMucRepository(work, factory);
+
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(
+            () => repository.LayMatHangAsync(new string('A', 33), default));
+    }
+
     [Fact]
     public async Task TraDanhMucBan_ChiHienHangVaNhomDangHoatDong()
     {

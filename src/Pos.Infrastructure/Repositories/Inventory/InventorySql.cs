@@ -7,8 +7,16 @@ namespace Pos.Infrastructure.Repositories.Inventory;
 
 internal static class InventorySql
 {
-    public static SqlParameter Ma(string name, string? value) => new(name, SqlDbType.VarChar, 32)
-        { Value = (object?)value ?? DBNull.Value };
+    public static SqlParameter Ma(string name, string? value)
+    {
+        // SqlParameter.Size can truncate an oversized code before SQL compares it.
+        if (value is not null && (value.Length > 32 || value.Any(kyTu => kyTu is <= ' ' or > '~')))
+        {
+            throw new BusinessRuleViolationException("Mã tham chiếu không hợp lệ.");
+        }
+
+        return new(name, SqlDbType.VarChar, 32) { Value = (object?)value ?? DBNull.Value };
+    }
     public static SqlParameter Chu(string name, string? value, int size) => new(name, SqlDbType.NVarChar, size)
         { Value = (object?)value ?? DBNull.Value };
     public static SqlParameter Tien(string name, decimal? value) => new(name, SqlDbType.Decimal)

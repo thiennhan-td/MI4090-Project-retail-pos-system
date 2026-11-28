@@ -33,11 +33,31 @@ public sealed class ReturnServiceTests
         var phieu = f.TaoPhieuTra();
         phieu.XacNhan(Luc, 25_000m);
 
-        await Assert.ThrowsAsync<InvalidStateTransitionException>(() => f.Return().XoaNhapAsync(MaPhieu, MaCa, Actor));
+        await Assert.ThrowsAsync<InvalidStateTransitionException>(() => f.Return().XoaNhapAsync(MaPhieu, MaCa, Actor, PhienBanNhap.CuaPhieuTra(phieu)));
 
         f.Tra.Verify(r => r.KhoaTheoMaAsync(MaPhieu, default), Times.Once);
         f.Tra.Verify(r => r.XoaNhapAsync(MaPhieu, default), Times.Never);
         f.Work.Verify(w => w.RollbackAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task XoaNhap_ChanPhienBanCuVaChoXoaPhienBanVuaKhoa()
+    {
+        var f = new CounterFixture();
+        var banCu = f.TaoPhieuTra(nhapLai: 0);
+        var banMoi = f.TaoPhieuTra(nhapLai: 1);
+        var service = f.Return();
+
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() =>
+            service.XoaNhapAsync(MaPhieu, MaCa, Actor, PhienBanNhap.CuaPhieuTra(banCu)));
+
+        f.Tra.Verify(r => r.KhoaTheoMaAsync(MaPhieu, default), Times.Once);
+        f.Tra.Verify(r => r.XoaNhapAsync(MaPhieu, default), Times.Never);
+        f.Work.Verify(w => w.RollbackAsync(default), Times.Once);
+
+        await service.XoaNhapAsync(MaPhieu, MaCa, Actor, PhienBanNhap.CuaPhieuTra(banMoi));
+        f.Tra.Verify(r => r.XoaNhapAsync(MaPhieu, default), Times.Once);
+        f.Work.Verify(w => w.CommitAsync(default), Times.Once);
     }
 
     [Fact]

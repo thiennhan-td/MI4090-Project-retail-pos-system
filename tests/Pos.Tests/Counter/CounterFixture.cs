@@ -17,7 +17,7 @@ internal sealed class CounterFixture
     public const string MaDong = "DB-1";
     public const string MaPhieu = "PT-1";
     public Mock<ICounterRequestRepository> Requests { get; } = new();
-    public Mock<ITaiKhoanRepository> TaiKhoan { get; } = new();
+    public Mock<ICounterAuthorizationRepository> CounterAuth { get; } = new();
     public Mock<IUnitOfWork> Work { get; } = new();
     public Mock<IAuthorizationService> Auth { get; } = new();
     public Mock<IInventoryService> Kho { get; } = new();
@@ -31,15 +31,17 @@ internal sealed class CounterFixture
 
     public CounterFixture()
     {
+        CounterAuth.Setup(r => r.LayVaiTroCoQuyenAsync(Actor, MaQuyenPos.QUY_LAP_THU_CHI, default)).ReturnsAsync("ThuNgan");
+        CounterAuth.Setup(r => r.LayVaiTroCoQuyenAsync(Actor, MaQuyenPos.BAN_HUY_HD_NHAP, default)).ReturnsAsync("ThuNgan");
         Ca.Setup(repo => repo.KhoaTheoMaAsync(MaCa, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CaBan(MaCa, Actor, Luc, 300_000m));
     }
 
     public static PaymentProcessorContext Payments() => new([new TienMatStrategy(), new ChuyenKhoanStrategy()]);
     public SaleService Sale() => new(HoaDon.Object, Ca.Object, Tra.Object, Kho.Object, Catalog.Object,
-        Auth.Object, Work.Object, Payments(), Requests.Object, TaiKhoan.Object);
+        Auth.Object, Work.Object, Payments(), Requests.Object, CounterAuth.Object);
     public ReturnService Return() => new(Tra.Object, HoaDon.Object, Ca.Object, Kho.Object, Auth.Object, Work.Object);
-    public ShiftCashService Shift() => new(Ca.Object, ThuChi.Object, BaoCaoKho.Object, Auth.Object, Work.Object, TaiKhoan.Object, Requests.Object);
+    public ShiftCashService Shift() => new(Ca.Object, ThuChi.Object, BaoCaoKho.Object, Auth.Object, Work.Object, CounterAuth.Object, Requests.Object);
 
     public HoaDon TaoHoaDon(bool daXacNhan = false)
     {

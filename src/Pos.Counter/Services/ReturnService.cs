@@ -95,13 +95,15 @@ public sealed class ReturnService(
         }, ct);
     }
 
-    public async Task XoaNhapAsync(string maPhieuTra, string maCa, string maTaiKhoan, CancellationToken ct = default)
+    public async Task XoaNhapAsync(string maPhieuTra, string maCa, string maTaiKhoan, string phienBanNhap,
+        CancellationToken ct = default)
     {
         await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.TRA_LAP_PHIEU, ct);
         await work.ThucThiAsync(async () =>
         {
             CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(maCa, ct), maTaiKhoan);
-            await LayNhapCuaNguoiNhan(maPhieuTra, maCa, maTaiKhoan, ct);
+            var nhap = await LayNhapCuaNguoiNhan(maPhieuTra, maCa, maTaiKhoan, ct);
+            PhienBanNhap.KiemTra(PhienBanNhap.CuaPhieuTra(nhap), phienBanNhap);
             await traRepo.XoaNhapAsync(maPhieuTra, ct);
             return true;
         }, ct);

@@ -18,7 +18,7 @@ public sealed class SaleService(
     ICatalogQueryService catalog,
     IAuthorizationService auth,
     IUnitOfWork work,
-    PaymentProcessorContext payments, ICounterRequestRepository requests, ITaiKhoanRepository taiKhoanRepo)
+    PaymentProcessorContext payments, ICounterRequestRepository requests, ICounterAuthorizationRepository counterAuth)
 {
     public async Task<HoaDon> LuuNhapAsync(string maTaiKhoan, string maCa, string? maHoaDon,
         IReadOnlyList<DongBanNhapDto> dongHang, IReadOnlyList<ThanhToanNhapDto> thanhToan,
@@ -125,9 +125,8 @@ public sealed class SaleService(
                     ?? throw new EntityNotFoundException("Không tìm thấy hóa đơn.");
                 if (banDau.TrangThai == TrangThaiChungTu.Nhap)
                 {
-                    await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_HUY_HD_NHAP, ct);
-                    var actor = await taiKhoanRepo.LayTheoMaAsync(maTaiKhoan, ct);
-                    if (actor?.MaVaiTro != "QuanLy")
+                    var vaiTro = await counterAuth.BatBuocCoQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_HUY_HD_NHAP, ct);
+                    if (vaiTro != "QuanLy")
                     {
                         KiemTraHoaDonTrongCa(banDau, banDau.MaCa, maTaiKhoan);
                         CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(banDau.MaCa, ct), maTaiKhoan);
@@ -142,7 +141,11 @@ public sealed class SaleService(
             var daXacNhan = hoaDon.TrangThai == TrangThaiChungTu.DaXacNhan;
             if (daXacNhan)
             {
-                await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_HUY_HD_XAC_NHAN, ct);
+                const string maQuyen = MaQuyenPos.BAN_HUY_HD_XAC_NHAN;
+                if (await counterAuth.BatBuocCoQuyenAsync(maTaiKhoan, maQuyen, ct) != "QuanLy")
+                {
+                    throw new UnauthorizedActionException(maQuyen);
+                }
             }
             else if (maCaDao is not null)
             {

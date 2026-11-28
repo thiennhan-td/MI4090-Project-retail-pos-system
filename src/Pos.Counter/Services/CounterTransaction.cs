@@ -30,6 +30,11 @@ internal static class CounterTransaction
         }
     }
 
+    public static async Task<string> BatBuocCoQuyenAsync(this ICounterAuthorizationRepository repo,
+        string actor, string maQuyen, CancellationToken ct)
+        => await repo.LayVaiTroCoQuyenAsync(actor, maQuyen, ct)
+            ?? throw new UnauthorizedActionException(maQuyen);
+
     public static async Task<CaBan> KhoaCaMoAsync(this ICaBanRepository repo, string maCa, CancellationToken ct)
     {
         var ca = await repo.KhoaTheoMaAsync(maCa, ct)

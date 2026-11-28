@@ -1,4 +1,5 @@
 using Moq;
+using Pos.Infrastructure.Repositories.Counter;
 using Pos.Contracts;
 using Pos.Counter.Reports;
 using Pos.Counter.Services;
@@ -96,14 +97,14 @@ public sealed class CounterReviewTests
         var f = new CounterFixture();
         f.TaoHoaDon();
         const string quanLy = "TK-QL";
-        f.TaiKhoan.Setup(r => r.LayTheoMaAsync(quanLy, default))
-            .ReturnsAsync(new TaiKhoan(quanLy, "QuanLy", "Quản lý", "manager", "hash"));
+        f.CounterAuth.Setup(r => r.LayVaiTroCoQuyenAsync(quanLy, MaQuyenPos.BAN_HUY_HD_NHAP, default))
+            .ReturnsAsync("QuanLy");
 
         var result = await f.Sale().HuyHoaDonAsync(MaHoaDon, quanLy, "Hủy nháp", null, Luc);
 
         Assert.Equal(TrangThaiChungTu.DaHuy, result.TrangThai);
         f.Ca.Verify(r => r.KhoaTheoMaAsync(It.IsAny<string>(), default), Times.Never);
-        f.Auth.Verify(a => a.KiemTraQuyenAsync(quanLy, MaQuyenPos.BAN_HUY_HD_NHAP, default), Times.Once);
+        f.CounterAuth.Verify(r => r.LayVaiTroCoQuyenAsync(quanLy, MaQuyenPos.BAN_HUY_HD_NHAP, default), Times.Once);
     }
 
     [Fact]
@@ -126,8 +127,8 @@ public sealed class CounterReviewTests
     {
         var f = new CounterFixture();
         const string nguoiLap = "TK-2";
-        f.TaiKhoan.Setup(r => r.LayTheoMaAsync(nguoiLap, default))
-            .ReturnsAsync(new TaiKhoan(nguoiLap, vaiTro, "Nhân viên", "user-2", "hash"));
+        f.CounterAuth.Setup(r => r.LayVaiTroCoQuyenAsync(nguoiLap, MaQuyenPos.QUY_LAP_THU_CHI, default))
+            .ReturnsAsync(vaiTro);
         f.ThuChi.Setup(r => r.SinhMaAsync(default)).ReturnsAsync("TC-1");
 
         Task<PhieuThuChi> Ghi() => f.Shift().LapPhieuThuChiAsync(MaCa, nguoiLap, "Thu", NguonQuy.KetCa,
@@ -142,6 +143,88 @@ public sealed class CounterReviewTests
         }
 
         f.Auth.Verify(a => a.KiemTraQuyenAsync(nguoiLap, MaQuyenPos.NCC_GHI_TRA_TIEN, default), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("Thu", "TT-1")]
+    [InlineData("Chi", "KH-1")]
+    public async Task ThuChi_ChanGhiLaiKhoanDaHachToan(string loai, string soChungTu)
+    {
+        var f = new CounterFixture();
+        f.ThuChi.Setup(r => r.SinhMaAsync(default)).ReturnsAsync("TC-1");
+        f.ThuChi.Setup(r => r.DaHachToanAsync(soChungTu, default)).ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(() =>
+            f.Shift().LapPhieuThuChiAsync(MaCa, Actor, loai, NguonQuy.KetCa,
+                PhuongThucThanhToan.TienMat, 10_000, "Khoản đã ghi", soChungTu, Luc, "req"));
+
+        f.ThuChi.Verify(r => r.DaHachToanAsync(soChungTu, default), Times.Once);
+        f.ThuChi.Verify(r => r.ThemAsync(It.IsAny<PhieuThuChi>(), default), Times.Never);
+        f.Work.Verify(w => w.RollbackAsync(default), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("ThanhToanBan", "t", "HoaDon", "h", "maThanhToan", "maHoaDon")]
+    [InlineData("KhoanHoan", "k", "PhieuTra", "p", "maKhoanHoan", "maPhieuTra")]
+    public void TruyVanDaHachToan_DoiChieuMaKhoanVaDauXacNhan(string bangKhoan, string k,
+        string bangGoc, string g, string maKhoan, string maGoc)
+    {
+        Assert.Matches(
+            $@"FROM dbo\.{bangKhoan} AS {k} WITH \(HOLDLOCK\)\s+INNER JOIN dbo\.{bangGoc} AS {g} WITH \(HOLDLOCK\)" +
+            $@"\s+ON {g}\.{maGoc} = {k}\.{maGoc}\s+WHERE {k}\.{maKhoan}=@so AND {g}\.lucXacNhan IS NOT NULL",
+            SqlPhieuThuChiRepository.SqlDaHachToan);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task PhanQuyen_CungMotLanDocVaiTroVaQuyenTrongTransaction(bool thuChi)
+    {
+        var f = new CounterFixture();
+        const string quanLy = "TK-QL";
+        var maQuyen = thuChi ? MaQuyenPos.QUY_LAP_THU_CHI : MaQuyenPos.BAN_HUY_HD_NHAP;
+        var steps = new List<string>();
+        f.Work.Setup(w => w.BeginTransactionAsync(default)).Callback(() => steps.Add("begin"));
+        f.CounterAuth.Setup(r => r.LayVaiTroCoQuyenAsync(quanLy, maQuyen, default))
+            .Callback(() => steps.Add("quyen-va-vai-tro")).ReturnsAsync("QuanLy");
+        f.Work.Setup(w => w.CommitAsync(default)).Callback(() => steps.Add("commit"));
+        f.TaoHoaDon();
+        f.ThuChi.Setup(r => r.SinhMaAsync(default)).ReturnsAsync("TC-1");
+        f.ThuChi.Setup(r => r.ThemAsync(It.IsAny<PhieuThuChi>(), default)).Callback(() => steps.Add("ghi"));
+        f.HoaDon.Setup(r => r.CapNhatAsync(It.IsAny<HoaDon>(), default)).Callback(() => steps.Add("ghi"));
+
+        if (thuChi)
+        {
+            await f.Shift().LapPhieuThuChiAsync(MaCa, quanLy, "Thu", NguonQuy.KetCa,
+                PhuongThucThanhToan.TienMat, 10_000, "Thu bổ sung", null, Luc, "req");
+        }
+        else
+        {
+            await f.Sale().HuyHoaDonAsync(MaHoaDon, quanLy, "Hủy nháp", null, Luc);
+        }
+
+        Assert.Equal(new[] { "begin", "quyen-va-vai-tro", "ghi", "commit" }, steps);
+        f.Auth.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("ThuNgan")]
+    [InlineData(null)]
+    public async Task HuyBan_ChanNeuKhongPhaiQuanLyCoQuyen(string? vaiTroCoQuyen)
+    {
+        var f = new CounterFixture();
+        var hoaDon = f.TaoHoaDon(true);
+        f.CounterAuth.Setup(r => r.LayVaiTroCoQuyenAsync(Actor, MaQuyenPos.BAN_HUY_HD_XAC_NHAN, default))
+            .ReturnsAsync(vaiTroCoQuyen);
+
+        var error = await Assert.ThrowsAsync<UnauthorizedActionException>(() =>
+            f.Sale().HuyHoaDonAsync(MaHoaDon, Actor, "Hủy bán", MaCa, Luc));
+
+        Assert.Equal(MaQuyenPos.BAN_HUY_HD_XAC_NHAN, error.MaQuyen);
+        Assert.Equal(TrangThaiChungTu.DaXacNhan, hoaDon.TrangThai);
+        f.CounterAuth.Verify(r => r.LayVaiTroCoQuyenAsync(Actor, MaQuyenPos.BAN_HUY_HD_XAC_NHAN, default), Times.Once);
+        f.HoaDon.Verify(r => r.CapNhatAsync(It.IsAny<HoaDon>(), default), Times.Never);
+        f.Kho.VerifyNoOtherCalls();
     }
 
     [Fact]

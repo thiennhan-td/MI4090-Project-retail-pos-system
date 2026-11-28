@@ -91,6 +91,8 @@ public sealed class SaleServiceTests
     {
         var f = new CounterFixture();
         var h = f.TaoHoaDon(true);
+        f.CounterAuth.Setup(r => r.LayVaiTroCoQuyenAsync(Actor, MaQuyenPos.BAN_HUY_HD_XAC_NHAN, default))
+            .ReturnsAsync("QuanLy");
         f.Tra.Setup(r => r.CoPhieuTraHieuLucAsync(MaHoaDon, default)).ReturnsAsync(true);
 
         await Assert.ThrowsAsync<BusinessRuleViolationException>(

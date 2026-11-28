@@ -8,7 +8,7 @@ namespace Pos.Counter.Services;
 
 public sealed class ShiftCashService(
     ICaBanRepository caRepo, IPhieuThuChiRepository thuChiRepo, IInventoryReportQueryService inventoryReports,
-    IAuthorizationService auth, IUnitOfWork work, ITaiKhoanRepository taiKhoanRepo,
+    IAuthorizationService auth, IUnitOfWork work, ICounterAuthorizationRepository counterAuth,
     ICounterRequestRepository requests) : IShiftCashService
 {
     public async Task<CaBan> MoCaAsync(string maTaiKhoan, decimal tienMatDauCa, DateTime lucUtc,
@@ -49,19 +49,28 @@ public sealed class ShiftCashService(
         string phuongThuc, decimal tien, string lyDo, string? soChungTu, DateTime lucUtc,
         string maYeuCau, CancellationToken ct = default)
     {
-        await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.QUY_LAP_THU_CHI, ct);
+        const string maQuyen = MaQuyenPos.QUY_LAP_THU_CHI;
         soChungTu = soChungTu?.Trim();
         var noiDung = new { maCa, loai, nguon, phuongThuc, Tien = CounterRequest.ChuanHoaTien(tien), lyDo, soChungTu };
-        return await work.ThucThiAsync(() => requests.GhiMotLanAsync("LapPhieuThuChi", maTaiKhoan, maYeuCau,
-            noiDung, GhiAsync, p => p, p => p, ct), ct);
-
-        async Task<PhieuThuChi> GhiAsync()
+        return await work.ThucThiAsync(async () =>
         {
-            var ca = await caRepo.KhoaCaMoAsync(maCa, ct);
-            if (ca.MaNguoiMo != maTaiKhoan &&
-                (await taiKhoanRepo.LayTheoMaAsync(maTaiKhoan, ct))?.MaVaiTro != "QuanLy")
+            var vaiTro = await counterAuth.BatBuocCoQuyenAsync(maTaiKhoan, maQuyen, ct);
+            var ca = await caRepo.KhoaTheoMaAsync(maCa, ct)
+                ?? throw new EntityNotFoundException("Không tìm thấy ca bán.");
+            if (ca.MaNguoiMo != maTaiKhoan && vaiTro != "QuanLy")
             {
-                throw new UnauthorizedActionException(MaQuyenPos.QUY_LAP_THU_CHI);
+                throw new UnauthorizedActionException(maQuyen);
+            }
+
+            return await requests.GhiMotLanAsync("LapPhieuThuChi", maTaiKhoan, maYeuCau,
+                noiDung, () => GhiAsync(ca), p => p, p => p, ct);
+        }, ct);
+
+        async Task<PhieuThuChi> GhiAsync(CaBan ca)
+        {
+            if (ca.TrangThai != TrangThaiChungTu.DangMo)
+            {
+                throw new InvalidStateTransitionException("Ca bán đã đóng.");
             }
             if (lucUtc < ca.LucMo)
             {

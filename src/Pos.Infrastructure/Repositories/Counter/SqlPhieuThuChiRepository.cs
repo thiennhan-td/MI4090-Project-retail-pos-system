@@ -30,18 +30,26 @@ public sealed class SqlPhieuThuChiRepository(SqlUnitOfWork work) : IPhieuThuChiR
             return false;
         }
 
-        await using var command = work.Lenh("""
+        await using var command = work.Lenh(SqlDaHachToan, Ma("@so", soChungTu));
+        return (bool)(await command.ExecuteScalarAsync(ct))!;
+    }
+
+    internal const string SqlDaHachToan = """
             SELECT CAST(CASE WHEN
                 EXISTS (SELECT 1 FROM dbo.HoaDon WITH (HOLDLOCK)
                     WHERE maHoaDon=@so AND lucXacNhan IS NOT NULL)
                 OR EXISTS (SELECT 1 FROM dbo.PhieuTra WITH (HOLDLOCK)
                     WHERE maPhieuTra=@so AND lucXacNhan IS NOT NULL)
+                OR EXISTS (SELECT 1 FROM dbo.ThanhToanBan AS t WITH (HOLDLOCK)
+                    INNER JOIN dbo.HoaDon AS h WITH (HOLDLOCK) ON h.maHoaDon = t.maHoaDon
+                    WHERE t.maThanhToan=@so AND h.lucXacNhan IS NOT NULL)
+                OR EXISTS (SELECT 1 FROM dbo.KhoanHoan AS k WITH (HOLDLOCK)
+                    INNER JOIN dbo.PhieuTra AS p WITH (HOLDLOCK) ON p.maPhieuTra = k.maPhieuTra
+                    WHERE k.maKhoanHoan=@so AND p.lucXacNhan IS NOT NULL)
                 OR EXISTS (SELECT 1 FROM dbo.TraNhaCungCap WITH (HOLDLOCK)
                     WHERE maKhoanTra=@so OR maPhieuNhap=@so)
                 THEN 1 ELSE 0 END AS bit);
-            """, Ma("@so", soChungTu));
-        return (bool)(await command.ExecuteScalarAsync(ct))!;
-    }
+            """;
 
     public Task ThemAsync(PhieuThuChi entity, CancellationToken ct) => work.Ghi("""
         INSERT dbo.PhieuThuChi(maPhieuThuChi, maCa, maNguoiLap, lucGhi, loaiThuChi, nguonQuy,

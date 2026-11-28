@@ -372,12 +372,14 @@ a.pos-nav-item.is-active {
         left: 0;
         top: 0;
         bottom: 0;
+        visibility: hidden;
         transform: translateX(-100%);
         transition: transform 0.2s ease;
         box-shadow: 0 12px 32px rgba(11, 28, 48, 0.2);
     }
 
     body.pos-nav-open .pos-sidebar {
+        visibility: visible;
         transform: translateX(0);
     }
 

@@ -26,6 +26,8 @@ html { scrollbar-gutter: stable; }
 .demo-screen main { padding-top: 1.25rem; padding-bottom: 1.5rem; }
 .demo-screen [role="dialog"] { overflow-y: auto; }
 .demo-screen [role="dialog"] > div { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+.demo-receipt-dialog { width: min(32rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; }
+.demo-receipt-dialog::backdrop { background: rgb(33 49 69 / .4); backdrop-filter: blur(4px); }
 .demo-screen input:disabled, .demo-screen button:disabled { cursor: not-allowed; }
 .demo-screen .material-symbols-outlined { overflow: hidden; max-width: 1.35em; flex-shrink: 0; }
 .demo-icons-unavailable .material-symbols-outlined { display: none; }
@@ -47,6 +49,7 @@ html { scrollbar-gutter: stable; }
 .demo-embedded .demo-shell a { display: none; }
 .demo-table { max-width: 100%; overflow-x: auto; }
 .demo-table > table { min-width: 36rem; }
+.demo-table .return-selected { background: #dbe1ff; }
 .demo-panel { min-width: 0; padding: 1rem; background: white; border: 1px solid var(--demo-line); border-radius: .75rem; }
 .demo-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }
 .demo-controls label { display: grid; gap: .25rem; min-width: 0; }

@@ -15,10 +15,18 @@ document.fonts.load('16px "Material Symbols Outlined"', 'close').then(fonts => {
 }).catch(() => {});
 
 for (const control of document.querySelectorAll('[data-demo-href]')) {
-  control.addEventListener('click', () => {
-    const screen = control.dataset.demoHref.split('/')[1];
-    if (window.self === window.top) location.href = control.dataset.demoHref;
-    else window.top.location = new URL('../../index.html#' + screen, location.href).href;
+  control.addEventListener('click', event => {
+    if (control.matches('a') && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)) return;
+    event.preventDefault();
+    const target = new URL(control.dataset.demoHref, location.href);
+    if (window.self === window.top) {
+      location.href = target.href;
+    } else {
+      const screen = target.pathname.split('/').at(-2);
+      const gallery = new URL('../../index.html', location.href);
+      gallery.hash = screen + target.search;
+      window.top.location = gallery.href;
+    }
   });
 }
 

@@ -208,3 +208,13 @@ A soft, structured radius profile (`roundedness: 1` -> 0.25rem / 4px base) deliv
 ### Specialized POS Components
 - **Numpad Grid:** 3x4 block grid of prominent mechanical-touch keys for tender input, discount calculation, and manual SKU entry.
 - **Cart Summary Drawer:** Anchored bottom or right rail displaying running Subtotal, Tax/VAT, Discounts, and a large-type Grand Total indicator.
+
+## Local prototype stylesheet
+
+All prototype screens use the bundled `assets/tailwind.css`. Rebuild it from the repository root after changing utility classes or the shared theme.
+
+```sh
+npx --yes tailwindcss@3.4.19 --config ./frontend-demo-V2/tailwind.config.cjs --output ./frontend-demo-V2/assets/tailwind.css --minify
+```
+
+The stylesheet uses Tailwind CSS 3.4.19 under the MIT license in `assets/tailwind.LICENSE.txt`. The prototype uses system-font and product-code fallbacks when optional Google fonts and sample product photographs are unavailable.

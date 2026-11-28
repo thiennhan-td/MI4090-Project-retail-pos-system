@@ -175,7 +175,7 @@ public sealed partial class BanHangDemoStore
                 xacNhan,
                 lines.ToArray(),
                 q.TienMat,
-                q.ChuyenKhoan, (nhap?.PhienBan ?? 0) + 1);
+                q.ChuyenKhoan, (nhap?.PhienBan ?? 0) + 1, xacNhan ? DateTime.Now : null);
 
             lichSu.Add(q.MaYeuCau, (q with { MaHoaDon = goc.MaHoaDon!, DongTra = dong }, ma));
 

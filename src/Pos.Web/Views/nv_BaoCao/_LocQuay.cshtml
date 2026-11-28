@@ -1,0 +1,51 @@
+@model Pos.Web.ViewModels.BaoCaoQuay.BaoCaoQuayViewModel
+@{
+    var loc = Model.Loc;
+    var csv = loc.ThamSo();
+    csv["csv"] = "true";
+}
+<form method="get" asp-action="@Model.HanhDong" class="pos-card pos-report-filters">
+    @if (loc.Ngay is { } ngay)
+    {
+        <label>Ngày báo cáo <input type="date" class="pos-input" name="ngay" value="@ngay.ToString("yyyy-MM-dd")" required /></label>
+    }
+    else
+    {
+        <label>Từ ngày <input type="date" class="pos-input" name="tu" value="@loc.Tu?.ToString("yyyy-MM-dd")" required /></label>
+        <label>Đến ngày <input type="date" class="pos-input" name="den" value="@loc.Den?.ToString("yyyy-MM-dd")" required /></label>
+    }
+    @if (Model.HanhDong == "BanTra")
+    {
+        <label>Mã mặt hàng <input class="pos-input" name="maHang" value="@loc.MaHang" placeholder="Tất cả mặt hàng" /></label>
+    }
+    @if (Model.MaCa is { } cacCa)
+    {
+        <label>Ca bán <select class="pos-input" name="maCa">
+            <option value="">Tất cả</option>
+            @foreach (var ma in cacCa)
+            {
+                <option value="@ma" selected="@(ma.Equals(loc.MaCa, StringComparison.OrdinalIgnoreCase))">@ma</option>
+            }
+        </select></label>
+        <label>Trạng thái ca <select class="pos-input" name="trangThaiCa">
+            <option value="">Tất cả</option>
+            <option value="DangMo" selected="@(loc.TrangThaiCa == "DangMo")">Đang mở</option>
+            <option value="DaDong" selected="@(loc.TrangThaiCa == "DaDong")">Đã đóng</option>
+        </select></label>
+    }
+    @if (ViewData["KhoDanhTinh"] is null)
+    {
+        <label>Vai trò demo <select class="pos-input" name="vaiTro">
+            <option value="QuanLy">Quản lý</option>
+            <option value="ThuNgan">Thu ngân</option>
+        </select></label>
+    }
+    <button class="pos-btn pos-btn-primary" type="submit">Xem báo cáo</button>
+    <a class="pos-btn pos-btn-secondary" asp-action="@Model.HanhDong" asp-all-route-data="csv">Tải CSV</a>
+    @if (loc.Ngay.HasValue)
+    {
+        var homNay = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7)).ToString("yyyy-MM-dd");
+        <a class="pos-btn pos-btn-secondary" asp-action="CuoiNgay" asp-route-ngay="@homNay">Hôm nay</a>
+        <a class="pos-btn pos-btn-secondary" asp-action="CuoiNgay" asp-route-ngay="2026-10-10">10/10/2026 (Seed)</a>
+    }
+</form>

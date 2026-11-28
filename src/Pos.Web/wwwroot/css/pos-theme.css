@@ -1106,3 +1106,43 @@ a.pos-nav-item.is-active {
     }
 }
 
+
+/* Báo cáo Quầy */
+.pos-report-filters, .pos-report-kpis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+}
+.pos-report-filters {
+    align-items: end;
+}
+.pos-report-filters label {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+.pos-report-kpis > div {
+    flex: 1 1 150px;
+    border-inline-start: 3px solid currentColor;
+    padding-inline-start: 10px;
+}
+.pos-report-kpis dd {
+    margin: 4px 0 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+.pos-report-section {
+    min-width: 0;
+}
+.pos-report-section .pos-num {
+    white-space: nowrap;
+    text-align: right;
+}
+.pos-report-negative {
+    color: #b42318;
+    font-weight: 700;
+}
+.pos-report-positive {
+    color: #067647;
+    font-weight: 700;
+}

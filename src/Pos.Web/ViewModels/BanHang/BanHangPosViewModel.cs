@@ -8,6 +8,9 @@ public sealed class BanHangPosViewModel
     public required string MaCaHienTai { get; init; }
     public required string TenThuNgan { get; init; }
     public required string MaYeuCauMacDinh { get; init; }
+    public HoaDonDemoRecord? HoaDonNhap { get; init; }
+    public string? ThongBaoLoi { get; init; }
+    public string? TraCuuUrl { get; init; }
     public IReadOnlyList<string> DanhSachNhomHang { get; init; } = [];
     public IReadOnlyList<MatHangDemoItem> DanhSachMatHang { get; init; } = [];
 }
@@ -21,17 +24,22 @@ public sealed class DongBanYeuCauViewModel
     public int SoLuong { get; set; }
 }
 
-public sealed class XacNhanBanRequestViewModel
+public sealed class GhiHoaDonRequestViewModel
 {
-    [Required(ErrorMessage = "Thiếu mã yêu cầu xác nhận.")]
+    [Required(ErrorMessage = "Thiếu mã yêu cầu giao dịch.")]
     public string MaYeuCau { get; set; } = string.Empty;
+
+    public string? MaNhap { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Phiên bản hóa đơn nháp không hợp lệ.")]
+    public int? PhienBan { get; set; }
 
     [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán.")]
     public string CheDoThanhToan { get; set; } = "TienMat";
 
-    public decimal TienMatPhanBo { get; set; }
+    public decimal? TienMatPhanBo { get; set; }
     public decimal? TienKhachDua { get; set; }
-    public decimal TienChuyenKhoan { get; set; }
+    public decimal? TienChuyenKhoan { get; set; }
     public bool CaDangMo { get; set; } = true;
     public List<DongBanYeuCauViewModel> DongBans { get; set; } = [];
 }

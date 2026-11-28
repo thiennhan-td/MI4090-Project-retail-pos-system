@@ -246,22 +246,22 @@
 }
 
 @media (max-width: 620px) {
-    .kho-header {
+    .pos-header-stack {
         display: grid;
         justify-content: stretch;
         gap: .35rem;
     }
-    .kho-header .pos-page-title {
+    .pos-header-stack .pos-page-title {
         white-space: normal;
         line-height: 1.25;
     }
-    .kho-header .pos-menu-btn {
+    .pos-header-stack .pos-menu-btn {
         flex-shrink: 0;
     }
-    .kho-header .pos-header-meta {
+    .pos-header-stack .pos-header-meta {
         justify-content: space-between;
     }
-    .kho-header .pos-header-meta > .pos-pill:first-child {
+    .pos-header-stack .pos-header-meta > .pos-pill:first-child {
         display: none;
     }
 }

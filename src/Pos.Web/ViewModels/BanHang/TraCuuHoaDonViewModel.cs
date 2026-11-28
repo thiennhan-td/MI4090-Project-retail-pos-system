@@ -15,6 +15,9 @@ public sealed class TraCuuHoaDonViewModel
     public string? MaHoaDonDangChon { get; set; }
     public string? ThongBaoThanhCong { get; set; }
     public string? ThongBaoLoi { get; set; }
+    public string? ThongBaoLoiHuy { get; init; }
+    public string? LyDoHuyNhap { get; init; }
+    public bool CoTheSuaNhap { get; init; }
 
     public IReadOnlyList<CaBanDemoItem> DanhSachCaBan { get; init; } = [];
     public IReadOnlyList<HoaDonDemoRecord> DanhSachHoaDon { get; init; } = [];
@@ -25,6 +28,9 @@ public sealed class HuyHoaDonRequestViewModel
 {
     [Required(ErrorMessage = "Thiếu mã hóa đơn cần hủy.")]
     public string MaHoaDon { get; set; } = string.Empty;
+
+    [Range(0, int.MaxValue, ErrorMessage = "Phiên bản hóa đơn không hợp lệ.")]
+    public int? PhienBan { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập lý do hủy hóa đơn.")]
     [StringLength(500, ErrorMessage = "Lý do hủy tối đa 500 ký tự.")]

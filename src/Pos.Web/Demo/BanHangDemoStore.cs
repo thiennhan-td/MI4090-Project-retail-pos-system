@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Pos.Web.Demo;
@@ -7,6 +6,7 @@ public sealed class BanHangDemoSessionProvider
 {
     private const string SessionInitKey = "PosDemoStoreInitialized";
     private readonly IMemoryCache _cache;
+    private readonly object _sync = new();
 
     public BanHangDemoSessionProvider(IMemoryCache cache)
     {
@@ -18,21 +18,26 @@ public sealed class BanHangDemoSessionProvider
         httpContext.Session.SetString(SessionInitKey, "1");
         var sessionKey = $"pos-demo-store:{httpContext.Session.Id}";
 
-        return _cache.GetOrCreate(sessionKey, entry =>
+        lock (_sync)
         {
-            entry.SlidingExpiration = TimeSpan.FromHours(4);
-            return new BanHangDemoStore();
-        })!;
+            return _cache.GetOrCreate(sessionKey, entry =>
+            {
+                entry.SlidingExpiration = TimeSpan.FromHours(4);
+                return new BanHangDemoStore();
+            })!;
+        }
     }
 }
 
 public sealed partial class BanHangDemoStore
 {
+    public const string MaCaHienTai = "S-CA-1126";
+    private const string MaThuNgan = "S-TK-TN1";
     private readonly object _sync = new();
     private readonly List<MatHangDemoItem> _matHangs;
     private readonly List<CaBanDemoItem> _caBans;
     private readonly List<HoaDonDemoRecord> _hoaDons;
-    private readonly ConcurrentDictionary<string, string> _idempotencyKeys = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, LanGhiHoaDon> _lanGhiHoaDon = new(StringComparer.Ordinal);
     private int _nextInvoiceNumber = 1;
 
     public BanHangDemoStore()
@@ -64,11 +69,13 @@ public sealed partial class BanHangDemoStore
                 TenNguoiLap = "Lê Linh",
                 LucLap = new DateTime(2026, 11, 26, 9, 30, 0),
                 TrangThai = "Nhap",
+                PhienBan = 1,
                 DongBans =
                 [
                     new DongBanDemoRecord("S-SUA", "Sữa tươi 180 ml", "Hộp", 1, 26000m)
                 ],
-                ThanhToans = []
+                ThanhToans = [],
+                ThanhToanNhap = new("TienMat", 26000m, null, null)
             },
             new HoaDonDemoRecord
             {
@@ -224,6 +231,7 @@ public sealed partial class BanHangDemoStore
                 .Where(h => isManager || caCuaToi!.Contains(h.MaCa))
                 .OrderByDescending(h => h.LucLap)
                 .ThenByDescending(h => h.MaHoaDon, StringComparer.Ordinal)
+                .Select(h => h with { })
                 .ToList();
         }
     }
@@ -243,49 +251,121 @@ public sealed partial class BanHangDemoStore
                 return (null, true);
             }
 
-            return (hoaDon, false);
+            return (hoaDon with { }, false);
         }
     }
 
-    public KetQuaTaoHoaDonDemo TaoHoacLayHoaDonDaXacNhan(
+    public CaBanDemoItem? LayCaHienTai()
+    {
+        lock (_sync)
+        {
+            return _caBans.FirstOrDefault(ca => ca.MaNguoiMo == MaThuNgan && ca.TrangThai == "DangMo");
+        }
+    }
+
+    public bool CoQuyenSuaNhap(HoaDonDemoRecord hoaDon)
+    {
+        var ca = LayCaHienTai();
+        return ca is not null
+            && ca.TrangThai == "DangMo"
+            && ca.MaNguoiMo == MaThuNgan
+            && hoaDon.MaCa == ca.MaCa
+            && hoaDon.MaNguoiLap == MaThuNgan;
+    }
+
+    public KetQuaGhiHoaDonDemo GhiHoaDon(
         string maYeuCau,
+        string? maNhap,
+        int? phienBan,
+        bool caDangMo,
         IReadOnlyList<DongBanDemoRecord> dongBans,
+        ThanhToanNhapDemoRecord? thanhToanNhap,
         IReadOnlyList<ThanhToanDemoRecord> thanhToans)
     {
         lock (_sync)
         {
-            if (_idempotencyKeys.TryGetValue(maYeuCau, out var existingCode))
+            var ca = LayCaHienTai();
+            if (!caDangMo || ca is null || ca.TrangThai != "DangMo" || ca.MaNguoiMo != MaThuNgan)
             {
-                var existing = _hoaDons.First(h => h.MaHoaDon == existingCode);
-                if (LaCungNoiDungNghiepVu(existing, dongBans, thanhToans))
-                {
-                    return new KetQuaTaoHoaDonDemo(KetQuaIdempotency.GuiLaiTrungKhop, existing);
-                }
-
-                return new KetQuaTaoHoaDonDemo(KetQuaIdempotency.XungDotNoiDung, existing);
+                return new(TrangThaiGhiHoaDonDemo.CaDaDong, null, "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi ghi hóa đơn.");
             }
 
-            if (MaCaMo is not string caMo) throw new InvalidOperationException("Bạn cần mở ca trước khi bán hàng.");
-            var now = DateTime.Now;
-            var maHoaDon = $"HD-{now:ddMM}-{_nextInvoiceNumber:D3}";
-            _nextInvoiceNumber++;
+            if (_lanGhiHoaDon.TryGetValue(maYeuCau, out var lanTruoc))
+            {
+                var daGhi = _hoaDons.First(h => h.MaHoaDon == lanTruoc.HoaDon.MaHoaDon);
+                var trungKhop = string.Equals(maNhap, lanTruoc.MaNhap, StringComparison.OrdinalIgnoreCase)
+                    && phienBan == lanTruoc.PhienBan
+                    && thanhToanNhap == lanTruoc.HoaDon.ThanhToanNhap
+                    && LaCungNoiDungNghiepVu(lanTruoc.HoaDon, dongBans, thanhToans);
+                if (!trungKhop)
+                {
+                    return new(TrangThaiGhiHoaDonDemo.XungDot, daGhi with { },
+                        $"Mã yêu cầu đã được dùng cho hóa đơn {daGhi.MaHoaDon} với nội dung khác.");
+                }
 
+                return daGhi.PhienBan == lanTruoc.HoaDon.PhienBan
+                    ? new(TrangThaiGhiHoaDonDemo.GuiLaiTrungKhop, daGhi with { })
+                    : new(TrangThaiGhiHoaDonDemo.XungDot, daGhi with { }, $"Hóa đơn {daGhi.MaHoaDon} đã thay đổi sau yêu cầu này.");
+            }
+
+            var chiSo = maNhap is null ? -1 : _hoaDons.FindIndex(h =>
+                string.Equals(h.MaHoaDon, maNhap, StringComparison.OrdinalIgnoreCase));
+            HoaDonDemoRecord? hoaDon = chiSo < 0 ? null : _hoaDons[chiSo];
+            if (maNhap is not null)
+            {
+                if (hoaDon is null)
+                {
+                    return new(TrangThaiGhiHoaDonDemo.KhongTimThay, null, "Không tìm thấy hóa đơn nháp.");
+                }
+
+                if (!CoQuyenSuaNhap(hoaDon))
+                {
+                    return new(TrangThaiGhiHoaDonDemo.KhongCoQuyen, null, "Thu ngân chỉ được sửa hóa đơn nháp thuộc ca đang mở của chính mình.");
+                }
+
+                if (hoaDon.TrangThai != "Nhap" || hoaDon.PhienBan != phienBan)
+                {
+                    return new(TrangThaiGhiHoaDonDemo.XungDot, hoaDon with { },
+                        $"Hóa đơn {hoaDon.MaHoaDon} đã được cập nhật, xác nhận hoặc hủy ở nơi khác.");
+                }
+            }
+
+            if (hoaDon is not null && thanhToanNhap is not null && hoaDon.ThanhToanNhap == thanhToanNhap
+                && LaCungNoiDungNghiepVu(hoaDon, dongBans, thanhToans))
+            {
+                var banHienTai = hoaDon with { };
+                _lanGhiHoaDon.Add(maYeuCau, new(maNhap, phienBan, banHienTai));
+                return new(TrangThaiGhiHoaDonDemo.DaGhi, banHienTai);
+            }
+
+            var now = DateTime.Now;
+            var laNhap = thanhToanNhap is not null;
             var record = new HoaDonDemoRecord
             {
-                MaHoaDon = maHoaDon,
-                MaCa = caMo,
-                MaNguoiLap = "S-TK-TN1",
-                TenNguoiLap = "Lê Linh",
-                LucLap = now,
-                LucXacNhan = now,
-                TrangThai = "DaXacNhan",
-                DongBans = dongBans.ToList(),
-                ThanhToans = thanhToans.ToList()
+                MaHoaDon = hoaDon?.MaHoaDon ?? $"HD-{now:ddMM}-{_nextInvoiceNumber++:D3}",
+                MaCa = hoaDon?.MaCa ?? ca.MaCa,
+                MaNguoiLap = hoaDon?.MaNguoiLap ?? ca.MaNguoiMo,
+                TenNguoiLap = hoaDon?.TenNguoiLap ?? ca.TenNguoiMo,
+                LucLap = hoaDon?.LucLap ?? now,
+                LucXacNhan = laNhap ? null : now,
+                TrangThai = laNhap ? "Nhap" : "DaXacNhan",
+                PhienBan = (hoaDon?.PhienBan ?? 0) + 1,
+                DongBans = dongBans.ToArray(),
+                ThanhToans = thanhToans.ToArray(),
+                ThanhToanNhap = thanhToanNhap
             };
 
-            _hoaDons.Insert(0, record);
-            _idempotencyKeys[maYeuCau] = maHoaDon;
-            return new KetQuaTaoHoaDonDemo(KetQuaIdempotency.TaoMoi, record);
+            if (chiSo >= 0)
+            {
+                _hoaDons[chiSo] = record;
+            }
+            else
+            {
+                _hoaDons.Insert(0, record);
+            }
+
+            _lanGhiHoaDon.Add(maYeuCau, new(maNhap, phienBan, record with { }));
+            return new(TrangThaiGhiHoaDonDemo.DaGhi, record with { });
         }
     }
 
@@ -332,6 +412,7 @@ public sealed partial class BanHangDemoStore
 
     public (bool ThanhCong, string ThongBao) HuyHoaDon(
         string maHoaDon,
+        int? phienBan,
         string lyDoHuy,
         string vaiTroDemo,
         bool coCaDaoMo)
@@ -355,9 +436,18 @@ public sealed partial class BanHangDemoStore
             }
 
             var laQuanLy = string.Equals(vaiTroDemo, "QuanLy", StringComparison.OrdinalIgnoreCase);
+            if (phienBan.HasValue && hoaDon.PhienBan != phienBan)
+            {
+                return (false, $"Hóa đơn {hoaDon.MaHoaDon} vừa thay đổi. Vui lòng xem lại thông tin trước khi hủy.");
+            }
 
             if (hoaDon.TrangThai == "Nhap")
             {
+                if (phienBan is null)
+                {
+                    return (false, "Vui lòng mở lại hóa đơn nháp để lấy phiên bản hiện tại trước khi hủy.");
+                }
+
                 if (!laQuanLy)
                 {
                     var ca = _caBans.FirstOrDefault(c => c.MaCa == hoaDon.MaCa);
@@ -368,6 +458,7 @@ public sealed partial class BanHangDemoStore
                 }
 
                 hoaDon.TrangThai = "DaHuy";
+                hoaDon.PhienBan++;
                 hoaDon.LucHuy = DateTime.Now;
                 hoaDon.TenNguoiHuy = laQuanLy ? "Nguyễn An" : "Lê Linh";
                 hoaDon.LyDoHuy = lyDoHuy.Trim();
@@ -393,6 +484,7 @@ public sealed partial class BanHangDemoStore
                 }
 
                 hoaDon.TrangThai = "DaHuy";
+                hoaDon.PhienBan++;
                 hoaDon.LucHuy = DateTime.Now;
                 hoaDon.TenNguoiHuy = "Nguyễn An";
                 hoaDon.MaCaDao = coTienMat ? MaCaMo : null;
@@ -405,18 +497,24 @@ public sealed partial class BanHangDemoStore
             return (false, "Trạng thái hóa đơn không hợp lệ để hủy.");
         }
     }
+
+    private sealed record LanGhiHoaDon(string? MaNhap, int? PhienBan, HoaDonDemoRecord HoaDon);
 }
 
-public enum KetQuaIdempotency
+public enum TrangThaiGhiHoaDonDemo
 {
-    TaoMoi,
+    DaGhi,
     GuiLaiTrungKhop,
-    XungDotNoiDung
+    XungDot,
+    KhongTimThay,
+    KhongCoQuyen,
+    CaDaDong
 }
 
-public sealed record KetQuaTaoHoaDonDemo(
-    KetQuaIdempotency TrangThai,
-    HoaDonDemoRecord HoaDon);
+public sealed record KetQuaGhiHoaDonDemo(
+    TrangThaiGhiHoaDonDemo TrangThai,
+    HoaDonDemoRecord? HoaDon,
+    string? ThongBao = null);
 
 public sealed record MatHangDemoItem(
     string MaHang,
@@ -448,7 +546,13 @@ public sealed record ThanhToanDemoRecord(
     decimal SoTienThanhToan,
     decimal? TienKhachDua);
 
-public sealed class HoaDonDemoRecord
+public sealed record ThanhToanNhapDemoRecord(
+    string CheDoThanhToan,
+    decimal? TienMatPhanBo,
+    decimal? TienKhachDua,
+    decimal? TienChuyenKhoan);
+
+public sealed record HoaDonDemoRecord
 {
     public required string MaHoaDon { get; init; }
     public required string MaCa { get; init; }
@@ -457,14 +561,16 @@ public sealed class HoaDonDemoRecord
     public DateTime LucLap { get; init; }
     public DateTime? LucXacNhan { get; set; }
     public required string TrangThai { get; set; }
+    public int PhienBan { get; set; }
     public DateTime? LucHuy { get; set; }
     public string? TenNguoiHuy { get; set; }
     public string? MaCaDao { get; set; }
     public string? LyDoHuy { get; set; }
     public bool CoPhieuTraHieuLuc { get; set; }
     public string? MaPhieuTraLienQuan { get; set; }
-    public List<DongBanDemoRecord> DongBans { get; init; } = [];
-    public List<ThanhToanDemoRecord> ThanhToans { get; init; } = [];
+    public IReadOnlyList<DongBanDemoRecord> DongBans { get; init; } = [];
+    public IReadOnlyList<ThanhToanDemoRecord> ThanhToans { get; init; } = [];
+    public ThanhToanNhapDemoRecord? ThanhToanNhap { get; init; }
 
     public decimal TongTienHang => DongBans.Sum(d => d.ThanhTien);
     public decimal TongTienMatPhanBo => ThanhToans.Where(t => t.PhuongThuc == "TienMat").Sum(t => t.SoTienThanhToan);

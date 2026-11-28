@@ -17,15 +17,26 @@ public sealed class TraNhaCungCap
         MaKhoanTra = QuyTac.Chuoi(maKhoanTra, 32);
         MaPhieuNhap = QuyTac.Chuoi(maPhieuNhap, 32);
         MaNguoiGhi = QuyTac.Chuoi(maNguoiGhi, 32);
-        MaCaChi = maCaChi is null ? null : QuyTac.Chuoi(maCaChi, 32);
+        KiemTraKhoanTra(soTienTra, phuongThuc, nguonChi, maCaChi);
+        MaCaChi = maCaChi;
         LucTra = QuyTac.Utc(lucTra);
-        SoTienTra = QuyTac.TienDuong(soTienTra);
-        PhuongThuc = QuyTac.PhuongThuc(phuongThuc);
-        NguonChi = QuyTac.Chuoi(nguonChi, 24);
+        SoTienTra = soTienTra;
+        PhuongThuc = phuongThuc;
+        NguonChi = nguonChi;
+    }
+
+    public static void KiemTraKhoanTra(decimal soTienTra, string phuongThuc, string nguonChi, string? maCaChi)
+    {
+        QuyTac.TienDuong(soTienTra);
+        QuyTac.PhuongThuc(phuongThuc);
         QuyTac.Dat(
-            (NguonChi == NguonQuy.KetCa && PhuongThuc == PhuongThucThanhToan.TienMat && MaCaChi is not null)
-            || (NguonChi == NguonQuy.QuyCuaHang && MaCaChi is null),
+            (nguonChi == NguonQuy.KetCa && phuongThuc == PhuongThucThanhToan.TienMat && maCaChi is not null)
+            || (nguonChi == NguonQuy.QuyCuaHang && maCaChi is null),
             "Nguồn chi và ca chi không phù hợp.");
+        if (maCaChi is not null)
+        {
+            QuyTac.Chuoi(maCaChi, 32);
+        }
     }
 
     public string MaKhoanTra { get; }

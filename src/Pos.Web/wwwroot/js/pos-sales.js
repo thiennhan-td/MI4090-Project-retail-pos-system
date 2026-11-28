@@ -687,7 +687,7 @@
         }
         lastShiftOpenState = shiftToggle.checked;
         if (shiftToggle.checked) {
-            shiftBadge.textContent = "Ca đang mở · S-CA-1126";
+            shiftBadge.textContent = "Ca đang mở";
             shiftBadge.classList.add("pos-pill-teal");
             setError(paymentError, "");
         } else {

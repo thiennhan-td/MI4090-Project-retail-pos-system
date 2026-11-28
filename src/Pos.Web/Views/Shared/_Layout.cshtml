@@ -115,14 +115,8 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f7"></use></svg>
                         <span>F7 · Quản lý ca &amp; Sổ quỹ</span>
                     </h2>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Quản lý ca &amp; Bàn giao két</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Sổ quỹ &amp; Thu chi tiền mặt</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    <a class="pos-nav-item @(currentController == "CaBan" && currentAction == "Index" ? "is-active" : "")" asp-controller="CaBan" asp-action="Index">Quản lý ca &amp; Bàn giao két</a>
+                    <a class="pos-nav-item @(currentController == "CaBan" && currentAction == "SoQuy" ? "is-active" : "")" asp-controller="CaBan" asp-action="SoQuy">Sổ quỹ &amp; Thu chi tiền mặt</a>
                 </section>
 
                 <section class="pos-nav-group" aria-label="F8 Báo cáo thống kê">

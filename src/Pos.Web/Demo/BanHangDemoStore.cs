@@ -104,7 +104,7 @@ public sealed partial class BanHangDemoStore
                 ],
                 ThanhToans =
                 [
-                    new ThanhToanDemoRecord("TienMat", 52000m, 60000m)
+                    new ThanhToanDemoRecord("ChuyenKhoan", 52000m, null)
                 ]
             },
             new HoaDonDemoRecord
@@ -151,6 +151,23 @@ public sealed partial class BanHangDemoStore
                 ]
             }
         ];
+        // S-HD-NOV-02 đến S-HD-NOV-12 trong 02_SeedData.sql cùng mẫu dòng với S-HD-NOV-01.
+        var mau = _hoaDons.Single(h => h.MaHoaDon == "S-HD-NOV-01");
+        for (int i = 2; i <= 12; i++)
+        {
+            var dong = new List<DongBanDemoRecord>
+            {
+                mau.DongBans[0] with { SoLuongBan = 1 + (i - 1) % 3 },
+                mau.DongBans[1] with { SoLuongBan = i % 2 == 0 ? 2 : 1 }
+            };
+            _hoaDons.Add(new HoaDonDemoRecord
+            {
+                MaHoaDon = $"S-HD-NOV-{i:D2}", MaCa = mau.MaCa, MaNguoiLap = mau.MaNguoiLap,
+                TenNguoiLap = mau.TenNguoiLap, LucLap = mau.LucLap, LucXacNhan = mau.LucXacNhan?.AddMinutes(3 * (i-1)),
+                TrangThai = "DaXacNhan", DongBans = dong,
+                ThanhToans = [new("ChuyenKhoan", dong.Sum(d => d.ThanhTien), null)]
+            });
+        }
     }
 
     public IReadOnlyList<MatHangDemoItem> LayDanhSachMatHang()
@@ -248,6 +265,7 @@ public sealed partial class BanHangDemoStore
                 return new KetQuaTaoHoaDonDemo(KetQuaIdempotency.XungDotNoiDung, existing);
             }
 
+            if (MaCaMo is not string caMo) throw new InvalidOperationException("Bạn cần mở ca trước khi bán hàng.");
             var now = DateTime.Now;
             var maHoaDon = $"HD-{now:ddMM}-{_nextInvoiceNumber:D3}";
             _nextInvoiceNumber++;
@@ -255,7 +273,7 @@ public sealed partial class BanHangDemoStore
             var record = new HoaDonDemoRecord
             {
                 MaHoaDon = maHoaDon,
-                MaCa = "S-CA-1126",
+                MaCa = caMo,
                 MaNguoiLap = "S-TK-TN1",
                 TenNguoiLap = "Lê Linh",
                 LucLap = now,
@@ -369,7 +387,7 @@ public sealed partial class BanHangDemoStore
                 }
 
                 var coTienMat = hoaDon.ThanhToans.Any(t => t.PhuongThuc == "TienMat" && t.SoTienThanhToan > 0);
-                if (coTienMat && !coCaDaoMo)
+                if (coTienMat && (!coCaDaoMo || MaCaMo == null))
                 {
                     return (false, $"Hóa đơn {hoaDon.MaHoaDon} có thanh toán tiền mặt, cần có một ca đang mở để ghi nhận đảo tiền mặt.");
                 }
@@ -377,10 +395,10 @@ public sealed partial class BanHangDemoStore
                 hoaDon.TrangThai = "DaHuy";
                 hoaDon.LucHuy = DateTime.Now;
                 hoaDon.TenNguoiHuy = "Nguyễn An";
-                hoaDon.MaCaDao = coTienMat ? "S-CA-1126" : null;
+                hoaDon.MaCaDao = coTienMat ? MaCaMo : null;
                 hoaDon.LyDoHuy = lyDoHuy.Trim();
                 return (true, coTienMat
-                    ? $"Đã hủy hóa đơn {hoaDon.MaHoaDon} và ghi nhận ca đảo tiền mặt S-CA-1126."
+                    ? $"Đã hủy hóa đơn {hoaDon.MaHoaDon} và ghi nhận ca đảo tiền mặt {hoaDon.MaCaDao}."
                     : $"Đã hủy hóa đơn {hoaDon.MaHoaDon} (thanh toán chuyển khoản, không tác động két ca).");
             }
 

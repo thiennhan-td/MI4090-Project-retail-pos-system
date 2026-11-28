@@ -25,7 +25,7 @@ public sealed class BanHangController : Controller
         var matHangs = store.LayDanhSachMatHang();
         var vm = new BanHangPosViewModel
         {
-            MaCaHienTai = "S-CA-1126",
+            MaCaHienTai = store.MaCaMo ?? string.Empty,
             TenThuNgan = "Lê Linh",
             MaYeuCauMacDinh = Guid.NewGuid().ToString("N"),
             DanhSachNhomHang = matHangs.Select(m => m.TenNhom).Distinct().ToList(),
@@ -121,7 +121,9 @@ public sealed class BanHangController : Controller
             });
         }
 
-        var ketQua = store.TaoHoacLayHoaDonDaXacNhan(req.MaYeuCau, dongBans, thanhToans);
+        KetQuaTaoHoaDonDemo ketQua;
+        try { ketQua = store.TaoHoacLayHoaDonDaXacNhan(req.MaYeuCau, dongBans, thanhToans); }
+        catch (InvalidOperationException ex) { return BadRequest(new { ok = false, field = "shift", message = ex.Message }); }
         var hoaDon = ketQua.HoaDon;
         var traCuuUrl = Url.Action(nameof(TraCuu), "BanHang", new { chon = hoaDon.MaHoaDon, vaiTro = "ThuNgan" });
 

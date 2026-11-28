@@ -12,6 +12,7 @@ public sealed class TraHangController(BanHangDemoSessionProvider phien) : Contro
     public IActionResult Index(string? maHoaDon, string? maNhap)
     {
         ViewData["PhienTra"] = HttpContext.Session.Id;
+        ViewData["CaMo"] = Kho.MaCaMo;
         return View("~/Views/nv_TraHang/Index.cshtml", Kho.TraHoaDon(maHoaDon, maNhap));
     }
 
@@ -47,6 +48,7 @@ public sealed class TraHangController(BanHangDemoSessionProvider phien) : Contro
             Response.StatusCode = 400;
             return View("~/Views/nv_TraHang/TraCuu.cshtml", new TraCuuTraViewModel(loc, [], null, []));
         }
+        ViewData["CaMo"] = Kho.MaCaMo;
         var r = Kho.TimPhieuTra(loc);
         return r.Model == null
             ? StatusCode(r.Status)

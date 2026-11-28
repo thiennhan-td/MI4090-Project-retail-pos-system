@@ -4,7 +4,7 @@ namespace Pos.Web.Demo;
 
 public sealed partial class BanHangDemoStore
 {
-    private const string CaTra = "S-CA-1126";
+    private string CaTra => MaCaMo ?? string.Empty;
 
     private readonly Dictionary<string, PhieuTraViewModel> _phieuTra = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -113,7 +113,7 @@ public sealed partial class BanHangDemoStore
                     : (409, "Mã yêu cầu đã dùng cho phiếu trả có nội dung khác.", cu.Ma, current.PhienBan);
             }
 
-            if (!q.CaMo)
+            if (!q.CaMo || MaCaMo == null)
             {
                 return (400, "Cần mở ca để nhận trả hàng.", null, 0);
             }

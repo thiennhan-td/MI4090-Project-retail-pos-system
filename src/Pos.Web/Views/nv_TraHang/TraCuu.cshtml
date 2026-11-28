@@ -196,7 +196,7 @@
             </div>
         </div>
 
-        @if (!ph.XacNhan && loc.CaMo && loc.VaiTro != "QuanLy" && ph.Ca == "S-CA-1126" && ph.Nguoi == "Lê Linh")
+        @if (!ph.XacNhan && loc.CaMo && loc.VaiTro != "QuanLy" && ph.Ca == ViewData["CaMo"] as string && ph.Nguoi == "Lê Linh")
         {
             <div class="pos-f3-toolbar-actions" style="margin-top: 1rem;">
                 <a class="pos-btn pos-btn-primary"

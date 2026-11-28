@@ -23,30 +23,56 @@ public sealed class ReturnService(
             CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(maCa, ct), maTaiKhoan);
             var hoaDon = await KhoaHoaDonGoc(maHoaDon, ct);
             var phieu = new PhieuTra(await traRepo.SinhMaAsync(ct), maHoaDon, maCa, maTaiKhoan, lucUtc);
-            foreach (var dong in dongTra)
-            {
-                phieu.ThemDongTra(new(await traRepo.SinhMaDongAsync(ct), phieu.MaPhieuTra, dong.MaDongBan,
-                    dong.SoLuongTra, dong.SoLuongNhapLai));
-            }
-            foreach (var khoan in khoanHoan)
-            {
-                phieu.ThemKhoanHoan(new(await traRepo.SinhMaHoanAsync(ct), phieu.MaPhieuTra,
-                    khoan.PhuongThuc, khoan.SoTien));
-            }
+            await DienNoiDungAsync(phieu, dongTra, khoanHoan, ct);
             await TinhGiaTriTraAsync(hoaDon, phieu, ct);
             await traRepo.ThemAsync(phieu, ct);
             return phieu;
         }, ct);
     }
 
+    public async Task<PhieuTra> CapNhatNhapAsync(string maPhieuTra, string maCa, string maTaiKhoan,
+        string phienBanNhap, IReadOnlyList<DongTraNhapDto> dongTra, IReadOnlyList<KhoanHoanNhapDto> khoanHoan,
+        CancellationToken ct = default)
+    {
+        await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.TRA_LAP_PHIEU, ct);
+        return await work.ThucThiAsync(async () =>
+        {
+            CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(maCa, ct), maTaiKhoan);
+            var nhap = await LayNhapCuaNguoiNhan(maPhieuTra, maCa, maTaiKhoan, ct);
+            PhienBanNhap.KiemTra(PhienBanNhap.CuaPhieuTra(nhap), phienBanNhap);
+            var hoaDon = await KhoaHoaDonGoc(nhap.MaHoaDon, ct);
+            var phieu = new PhieuTra(nhap.MaPhieuTra, nhap.MaHoaDon, nhap.MaCaNhan, nhap.MaNguoiNhan, nhap.LucLap);
+            await DienNoiDungAsync(phieu, dongTra, khoanHoan, ct);
+            await TinhGiaTriTraAsync(hoaDon, phieu, ct);
+            await traRepo.CapNhatAsync(phieu, ct);
+            return phieu;
+        }, ct);
+    }
+
+    private async Task DienNoiDungAsync(PhieuTra phieu, IReadOnlyList<DongTraNhapDto> dongTra,
+        IReadOnlyList<KhoanHoanNhapDto> khoanHoan, CancellationToken ct)
+    {
+        foreach (var dong in dongTra)
+        {
+            phieu.ThemDongTra(new(await traRepo.SinhMaDongAsync(ct), phieu.MaPhieuTra, dong.MaDongBan,
+                dong.SoLuongTra, dong.SoLuongNhapLai));
+        }
+        foreach (var khoan in khoanHoan)
+        {
+            phieu.ThemKhoanHoan(new(await traRepo.SinhMaHoanAsync(ct), phieu.MaPhieuTra,
+                khoan.PhuongThuc, khoan.SoTien));
+        }
+    }
+
     public async Task<PhieuTra> XacNhanTraAsync(string maPhieuTra, string maCa, string maTaiKhoan,
-        DateTime lucUtc, CancellationToken ct = default)
+        DateTime lucUtc, string phienBanNhap, CancellationToken ct = default)
     {
         await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.TRA_XAC_NHAN, ct);
         return await work.ThucThiAsync(async () =>
         {
             CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(maCa, ct), maTaiKhoan);
             var phieu = await LayNhapCuaNguoiNhan(maPhieuTra, maCa, maTaiKhoan, ct);
+            PhienBanNhap.KiemTra(PhienBanNhap.CuaPhieuTra(phieu), phienBanNhap);
             // Mọi lần xác nhận trả và hủy bán đều khóa cùng một hóa đơn gốc.
             var hoaDon = await KhoaHoaDonGoc(phieu.MaHoaDon, ct);
             if (lucUtc < hoaDon.LucXacNhan)

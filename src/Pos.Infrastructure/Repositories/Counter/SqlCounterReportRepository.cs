@@ -6,6 +6,17 @@ namespace Pos.Infrastructure.Repositories.Counter;
 
 public sealed class SqlCounterReportRepository(SqlUnitOfWork work) : ICounterReportRepository
 {
+    public async Task<decimal> TinhChiNccTuKetTrongKyAsync(string maCa, DateTime tuUtc, DateTime denUtc,
+        CancellationToken ct)
+    {
+        await using var command = work.Lenh("""
+            SELECT COALESCE(SUM(soTienTra), 0) FROM dbo.TraNhaCungCap
+            WHERE maCaChi=@ca AND nguonChi='KetCa' AND phuongThuc='TienMat'
+                AND lucTra >= @tu AND lucTra < @den;
+            """, Ma("@ca", maCa), Luc("@tu", tuUtc), Luc("@den", denUtc));
+        return (decimal)(await command.ExecuteScalarAsync(ct))!;
+    }
+
     public async Task<IReadOnlyList<SuKienBanTra>> LaySuKienAsync(DateTime tuUtc, DateTime denUtc, CancellationToken ct)
     {
         await using var command = work.Lenh("""
@@ -29,7 +40,9 @@ public sealed class SqlCounterReportRepository(SqlUnitOfWork work) : ICounterRep
             FROM dbo.HoaDon h JOIN dbo.ThanhToanBan t ON h.maHoaDon=t.maHoaDon
             WHERE h.lucXacNhan >= @tu AND h.lucXacNhan < @den
             UNION ALL
-            SELECT h.lucHuy, h.maHoaDon, COALESCE(h.maCaDao,h.maCa), 'DaoThanhToan', NULL, 0,
+            SELECT h.lucHuy, h.maHoaDon,
+                   CASE WHEN t.phuongThuc='TienMat' THEN COALESCE(h.maCaDao,h.maCa) ELSE h.maCa END,
+                   'DaoThanhToan', NULL, 0,
                    t.soTienThanhToan, t.phuongThuc
             FROM dbo.HoaDon h JOIN dbo.ThanhToanBan t ON h.maHoaDon=t.maHoaDon
             WHERE h.lucHuy >= @tu AND h.lucHuy < @den AND h.lucXacNhan IS NOT NULL AND h.trangThai='DaHuy'

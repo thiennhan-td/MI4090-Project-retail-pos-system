@@ -8,7 +8,8 @@ namespace Pos.Counter.Services;
 
 public sealed class ShiftCashService(
     ICaBanRepository caRepo, IPhieuThuChiRepository thuChiRepo, IInventoryReportQueryService inventoryReports,
-    IAuthorizationService auth, IUnitOfWork work) : IShiftCashService
+    IAuthorizationService auth, IUnitOfWork work, ITaiKhoanRepository taiKhoanRepo,
+    ICounterRequestRepository requests) : IShiftCashService
 {
     public async Task<CaBan> MoCaAsync(string maTaiKhoan, decimal tienMatDauCa, DateTime lucUtc,
         CancellationToken ct = default)
@@ -45,15 +46,22 @@ public sealed class ShiftCashService(
     }
 
     public async Task<PhieuThuChi> LapPhieuThuChiAsync(string maCa, string maTaiKhoan, string loai, string nguon,
-        string phuongThuc, decimal tien, string lyDo, string? soChungTu, DateTime lucUtc, CancellationToken ct = default)
+        string phuongThuc, decimal tien, string lyDo, string? soChungTu, DateTime lucUtc,
+        string maYeuCau, CancellationToken ct = default)
     {
         await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.QUY_LAP_THU_CHI, ct);
-        return await work.ThucThiAsync(async () =>
+        soChungTu = soChungTu?.Trim();
+        var noiDung = new { maCa, loai, nguon, phuongThuc, Tien = CounterRequest.ChuanHoaTien(tien), lyDo, soChungTu };
+        return await work.ThucThiAsync(() => requests.GhiMotLanAsync("LapPhieuThuChi", maTaiKhoan, maYeuCau,
+            noiDung, GhiAsync, p => p, p => p, ct), ct);
+
+        async Task<PhieuThuChi> GhiAsync()
         {
             var ca = await caRepo.KhoaCaMoAsync(maCa, ct);
-            if (ca.MaNguoiMo != maTaiKhoan)
+            if (ca.MaNguoiMo != maTaiKhoan &&
+                (await taiKhoanRepo.LayTheoMaAsync(maTaiKhoan, ct))?.MaVaiTro != "QuanLy")
             {
-                await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.NCC_GHI_TRA_TIEN, ct);
+                throw new UnauthorizedActionException(MaQuyenPos.QUY_LAP_THU_CHI);
             }
             if (lucUtc < ca.LucMo)
             {
@@ -61,9 +69,13 @@ public sealed class ShiftCashService(
             }
             var phieu = new PhieuThuChi(await thuChiRepo.SinhMaAsync(ct), maCa, maTaiKhoan, lucUtc,
                 loai, nguon, phuongThuc, tien, lyDo, soChungTu);
+            if (phieu.SoChungTuKemTheo is { } so && await thuChiRepo.DaHachToanAsync(so, ct))
+            {
+                throw new BusinessRuleViolationException("Chứng từ này đã được hạch toán. Không thể ghi lại khoản thu chi.");
+            }
             await thuChiRepo.ThemAsync(phieu, ct);
             return phieu;
-        }, ct);
+        }
     }
 
     public async Task<ThongTinCaMoDto> KiemTraVaKhoaCaMoChoChiNccAsync(string maCaChi, CancellationToken ct)

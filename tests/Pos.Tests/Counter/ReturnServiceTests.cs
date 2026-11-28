@@ -1,4 +1,5 @@
 using Moq;
+using Pos.Counter.Services;
 using Pos.Contracts;
 using Pos.Domain.Constants;
 using Pos.Domain.Exceptions;
@@ -13,9 +14,9 @@ public sealed class ReturnServiceTests
     {
         var f = new CounterFixture();
         f.TaoHoaDon(true);
-        f.TaoPhieuTra();
+        var nhap = f.TaoPhieuTra();
 
-        var phieu = await f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc);
+        var phieu = await f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc, PhienBanNhap.CuaPhieuTra(nhap));
 
         Assert.Equal(TrangThaiChungTu.DaXacNhan, phieu.TrangThai);
         f.Tra.Verify(r => r.KhoaTheoMaAsync(MaPhieu, default), Times.Once);
@@ -44,11 +45,11 @@ public sealed class ReturnServiceTests
     {
         var f = new CounterFixture();
         f.TaoHoaDon(true);
-        f.TaoPhieuTra();
+        var nhap = f.TaoPhieuTra();
         f.Tra.Setup(r => r.TinhLuongDaTraAsync(MaDong, default)).ReturnsAsync(2);
 
         await Assert.ThrowsAsync<BusinessRuleViolationException>(
-            () => f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc));
+            () => f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc, PhienBanNhap.CuaPhieuTra(nhap)));
 
         f.Kho.Verify(k => k.GhiNhanNhapTraAsync(It.IsAny<YeuCauNhapTraDto>(), default), Times.Never);
         f.Work.Verify(w => w.CommitAsync(default), Times.Never);
@@ -59,12 +60,12 @@ public sealed class ReturnServiceTests
     {
         var f = new CounterFixture();
         f.TaoHoaDon(true);
-        f.TaoPhieuTra();
+        var nhap = f.TaoPhieuTra();
         var failure = new ConcurrencyConflictException("Thẻ kho thay đổi.");
         f.Kho.Setup(s => s.GhiNhanNhapTraAsync(It.IsAny<YeuCauNhapTraDto>(), default)).ThrowsAsync(failure);
 
         var actual = await Assert.ThrowsAsync<ConcurrencyConflictException>(
-            () => f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc));
+            () => f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc, PhienBanNhap.CuaPhieuTra(nhap)));
 
         Assert.Same(failure, actual);
         f.Work.Verify(w => w.RollbackAsync(default), Times.Once);
@@ -76,9 +77,9 @@ public sealed class ReturnServiceTests
     {
         var f = new CounterFixture();
         f.TaoHoaDon(true);
-        f.TaoPhieuTra(0);
+        var nhap = f.TaoPhieuTra(0);
 
-        var phieu = await f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc);
+        var phieu = await f.Return().XacNhanTraAsync(MaPhieu, MaCa, Actor, Luc, PhienBanNhap.CuaPhieuTra(nhap));
 
         Assert.Equal(TrangThaiChungTu.DaXacNhan, phieu.TrangThai);
         f.Kho.Verify(k => k.GhiNhanNhapTraAsync(It.IsAny<YeuCauNhapTraDto>(), default), Times.Never);

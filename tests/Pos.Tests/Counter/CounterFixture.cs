@@ -16,6 +16,8 @@ internal sealed class CounterFixture
     public const string MaHoaDon = "HD-1";
     public const string MaDong = "DB-1";
     public const string MaPhieu = "PT-1";
+    public Mock<ICounterRequestRepository> Requests { get; } = new();
+    public Mock<ITaiKhoanRepository> TaiKhoan { get; } = new();
     public Mock<IUnitOfWork> Work { get; } = new();
     public Mock<IAuthorizationService> Auth { get; } = new();
     public Mock<IInventoryService> Kho { get; } = new();
@@ -35,9 +37,9 @@ internal sealed class CounterFixture
 
     public static PaymentProcessorContext Payments() => new([new TienMatStrategy(), new ChuyenKhoanStrategy()]);
     public SaleService Sale() => new(HoaDon.Object, Ca.Object, Tra.Object, Kho.Object, Catalog.Object,
-        Auth.Object, Work.Object, Payments());
+        Auth.Object, Work.Object, Payments(), Requests.Object, TaiKhoan.Object);
     public ReturnService Return() => new(Tra.Object, HoaDon.Object, Ca.Object, Kho.Object, Auth.Object, Work.Object);
-    public ShiftCashService Shift() => new(Ca.Object, ThuChi.Object, BaoCaoKho.Object, Auth.Object, Work.Object);
+    public ShiftCashService Shift() => new(Ca.Object, ThuChi.Object, BaoCaoKho.Object, Auth.Object, Work.Object, TaiKhoan.Object, Requests.Object);
 
     public HoaDon TaoHoaDon(bool daXacNhan = false)
     {
@@ -48,6 +50,7 @@ internal sealed class CounterFixture
         {
             h.XacNhan(Luc);
         }
+        HoaDon.Setup(repo => repo.LayTheoMaAsync(MaHoaDon, It.IsAny<CancellationToken>())).ReturnsAsync(h);
         HoaDon.Setup(repo => repo.KhoaTheoMaAsync(MaHoaDon, It.IsAny<CancellationToken>())).ReturnsAsync(h);
         return h;
     }

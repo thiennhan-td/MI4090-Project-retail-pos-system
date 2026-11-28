@@ -1,6 +1,7 @@
 using Moq;
 using Pos.Contracts;
 using Pos.Counter.Strategies;
+using Pos.Counter.Services;
 using Pos.Domain.Constants;
 using Pos.Domain.Exceptions;
 using static Pos.Tests.Counter.CounterFixture;
@@ -23,7 +24,7 @@ public sealed class SaleServiceTests
             .Callback(() => steps.Add("xuat")).ReturnsAsync(new KetQuaGhiTheKhoDto(1, 0));
         f.Work.Setup(w => w.CommitAsync(default)).Callback(() => steps.Add("commit")).Returns(Task.CompletedTask);
 
-        var result = await f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc);
+        var result = await f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc, PhienBanNhap.CuaHoaDon(h), "req-1");
 
         Assert.Equal(TrangThaiChungTu.DaXacNhan, result.TrangThai);
         Assert.Equal(new[] { "quyen", "begin", "luu", "xuat", "commit" }, steps);
@@ -35,14 +36,16 @@ public sealed class SaleServiceTests
     public async Task XacNhanBan_ThieuTonRollbackVaGiuNgoaiLeGoc()
     {
         var f = new CounterFixture();
-        f.TaoHoaDon();
+        var h = f.TaoHoaDon();
         var failure = new InsufficientStockException("MH-1", 1, 2);
         f.Kho.Setup(s => s.GhiNhanXuatBanAsync(It.IsAny<YeuCauXuatBanDto>(), default)).ThrowsAsync(failure);
 
         var actual = await Assert.ThrowsAsync<InsufficientStockException>(
-            () => f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc));
+            () => f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc, PhienBanNhap.CuaHoaDon(h), "req-1"));
 
         Assert.Same(failure, actual);
+        f.Requests.Verify(r => r.ThemAsync(It.IsAny<string>(), It.IsAny<Pos.Domain.Interfaces.KetQuaYeuCauQuay>(),
+            default), Times.Never);
         f.Work.Verify(w => w.RollbackAsync(CancellationToken.None), Times.Once);
         f.Work.Verify(w => w.CommitAsync(default), Times.Never);
     }
@@ -51,7 +54,7 @@ public sealed class SaleServiceTests
     public async Task XacNhanBan_RequestHuyVaRollbackLoiVanGiuNgoaiLeGoc()
     {
         var f = new CounterFixture();
-        f.TaoHoaDon();
+        var h = f.TaoHoaDon();
         using var cancellation = new CancellationTokenSource();
         var original = new InsufficientStockException("MH-1", 1, 2);
         var rollback = new InvalidOperationException("Lỗi dọn giao dịch.");
@@ -60,7 +63,7 @@ public sealed class SaleServiceTests
         f.Work.Setup(w => w.RollbackAsync(CancellationToken.None)).ThrowsAsync(rollback);
 
         var actual = await Assert.ThrowsAsync<InsufficientStockException>(
-            () => f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc, cancellation.Token));
+            () => f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc, PhienBanNhap.CuaHoaDon(h), "req-1", cancellation.Token));
 
         Assert.Same(original, actual);
         Assert.Same(rollback, actual.Data["Counter.RollbackException"]);
@@ -72,11 +75,12 @@ public sealed class SaleServiceTests
     public async Task XacNhanBan_ThieuQuyenKhongMoGiaoDich()
     {
         var f = new CounterFixture();
+        var h = f.TaoHoaDon();
         f.Auth.Setup(s => s.KiemTraQuyenAsync(Actor, MaQuyenPos.BAN_XAC_NHAN, default))
             .ThrowsAsync(new UnauthorizedActionException(MaQuyenPos.BAN_XAC_NHAN));
 
         var error = await Assert.ThrowsAsync<UnauthorizedActionException>(
-            () => f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc));
+            () => f.Sale().XacNhanBanAsync(MaHoaDon, MaCa, Actor, Luc, PhienBanNhap.CuaHoaDon(h), "req-1"));
 
         Assert.Equal(MaQuyenPos.BAN_XAC_NHAN, error.MaQuyen);
         f.Work.Verify(w => w.BeginTransactionAsync(default), Times.Never);

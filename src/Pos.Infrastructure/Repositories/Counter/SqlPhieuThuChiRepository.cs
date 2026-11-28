@@ -23,6 +23,26 @@ public sealed class SqlPhieuThuChiRepository(SqlUnitOfWork work) : IPhieuThuChiR
             : null;
     }
 
+    public async Task<bool> DaHachToanAsync(string soChungTu, CancellationToken ct)
+    {
+        if (soChungTu.Length > 32)
+        {
+            return false;
+        }
+
+        await using var command = work.Lenh("""
+            SELECT CAST(CASE WHEN
+                EXISTS (SELECT 1 FROM dbo.HoaDon WITH (HOLDLOCK)
+                    WHERE maHoaDon=@so AND lucXacNhan IS NOT NULL)
+                OR EXISTS (SELECT 1 FROM dbo.PhieuTra WITH (HOLDLOCK)
+                    WHERE maPhieuTra=@so AND lucXacNhan IS NOT NULL)
+                OR EXISTS (SELECT 1 FROM dbo.TraNhaCungCap WITH (HOLDLOCK)
+                    WHERE maKhoanTra=@so OR maPhieuNhap=@so)
+                THEN 1 ELSE 0 END AS bit);
+            """, Ma("@so", soChungTu));
+        return (bool)(await command.ExecuteScalarAsync(ct))!;
+    }
+
     public Task ThemAsync(PhieuThuChi entity, CancellationToken ct) => work.Ghi("""
         INSERT dbo.PhieuThuChi(maPhieuThuChi, maCa, maNguoiLap, lucGhi, loaiThuChi, nguonQuy,
             phuongThuc, soTien, lyDo, soChungTuKemTheo)

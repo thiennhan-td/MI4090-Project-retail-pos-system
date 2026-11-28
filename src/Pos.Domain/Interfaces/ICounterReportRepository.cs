@@ -7,5 +7,6 @@ public sealed record SuKienBanTra(DateTime LucUtc, string MaChungTu, string MaCa
 
 public interface ICounterReportRepository
 {
+    Task<decimal> TinhChiNccTuKetTrongKyAsync(string maCa, DateTime tuUtc, DateTime denUtc, CancellationToken ct);
     Task<IReadOnlyList<SuKienBanTra>> LaySuKienAsync(DateTime tuUtc, DateTime denUtc, CancellationToken ct);
 }

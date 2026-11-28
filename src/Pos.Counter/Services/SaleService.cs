@@ -18,18 +18,25 @@ public sealed class SaleService(
     ICatalogQueryService catalog,
     IAuthorizationService auth,
     IUnitOfWork work,
-    PaymentProcessorContext payments)
+    PaymentProcessorContext payments, ICounterRequestRepository requests, ITaiKhoanRepository taiKhoanRepo)
 {
     public async Task<HoaDon> LuuNhapAsync(string maTaiKhoan, string maCa, string? maHoaDon,
         IReadOnlyList<DongBanNhapDto> dongHang, IReadOnlyList<ThanhToanNhapDto> thanhToan,
-        DateTime lucUtc, CancellationToken ct = default)
+        DateTime lucUtc, string maYeuCau, CancellationToken ct = default)
     {
         await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_LAP_HD, ct);
-        if (thanhToan.Count > 0)
+        var noiDung = new
         {
-            await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_THANH_TOAN, ct);
-        }
-        return await work.ThucThiAsync(async () =>
+            maCa, maHoaDon, dongHang,
+            ThanhToan = thanhToan.Select(t => new
+            {
+                t.PhuongThuc, SoTien = CounterRequest.ChuanHoaTien(t.SoTien), TienKhachDua = CounterRequest.ChuanHoaTien(t.TienKhachDua)
+            })
+        };
+        return await work.ThucThiAsync(() => requests.GhiMotLanAsync("LuuNhapBan", maTaiKhoan, maYeuCau,
+            noiDung, GhiAsync, HoaDonDaGhi.Chup, h => h.KhoiPhuc(), ct), ct);
+
+        async Task<HoaDon> GhiAsync()
         {
             CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(maCa, ct), maTaiKhoan);
             var draft = maHoaDon is null ? null : await KhoaHoaDon(maHoaDon, ct);
@@ -37,6 +44,13 @@ public sealed class SaleService(
             {
                 KiemTraHoaDonTrongCa(draft, maCa, maTaiKhoan);
                 BatBuocNhap(draft);
+            }
+
+            var thanhToanCu = draft?.ThanhToanBans
+                .Select(t => new ThanhToanNhapDto(t.PhuongThuc, t.SoTienThanhToan, t.TienKhachDua)) ?? [];
+            if (!SapXepThanhToan(thanhToanCu).SequenceEqual(SapXepThanhToan(thanhToan)))
+            {
+                await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_THANH_TOAN, ct);
             }
 
             var hoaDon = new HoaDon(draft?.MaHoaDon ?? await hoaDonRepo.SinhMaAsync(ct), maCa,
@@ -63,19 +77,23 @@ public sealed class SaleService(
                 await hoaDonRepo.CapNhatAsync(hoaDon, ct);
             }
             return hoaDon;
-        }, ct);
+        }
     }
 
     public async Task<HoaDon> XacNhanBanAsync(string maHoaDon, string maCa, string maTaiKhoan,
-        DateTime lucUtc, CancellationToken ct = default)
+        DateTime lucUtc, string phienBanNhap, string maYeuCau, CancellationToken ct = default)
     {
         await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_XAC_NHAN, ct);
-        return await work.ThucThiAsync(async () =>
+        return await work.ThucThiAsync(() => requests.GhiMotLanAsync("XacNhanBan", maTaiKhoan, maYeuCau,
+            new { maHoaDon, maCa, phienBanNhap }, GhiAsync, HoaDonDaGhi.Chup, h => h.KhoiPhuc(), ct), ct);
+
+        async Task<HoaDon> GhiAsync()
         {
             CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(maCa, ct), maTaiKhoan);
             var hoaDon = await KhoaHoaDon(maHoaDon, ct);
             KiemTraHoaDonTrongCa(hoaDon, maCa, maTaiKhoan);
             BatBuocNhap(hoaDon);
+            PhienBanNhap.KiemTra(PhienBanNhap.CuaHoaDon(hoaDon), phienBanNhap);
             foreach (var khoan in hoaDon.ThanhToanBans)
             {
                 payments.KiemTraThanhToan(khoan);
@@ -84,25 +102,51 @@ public sealed class SaleService(
             await hoaDonRepo.CapNhatAsync(hoaDon, ct);
             await inventory.GhiNhanXuatBanAsync(new(hoaDon.MaHoaDon, lucUtc, DongXuat(hoaDon)), ct);
             return hoaDon;
-        }, ct);
+        }
     }
 
     public Task<HoaDon> HuyHoaDonAsync(string maHoaDon, string maTaiKhoan, string lyDo, string? maCaDao,
         DateTime lucUtc, CancellationToken ct = default)
         => work.ThucThiAsync(async () =>
         {
+            HoaDon hoaDon;
             if (maCaDao is not null)
             {
-                await caRepo.KhoaCaMoAsync(maCaDao, ct);
+                var caDao = await caRepo.KhoaCaMoAsync(maCaDao, ct);
+                if (lucUtc < caDao.LucMo)
+                {
+                    throw new BusinessRuleViolationException("Thời điểm đảo tiền mặt phải từ lúc mở ca đảo.");
+                }
+                hoaDon = await KhoaHoaDon(maHoaDon, ct);
             }
-            var hoaDon = await KhoaHoaDon(maHoaDon, ct);
-            var daXacNhan = hoaDon.TrangThai == TrangThaiChungTu.DaXacNhan;
-            await auth.KiemTraQuyenAsync(maTaiKhoan,
-                daXacNhan ? MaQuyenPos.BAN_HUY_HD_XAC_NHAN : MaQuyenPos.BAN_HUY_HD_NHAP, ct);
-            if (!daXacNhan && hoaDon.TrangThai == TrangThaiChungTu.Nhap && hoaDon.MaNguoiLap != maTaiKhoan)
+            else
             {
-                // Quyền hủy nháp và quyền xem toàn cửa hàng độc lập.
+                var banDau = await hoaDonRepo.LayTheoMaAsync(maHoaDon, ct)
+                    ?? throw new EntityNotFoundException("Không tìm thấy hóa đơn.");
+                if (banDau.TrangThai == TrangThaiChungTu.Nhap)
+                {
+                    await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_HUY_HD_NHAP, ct);
+                    var actor = await taiKhoanRepo.LayTheoMaAsync(maTaiKhoan, ct);
+                    if (actor?.MaVaiTro != "QuanLy")
+                    {
+                        KiemTraHoaDonTrongCa(banDau, banDau.MaCa, maTaiKhoan);
+                        CounterTransaction.KiemTraChuCa(await caRepo.KhoaCaMoAsync(banDau.MaCa, ct), maTaiKhoan);
+                    }
+                }
+                hoaDon = await KhoaHoaDon(maHoaDon, ct);
+                if (banDau.TrangThai != hoaDon.TrangThai)
+                {
+                    throw new ConcurrencyConflictException("Hóa đơn đã đổi trạng thái. Hãy tải lại trước khi hủy.");
+                }
+            }
+            var daXacNhan = hoaDon.TrangThai == TrangThaiChungTu.DaXacNhan;
+            if (daXacNhan)
+            {
                 await auth.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.BAN_HUY_HD_XAC_NHAN, ct);
+            }
+            else if (maCaDao is not null)
+            {
+                throw new BusinessRuleViolationException("Chỉ đảo tiền mặt khi hủy hóa đơn đã xác nhận.");
             }
             hoaDon.Huy(maTaiKhoan, lucUtc, lyDo, maCaDao,
                 daXacNhan && await traRepo.CoPhieuTraHieuLucAsync(maHoaDon, ct));
@@ -113,6 +157,9 @@ public sealed class SaleService(
             }
             return hoaDon;
         }, ct);
+
+    private static IOrderedEnumerable<ThanhToanNhapDto> SapXepThanhToan(IEnumerable<ThanhToanNhapDto> cacKhoan)
+        => cacKhoan.OrderBy(t => t.PhuongThuc, StringComparer.Ordinal).ThenBy(t => t.SoTien).ThenBy(t => t.TienKhachDua);
 
     private async Task<HoaDon> KhoaHoaDon(string ma, CancellationToken ct)
         => await hoaDonRepo.KhoaTheoMaAsync(ma, ct) ?? throw new EntityNotFoundException("Không tìm thấy hóa đơn.");

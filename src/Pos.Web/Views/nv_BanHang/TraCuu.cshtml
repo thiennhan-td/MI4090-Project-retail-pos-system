@@ -1,0 +1,340 @@
+@using System.Globalization
+@model Pos.Web.ViewModels.BanHang.TraCuuHoaDonViewModel
+@{
+    ViewData["Title"] = "Tra cứu, in và hủy hóa đơn";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    string Money(decimal v) => $"{v.ToString("#,##0", vi)} đ";
+    string StatusText(string s) => s switch
+    {
+        "DaXacNhan" => "Đã xác nhận",
+        "DaHuy" => "Đã hủy",
+        _ => "Nháp"
+    };
+    string StatusClass(string s) => s switch
+    {
+        "DaXacNhan" => "pos-badge-teal",
+        "DaHuy" => "pos-badge-error",
+        _ => "pos-badge-amber"
+    };
+    var hd = Model.HoaDonDangChon;
+    var laQuanLy = Model.VaiTroDemo == "QuanLy";
+    var coTienMat = hd is not null && hd.TongTienMatPhanBo > 0;
+    var duocHuy = false;
+    var lyDoChanHuy = string.Empty;
+
+    if (hd is not null)
+    {
+        if (hd.TrangThai == "DaHuy")
+        {
+            lyDoChanHuy = "Hóa đơn đã hủy, không thể hủy lại.";
+        }
+        else if (hd.TrangThai == "Nhap")
+        {
+            var caMo = Model.DanhSachCaBan.Any(c => c.MaCa == hd.MaCa && c.TrangThai == "DangMo");
+            if (laQuanLy || (hd.MaNguoiLap == "S-TK-TN1" && caMo))
+            {
+                duocHuy = true;
+            }
+            else
+            {
+                lyDoChanHuy = "Thu ngân chỉ được hủy hóa đơn nháp thuộc ca đang mở của chính mình.";
+            }
+        }
+        else if (hd.TrangThai == "DaXacNhan")
+        {
+            if (!laQuanLy)
+            {
+                lyDoChanHuy = "Thu ngân không có quyền hủy hóa đơn đã xác nhận (chỉ Quản lý được hủy).";
+            }
+            else if (hd.CoPhieuTraHieuLuc)
+            {
+                lyDoChanHuy = $"Không thể hủy vì hóa đơn đã có phiếu trả hiệu lực ({hd.MaPhieuTraLienQuan}).";
+            }
+            else if (coTienMat && !Model.CoCaDaoMo)
+            {
+                lyDoChanHuy = "Hóa đơn có thu tiền mặt nên cần có một ca đang mở để ghi nhận đảo tiền mặt.";
+            }
+            else
+            {
+                duocHuy = true;
+            }
+        }
+    }
+}
+
+<section class="pos-f3-toolbar">
+    <div class="pos-f3-meta-row">
+        <span class="pos-pill">@(laQuanLy ? "Vai trò demo: Quản lý (Nguyễn An · Toàn cửa hàng)" : "Vai trò demo: Thu ngân (Lê Linh · Các ca của mình)")</span>
+        <span class="pos-muted" style="font-size: 0.82rem;">Kiểm tra quyền &amp; giao dịch thật sẽ được bảo đảm tại tầng Service khi nối SQL.</span>
+    </div>
+    <div class="pos-f3-toolbar-actions">
+        <a class="pos-btn @(laQuanLy ? "pos-btn-secondary" : "pos-btn-primary")"
+           asp-controller="BanHang" asp-action="TraCuu"
+           asp-route-vaiTro="ThuNgan" asp-route-coCaDaoMo="@Model.CoCaDaoMo" asp-route-chon="@Model.MaHoaDonDangChon">
+            Thu ngân (Lê Linh)
+        </a>
+        <a class="pos-btn @(laQuanLy ? "pos-btn-primary" : "pos-btn-secondary")"
+           asp-controller="BanHang" asp-action="TraCuu"
+           asp-route-vaiTro="QuanLy" asp-route-coCaDaoMo="@Model.CoCaDaoMo" asp-route-chon="@Model.MaHoaDonDangChon">
+            Quản lý (Nguyễn An)
+        </a>
+        <a class="pos-btn pos-btn-secondary" asp-controller="BanHang" asp-action="Index">Mở màn Bán hàng POS</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.ThongBaoThanhCong))
+{
+    <div class="pos-alert pos-alert-success" role="status">@Model.ThongBaoThanhCong</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ThongBaoLoi))
+{
+    <div class="pos-alert pos-alert-error" role="alert">@Model.ThongBaoLoi</div>
+}
+
+<!-- BỘ LỌC TRA CỨU -->
+<section class="pos-card" style="margin-bottom: 1rem;">
+    <form method="get" asp-controller="BanHang" asp-action="TraCuu" class="pos-filter-grid">
+        <input type="hidden" name="vaiTro" value="@Model.VaiTroDemo" />
+        <input type="hidden" name="coCaDaoMo" value="@(Model.CoCaDaoMo ? "true" : "false")" />
+        <div class="pos-field">
+            <label for="f-maHoaDon">Mã hóa đơn</label>
+            <input id="f-maHoaDon" name="maHoaDon" value="@Model.MaHoaDon" class="pos-input" placeholder="VD: S-HD-01, HD-..." />
+        </div>
+        <div class="pos-field">
+            <label for="f-tuNgay">Từ ngày</label>
+            <input id="f-tuNgay" name="tuNgay" type="date" value="@(Model.TuNgay?.ToString("yyyy-MM-dd"))" class="pos-input" />
+        </div>
+        <div class="pos-field">
+            <label for="f-denNgay">Đến ngày</label>
+            <input id="f-denNgay" name="denNgay" type="date" value="@(Model.DenNgay?.ToString("yyyy-MM-dd"))" class="pos-input" />
+        </div>
+        <div class="pos-field">
+            <label for="f-maCa">Ca bán</label>
+            <select id="f-maCa" name="maCa" class="pos-input">
+                <option value="">Tất cả ca được xem</option>
+                @foreach (var ca in Model.DanhSachCaBan)
+                {
+                    <option value="@ca.MaCa" selected="@(Model.MaCa == ca.MaCa ? "selected" : null)">
+                        @ca.MaCa · @ca.TenNguoiMo (@(ca.TrangThai == "DangMo" ? "Đang mở" : "Đã đóng"))
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="pos-field">
+            <label for="f-trangThai">Trạng thái</label>
+            <select id="f-trangThai" name="trangThai" class="pos-input">
+                <option value="TatCa" selected="@(Model.TrangThai == "TatCa" ? "selected" : null)">Tất cả</option>
+                <option value="Nhap" selected="@(Model.TrangThai == "Nhap" ? "selected" : null)">Nháp</option>
+                <option value="DaXacNhan" selected="@(Model.TrangThai == "DaXacNhan" ? "selected" : null)">Đã xác nhận</option>
+                <option value="DaHuy" selected="@(Model.TrangThai == "DaHuy" ? "selected" : null)">Đã hủy</option>
+            </select>
+        </div>
+        <div class="pos-filter-actions">
+            <button type="submit" class="pos-btn pos-btn-primary">Lọc hóa đơn</button>
+            <a class="pos-btn pos-btn-ghost" asp-controller="BanHang" asp-action="TraCuu" asp-route-vaiTro="@Model.VaiTroDemo">Xóa lọc</a>
+        </div>
+    </form>
+</section>
+
+<!-- MASTER-DETAIL -->
+<div class="pos-lookup-grid">
+    <!-- DANH SÁCH HÓA ĐƠN -->
+    <section class="pos-card pos-invoice-list-pane" aria-label="Danh sách hóa đơn">
+        <div class="pos-pane-head">
+            <h2 class="pos-h2" style="margin: 0;">Danh sách hóa đơn</h2>
+            <span class="pos-pill pos-num">@Model.DanhSachHoaDon.Count kết quả</span>
+        </div>
+
+        @if (Model.DanhSachHoaDon.Count == 0)
+        {
+            <p class="pos-muted" style="margin-top: 1rem;">Không có hóa đơn nào phù hợp điều kiện lọc.</p>
+        }
+        else
+        {
+            <div class="pos-invoice-items">
+                @foreach (var item in Model.DanhSachHoaDon)
+                {
+                    var isSelected = hd is not null && item.MaHoaDon == hd.MaHoaDon;
+                    <a class="pos-invoice-row @(isSelected ? "is-selected" : string.Empty)"
+                       asp-controller="BanHang" asp-action="TraCuu"
+                       asp-route-maHoaDon="@Model.MaHoaDon"
+                       asp-route-tuNgay="@(Model.TuNgay?.ToString("yyyy-MM-dd"))"
+                       asp-route-denNgay="@(Model.DenNgay?.ToString("yyyy-MM-dd"))"
+                       asp-route-maCa="@Model.MaCa"
+                       asp-route-trangThai="@Model.TrangThai"
+                       asp-route-vaiTro="@Model.VaiTroDemo"
+                       asp-route-coCaDaoMo="@Model.CoCaDaoMo"
+                       asp-route-chon="@item.MaHoaDon">
+                        <div class="pos-invoice-row-top">
+                            <strong class="pos-num">@item.MaHoaDon</strong>
+                            <span class="pos-badge @StatusClass(item.TrangThai)">@StatusText(item.TrangThai)</span>
+                        </div>
+                        <div class="pos-invoice-row-meta">
+                            <span>@item.LucLap.ToString("dd/MM/yyyy HH:mm") · Ca @item.MaCa</span>
+                            <strong class="pos-num">@Money(item.TongTienHang)</strong>
+                        </div>
+                        <div class="pos-muted" style="font-size: 0.78rem;">Thu ngân: @item.TenNguoiLap</div>
+                    </a>
+                }
+            </div>
+        }
+    </section>
+
+    <!-- CHI TIẾT HÓA ĐƠN -->
+    <section class="pos-card pos-invoice-detail-pane" aria-label="Chi tiết hóa đơn">
+        @if (hd is null)
+        {
+            <p class="pos-muted">Chọn một hóa đơn bên trái để xem chi tiết dòng hàng, thanh toán và thao tác in/hủy.</p>
+        }
+        else
+        {
+            <div class="pos-pane-head" style="margin-bottom: 1rem;">
+                <div>
+                    <div class="pos-f3-meta-row">
+                        <h2 class="pos-h2 pos-num" style="margin: 0;">@hd.MaHoaDon</h2>
+                        <span class="pos-badge @StatusClass(hd.TrangThai)">@StatusText(hd.TrangThai)</span>
+                        @if (hd.CoPhieuTraHieuLuc)
+                        {
+                            <span class="pos-badge pos-badge-amber">Có phiếu trả: @hd.MaPhieuTraLienQuan</span>
+                        }
+                    </div>
+                    <p class="pos-muted" style="font-size: 0.84rem; margin-top: 0.25rem;">
+                        Lập lúc @hd.LucLap.ToString("dd/MM/yyyy HH:mm")
+                        @if (hd.LucXacNhan.HasValue)
+                        {
+                            <span> · Xác nhận @hd.LucXacNhan.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        }
+                        · Ca @hd.MaCa · Thu ngân @hd.TenNguoiLap
+                    </p>
+                </div>
+                <a class="pos-btn pos-btn-secondary"
+                   asp-controller="BanHang" asp-action="InHoaDon"
+                   asp-route-maHoaDon="@hd.MaHoaDon" asp-route-vaiTro="@Model.VaiTroDemo">
+                    In lại hóa đơn
+                </a>
+            </div>
+
+            <div class="pos-table-wrap">
+                <table class="pos-table">
+                    <thead>
+                        <tr>
+                            <th>Mã hàng</th>
+                            <th>Tên mặt hàng</th>
+                            <th>ĐVT</th>
+                            <th class="pos-num-col">SL</th>
+                            <th class="pos-num-col">Đơn giá lúc bán</th>
+                            <th class="pos-num-col">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in hd.DongBans)
+                        {
+                            <tr>
+                                <td class="pos-num">@line.MaHang</td>
+                                <td>@line.TenHang</td>
+                                <td>@line.DonViTinh</td>
+                                <td class="pos-num-col pos-num">@line.SoLuongBan</td>
+                                <td class="pos-num-col pos-num">@Money(line.DonGiaThucBan)</td>
+                                <td class="pos-num-col pos-num"><strong>@Money(line.ThanhTien)</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pos-detail-summary">
+                <div class="pos-detail-row">
+                    <span>Tổng tiền hàng</span>
+                    <strong class="pos-num">@Money(hd.TongTienHang)</strong>
+                </div>
+                @if (hd.ThanhToans.Count == 0)
+                {
+                    <div class="pos-detail-row">
+                        <span class="pos-muted">Khoản thanh toán</span>
+                        <span class="pos-muted">Chưa ghi nhận (hóa đơn nháp)</span>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var pay in hd.ThanhToans)
+                    {
+                        <div class="pos-detail-row">
+                            <span>@(pay.PhuongThuc == "TienMat" ? "Thanh toán Tiền mặt" : "Thanh toán Chuyển khoản")</span>
+                            <span class="pos-num">@Money(pay.SoTienThanhToan)</span>
+                        </div>
+                    }
+                    @if (hd.TongTienMatPhanBo > 0)
+                    {
+                        <div class="pos-detail-row">
+                            <span>Tiền mặt khách đưa</span>
+                            <span class="pos-num">@Money(hd.TongTienKhachDua)</span>
+                        </div>
+                        <div class="pos-detail-row">
+                            <span>Tiền thừa trả khách</span>
+                            <strong class="pos-num pos-text-teal">@Money(hd.TienThua)</strong>
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (hd.TrangThai == "DaHuy")
+            {
+                <div class="pos-cancel-history">
+                    <strong>Thông tin hủy chứng từ</strong>
+                    <p class="pos-muted" style="margin-top: 0.25rem;">
+                        Người hủy: <strong>@hd.TenNguoiHuy</strong> · Thời điểm: @hd.LucHuy?.ToString("dd/MM/yyyy HH:mm")
+                        @if (!string.IsNullOrWhiteSpace(hd.MaCaDao))
+                        {
+                            <span> · Ca đảo tiền mặt: <strong>@hd.MaCaDao</strong></span>
+                        }
+                    </p>
+                    <p style="margin: 0.35rem 0 0;">Lý do: @hd.LyDoHuy</p>
+                </div>
+            }
+            else
+            {
+                <div class="pos-cancel-box">
+                    <div class="pos-pane-head" style="margin-bottom: 0.5rem;">
+                        <strong>Hủy hóa đơn</strong>
+                        @if (laQuanLy && hd.TrangThai == "DaXacNhan" && coTienMat)
+                        {
+                            <a class="pos-link-btn"
+                               asp-controller="BanHang" asp-action="TraCuu"
+                               asp-route-vaiTro="@Model.VaiTroDemo"
+                               asp-route-coCaDaoMo="@(!Model.CoCaDaoMo)"
+                               asp-route-chon="@hd.MaHoaDon">
+                                @(Model.CoCaDaoMo ? "Ca đảo tiền mặt: Đang mở (bấm để thử không có ca mở)" : "Ca đảo tiền mặt: Không có ca mở (bấm để bật lại)")
+                            </a>
+                        }
+                    </div>
+
+                    @if (!duocHuy)
+                    {
+                        <p class="pos-field-error" style="margin: 0;">@lyDoChanHuy</p>
+                    }
+                    else
+                    {
+                        <form method="post" asp-controller="BanHang" asp-action="HuyHoaDon" class="pos-cancel-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="MaHoaDon" value="@hd.MaHoaDon" />
+                            <input type="hidden" name="VaiTroDemo" value="@Model.VaiTroDemo" />
+                            <input type="hidden" name="CoCaDaoMo" value="@(Model.CoCaDaoMo ? "true" : "false")" />
+                            <label for="cancel-reason">Lý do hủy <span style="color: var(--pos-error);">*</span></label>
+                            <input id="cancel-reason" name="LyDoHuy" class="pos-input" required maxlength="500"
+                                   placeholder="Nhập lý do hủy hóa đơn (bắt buộc)..." />
+                            @if (hd.TrangThai == "DaXacNhan" && coTienMat)
+                            {
+                                <p class="pos-muted" style="font-size: 0.8rem;">
+                                    Hóa đơn có khoản tiền mặt: khi hủy sẽ ghi nhận đảo tiền mặt vào ca đang mở <strong>S-CA-1126</strong>.
+                                </p>
+                            }
+                            <div>
+                                <button type="submit" class="pos-btn pos-btn-danger">Xác nhận hủy hóa đơn</button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            }
+        }
+    </section>
+</div>

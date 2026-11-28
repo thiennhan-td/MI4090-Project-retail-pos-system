@@ -4,6 +4,10 @@
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isHome = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase)
         && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    var isBanHangPos = string.Equals(currentController, "BanHang", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    var isTraCuuHoaDon = string.Equals(currentController, "BanHang", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(currentAction, "TraCuu", StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -76,14 +80,12 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f3"></use></svg>
                         <span>F3 · Bán hàng &amp; Thu tiền</span>
                     </h2>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                    <a class="pos-nav-item @(isBanHangPos ? "is-active" : string.Empty)" asp-controller="BanHang" asp-action="Index">
                         <span>Màn hình Bán hàng POS</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
+                    </a>
+                    <a class="pos-nav-item @(isTraCuuHoaDon ? "is-active" : string.Empty)" asp-controller="BanHang" asp-action="TraCuu">
                         <span>Tra cứu, in và hủy hóa đơn</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    </a>
                 </section>
 
                 <section class="pos-nav-group" aria-label="F4 Nhận trả và Hoàn tiền">

@@ -1,0 +1,160 @@
+@using System.Globalization
+@model Pos.Web.ViewModels.BanHang.InHoaDonViewModel
+@{
+    Layout = null;
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    string Money(decimal v) => $"{v.ToString("#,##0", vi)} đ";
+    var hd = Model.HoaDon;
+    var thoiDiemIn = hd.LucXacNhan ?? hd.LucLap;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>In hóa đơn @hd.MaHoaDon · Retail Core POS</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 1.25rem;
+            background: #eff4ff;
+            color: #0b1c30;
+            font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .print-toolbar {
+            max-width: 340px;
+            margin: 0 auto 1rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .print-btn {
+            padding: 0.5rem 0.9rem;
+            border-radius: 6px;
+            border: 1px solid #9aaec7;
+            background: #ffffff;
+            color: #1e3a8a;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .print-btn-primary {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+        .receipt {
+            max-width: 340px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 18px 16px;
+            border: 1px solid #d3dfed;
+            border-radius: 8px;
+        }
+        .center { text-align: center; }
+        .shop-name { font-size: 16px; font-weight: 700; color: #00236f; }
+        .receipt h1 { font-size: 15px; margin: 12px 0 4px; letter-spacing: 0.03em; }
+        .meta { margin: 10px 0; padding: 8px 0; border-top: 1px dashed #9aaec7; border-bottom: 1px dashed #9aaec7; }
+        .meta div { display: flex; justify-content: space-between; gap: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { padding: 4px 2px; border-bottom: 1px dashed #cbd5e1; text-align: left; }
+        th { border-bottom: 1px solid #0b1c30; font-size: 12px; }
+        .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .qty { text-align: center; font-variant-numeric: tabular-nums; }
+        .item-name td { border-bottom: 0; font-weight: 600; padding-top: 6px; }
+        dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; margin: 10px 0; }
+        dt { color: #444651; }
+        dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .grand dt, .grand dd { font-size: 14px; font-weight: 700; color: #00236f; }
+        .cancelled-stamp {
+            margin: 8px 0;
+            padding: 6px;
+            border: 1px solid #ba1a1a;
+            color: #ba1a1a;
+            text-align: center;
+            font-weight: 700;
+        }
+        footer { margin-top: 14px; text-align: center; font-style: italic; color: #444651; }
+        @@media print {
+            body { background: #ffffff; padding: 0; }
+            .print-toolbar { display: none !important; }
+            .receipt { width: 72mm; max-width: none; border: 0; border-radius: 0; padding: 0; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-toolbar">
+        <a class="print-btn" href="@(Model.QuayLaiUrl ?? Url.Action("TraCuu", "BanHang"))">← Quay lại tra cứu</a>
+        <button type="button" class="print-btn print-btn-primary" onclick="window.print()">In hóa đơn</button>
+    </div>
+
+    <article class="receipt" aria-label="Bản in hóa đơn @hd.MaHoaDon">
+        <div class="center">
+            <div class="shop-name">@Model.TenCuaHang</div>
+            <div>@Model.DiaChiCuaHang</div>
+            <div>ĐT: @Model.SoDienThoaiCuaHang</div>
+            <h1>HÓA ĐƠN BÁN HÀNG</h1>
+        </div>
+
+        @if (hd.TrangThai == "DaHuy")
+        {
+            <div class="cancelled-stamp">CHỨNG TỪ ĐÃ HỦY (BẢN IN ĐỐI SOÁT)</div>
+        }
+
+        <div class="meta">
+            <div><span>Số HĐ:</span><strong class="num">@hd.MaHoaDon</strong></div>
+            <div><span>Thời gian:</span><span class="num">@thoiDiemIn.ToString("dd/MM/yyyy HH:mm")</span></div>
+            <div><span>Ca bán:</span><span class="num">@hd.MaCa</span></div>
+            <div><span>Thu ngân:</span><span>@hd.TenNguoiLap</span></div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Đơn giá</th>
+                    <th class="qty">SL</th>
+                    <th class="num">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in hd.DongBans)
+                {
+                    <tr class="item-name">
+                        <td colspan="3">@line.TenHang (@line.DonViTinh)</td>
+                    </tr>
+                    <tr>
+                        <td class="num" style="text-align:left;">@Money(line.DonGiaThucBan)</td>
+                        <td class="qty">@line.SoLuongBan</td>
+                        <td class="num">@Money(line.ThanhTien)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <dl>
+            <dt class="grand">Tổng tiền hàng:</dt>
+            <dd class="grand">@Money(hd.TongTienHang)</dd>
+
+            @foreach (var pay in hd.ThanhToans)
+            {
+                <dt>@(pay.PhuongThuc == "TienMat" ? "Thanh toán Tiền mặt:" : "Thanh toán Chuyển khoản:")</dt>
+                <dd>@Money(pay.SoTienThanhToan)</dd>
+            }
+
+            @if (hd.TongTienMatPhanBo > 0)
+            {
+                <dt>Tiền mặt khách đưa:</dt>
+                <dd>@Money(hd.TongTienKhachDua)</dd>
+                <dt>Tiền thừa trả khách:</dt>
+                <dd>@Money(hd.TienThua)</dd>
+            }
+        </dl>
+
+        <footer>Cảm ơn quý khách và hẹn gặp lại!</footer>
+    </article>
+</body>
+</html>

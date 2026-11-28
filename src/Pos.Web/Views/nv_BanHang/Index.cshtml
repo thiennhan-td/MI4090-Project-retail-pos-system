@@ -1,0 +1,174 @@
+@using System.Globalization
+@model Pos.Web.ViewModels.BanHang.BanHangPosViewModel
+@{
+    ViewData["Title"] = "Màn hình Bán hàng POS";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    string Money(decimal v) => $"{v.ToString("#,##0", vi)} đ";
+}
+
+<section class="pos-f3-toolbar">
+    <div>
+        <div class="pos-f3-meta-row">
+            <span class="pos-pill pos-pill-teal" id="pos-shift-badge">Ca đang mở · @Model.MaCaHienTai</span>
+            <span class="pos-pill">Thu ngân: @Model.TenThuNgan</span>
+            <span class="pos-muted" style="font-size: 0.82rem;">Chế độ giao diện mẫu (chưa ghi SQL)</span>
+        </div>
+    </div>
+    <div class="pos-f3-toolbar-actions">
+        <label class="pos-toggle-label">
+            <input type="checkbox" id="pos-shift-open-toggle" checked />
+            <span>Ca đang mở (bỏ chọn để thử ca đã đóng)</span>
+        </label>
+        <a class="pos-btn pos-btn-secondary" asp-controller="BanHang" asp-action="TraCuu">Tra cứu hóa đơn</a>
+    </div>
+</section>
+
+<div class="pos-sales-grid" id="pos-sales-app"
+     data-confirm-url="@Url.Action("XacNhanBan", "BanHang")"
+     data-request-id="@Model.MaYeuCauMacDinh">
+
+    <!-- CỘT TRÁI: TÌM KIẾM & DANH MỤC MẶT HÀNG -->
+    <section class="pos-card pos-catalog-pane" aria-label="Danh mục mặt hàng">
+        <div class="pos-search-bar">
+            <label class="pos-sr-only" for="pos-product-search">Tìm mặt hàng theo tên hoặc mã</label>
+            <input type="search" id="pos-product-search" class="pos-input" placeholder="Tìm theo tên hoặc mã hàng (VD: S-SUA, Sữa tươi, Bánh mì)..." autocomplete="off" />
+        </div>
+
+        <div class="pos-cat-tabs" role="tablist" aria-label="Lọc theo nhóm hàng">
+            <button type="button" class="pos-cat-btn is-active" data-category="all" aria-pressed="true">Tất cả (@Model.DanhSachMatHang.Count)</button>
+            @foreach (var nhom in Model.DanhSachNhomHang)
+            {
+                <button type="button" class="pos-cat-btn" data-category="@nhom" aria-pressed="false">@nhom</button>
+            }
+        </div>
+
+        <div class="pos-product-grid" id="pos-product-grid">
+            @foreach (var item in Model.DanhSachMatHang)
+            {
+                <button type="button"
+                        class="pos-product-card"
+                        data-ma-hang="@item.MaHang"
+                        data-ten-hang="@item.TenHang"
+                        data-nhom="@item.TenNhom"
+                        data-dvt="@item.DonViTinh"
+                        data-gia="@item.GiaBanHienHanh"
+                        data-ton="@item.TonMau">
+                    <span class="pos-product-top">
+                        <span class="pos-product-code">@item.MaHang</span>
+                        <span class="pos-product-stock pos-num">Tồn mẫu: @item.TonMau @item.DonViTinh</span>
+                    </span>
+                    <span class="pos-product-name">@item.TenHang</span>
+                    <span class="pos-product-price pos-num">@Money(item.GiaBanHienHanh)</span>
+                </button>
+            }
+        </div>
+        <p class="pos-muted" id="pos-product-empty" hidden style="margin-top: 1rem;">Không tìm thấy mặt hàng phù hợp.</p>
+    </section>
+
+    <!-- CỘT PHẢI: GIỎ HÀNG & THANH TOÁN -->
+    <section class="pos-card pos-cart-pane" aria-label="Hóa đơn bán hàng và thanh toán">
+        <div class="pos-cart-header">
+            <div>
+                <h2 class="pos-h2" style="margin-bottom: 0.15rem;">Hóa đơn hiện tại</h2>
+                <span class="pos-muted" id="pos-draft-status" style="font-size: 0.82rem;">Nháp · Chưa xác nhận</span>
+            </div>
+            <button type="button" class="pos-btn pos-btn-ghost" id="pos-btn-clear-cart">Làm mới hóa đơn</button>
+        </div>
+
+        <div class="pos-cart-list" id="pos-cart-list" aria-live="polite">
+            <p class="pos-muted pos-empty-cart">Chưa có mặt hàng trong giỏ. Chọn mặt hàng bên trái để thêm.</p>
+        </div>
+        <p class="pos-field-error" id="pos-cart-error" role="alert" hidden></p>
+
+        <div class="pos-total-box">
+            <span>Tổng phải thu</span>
+            <strong class="pos-num pos-grand-total" id="pos-grand-total">0 đ</strong>
+        </div>
+
+        <!-- PHƯƠNG THỨC THANH TOÁN -->
+        <div class="pos-payment-box">
+            <div class="pos-payment-modes" role="group" aria-label="Chế độ thanh toán">
+                <button type="button" class="pos-mode-btn is-active" data-mode="TienMat" aria-pressed="true">Tiền mặt</button>
+                <button type="button" class="pos-mode-btn" data-mode="ChuyenKhoan" aria-pressed="false">Chuyển khoản</button>
+                <button type="button" class="pos-mode-btn" data-mode="HonHop" aria-pressed="false">Hỗn hợp</button>
+            </div>
+
+            <!-- Khối Tiền mặt phân bổ (chỉ hiện riêng khi Hỗn hợp; khi Tiền mặt tự bằng tổng hóa đơn) -->
+            <div class="pos-field" id="pos-cash-alloc-group" hidden>
+                <div class="pos-field-head">
+                    <label for="pos-cash-allocated">Tiền mặt phân bổ vào hóa đơn (đ)</label>
+                    <button type="button" class="pos-link-btn" id="pos-fill-cash-remaining">Điền phần còn lại</button>
+                </div>
+                <input type="number" id="pos-cash-allocated" class="pos-input pos-input-num" min="0" step="1000" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <!-- Khối Tiền khách đưa (hiện khi Tiền mặt hoặc Hỗn hợp) -->
+            <div class="pos-field" id="pos-cash-given-group">
+                <div class="pos-field-head">
+                    <label for="pos-cash-given">Tiền mặt khách đưa (đ)</label>
+                    <span class="pos-muted" style="font-size: 0.78rem;">Phân bổ mặt: <strong class="pos-num" id="pos-cash-alloc-summary">0 đ</strong></span>
+                </div>
+                <input type="number" id="pos-cash-given" class="pos-input pos-input-num" min="0" step="1000" inputmode="numeric" placeholder="Nhập số tiền khách đưa" />
+                <div class="pos-denom-row" aria-label="Mệnh giá tiền nhanh">
+                    <button type="button" class="pos-denom-btn" data-denom="exact">Vừa đủ</button>
+                    <button type="button" class="pos-denom-btn" data-denom="20000">20.000</button>
+                    <button type="button" class="pos-denom-btn" data-denom="50000">50.000</button>
+                    <button type="button" class="pos-denom-btn" data-denom="100000">100.000</button>
+                    <button type="button" class="pos-denom-btn" data-denom="200000">200.000</button>
+                    <button type="button" class="pos-denom-btn" data-denom="500000">500.000</button>
+                </div>
+                <p class="pos-field-error" id="pos-cash-given-error" role="alert" hidden></p>
+            </div>
+
+            <!-- Khối Chuyển khoản (hiện khi Chuyển khoản hoặc Hỗn hợp) -->
+            <div class="pos-field" id="pos-transfer-group" hidden>
+                <div class="pos-field-head">
+                    <label for="pos-transfer-amount">Số tiền chuyển khoản (đ)</label>
+                    <button type="button" class="pos-link-btn" id="pos-fill-transfer-remaining">Điền phần còn lại</button>
+                </div>
+                <input type="number" id="pos-transfer-amount" class="pos-input pos-input-num" min="0" step="1000" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <div class="pos-summary-grid">
+                <div>
+                    <span class="pos-muted">Đã phân bổ</span>
+                    <strong class="pos-num" id="pos-allocated-total">0 đ</strong>
+                </div>
+                <div>
+                    <span class="pos-muted">Còn thiếu</span>
+                    <strong class="pos-num" id="pos-remaining-total">0 đ</strong>
+                </div>
+                <div>
+                    <span class="pos-muted">Tiền thừa trả khách</span>
+                    <strong class="pos-num pos-text-teal" id="pos-change-total">0 đ</strong>
+                </div>
+            </div>
+            <p class="pos-field-error" id="pos-payment-error" role="alert" hidden></p>
+        </div>
+
+        <div class="pos-confirm-actions">
+            <button type="button" class="pos-btn pos-btn-primary pos-btn-lg" id="pos-btn-confirm">Xác nhận bán hàng</button>
+        </div>
+
+        <div class="pos-alert pos-alert-error" id="pos-conflict-result" hidden role="alert">
+            <strong>Mã yêu cầu đã dùng cho hóa đơn <span class="pos-num" id="pos-conflict-code"></span>.</strong>
+            <a asp-controller="BanHang" asp-action="TraCuu" id="pos-conflict-lookup">Tra cứu hóa đơn đã ghi</a>
+        </div>
+
+        <div class="pos-success-banner" id="pos-confirm-result" hidden role="status">
+            <div>
+                <strong>Đã xác nhận hóa đơn <span class="pos-num" id="pos-confirmed-code"></span></strong>
+                <p class="pos-muted" id="pos-confirmed-detail" style="font-size: 0.85rem; margin-top: 0.25rem;"></p>
+            </div>
+            <div class="pos-success-links">
+                <a class="pos-btn pos-btn-secondary" id="pos-link-lookup" href="#">Mở tra cứu hóa đơn</a>
+                <a class="pos-btn pos-btn-primary" id="pos-link-print" href="#">In hóa đơn</a>
+                <button type="button" class="pos-btn pos-btn-ghost" id="pos-btn-new-invoice">Lập hóa đơn mới</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/pos-sales.js" asp-append-version="true"></script>
+}

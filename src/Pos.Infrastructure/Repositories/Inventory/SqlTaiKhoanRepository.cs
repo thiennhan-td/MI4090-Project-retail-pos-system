@@ -21,6 +21,14 @@ public sealed class SqlTaiKhoanRepository(SqlUnitOfWork work, SqlConnectionFacto
         => work.DocAsync(factory, $"SELECT {Cot} FROM dbo.TaiKhoan WHERE tenDangNhap = @ten;",
             (command, token) => DocMotAsync(command, DocTaiKhoan, token), ct, Chu("@ten", tenDangNhap, 64));
 
+    public Task<HoSoDangNhap?> LayHoSoDangNhapAsync(string maTaiKhoan, CancellationToken ct)
+        => work.DocAsync(factory, """
+            SELECT t.maTaiKhoan, t.maVaiTro, t.hoTen, t.tenDangNhap, t.matKhauBam, t.trangThai, q.maQuyen
+            FROM dbo.TaiKhoan AS t WITH (HOLDLOCK)
+            LEFT JOIN dbo.QuyenVaiTro AS q WITH (HOLDLOCK) ON q.maVaiTro = t.maVaiTro
+            WHERE t.maTaiKhoan = @ma AND t.trangThai = 'HoatDong';
+            """, DocHoSoAsync, ct, Ma("@ma", maTaiKhoan));
+
     public Task<IReadOnlyList<TaiKhoan>> TimTaiKhoanAsync(string? tuKhoa, CancellationToken ct)
         => work.DocAsync(factory, $"""
             SELECT {Cot} FROM dbo.TaiKhoan
@@ -91,6 +99,27 @@ public sealed class SqlTaiKhoanRepository(SqlUnitOfWork work, SqlConnectionFacto
 
     private static async Task<IReadOnlySet<string>> DocQuyenAsync(SqlCommand command, CancellationToken ct)
         => (await DocNhieuAsync(command, r => r.GetString(0), ct)).ToHashSet(StringComparer.Ordinal);
+
+    private static async Task<HoSoDangNhap?> DocHoSoAsync(SqlCommand command, CancellationToken ct)
+    {
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct))
+        {
+            return null;
+        }
+
+        var taiKhoan = DocTaiKhoan(reader);
+        var quyen = new HashSet<string>(StringComparer.Ordinal);
+        do
+        {
+            if (!reader.IsDBNull(6))
+            {
+                quyen.Add(reader.GetString(6));
+            }
+        } while (await reader.ReadAsync(ct));
+
+        return new(taiKhoan, quyen);
+    }
 
     private static TaiKhoan DocTaiKhoan(SqlDataReader reader)
     {

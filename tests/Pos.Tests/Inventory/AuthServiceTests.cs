@@ -16,14 +16,13 @@ public sealed class AuthServiceTests
     [Fact]
     public async Task DangNhap_ChuanHoaTenVaChiTraDanhTinhSauKhiKiemTraMatKhau()
     {
-        var repository = new Mock<ITaiKhoanRepository>();
-        var authorization = new Mock<IAuthorizationService>();
+        var repository = new Mock<IQuanTriTaiKhoanRepository>();
         var hasher = new Mock<IMatKhauHasher>();
         repository.Setup(x => x.LayTheoTenDangNhapAsync("admin", default)).ReturnsAsync(TaoTaiKhoan());
         hasher.Setup(x => x.KiemTra("mat-khau", "da-bam")).Returns(true);
-        authorization.Setup(x => x.LayTapQuyenAsync("TK-1", default))
-            .ReturnsAsync(new HashSet<string>(StringComparer.Ordinal) { MaQuyenPos.HT_PHAN_QUYEN });
-        var service = new AuthService(repository.Object, hasher.Object, authorization.Object);
+        repository.Setup(x => x.LayHoSoDangNhapAsync("TK-1", default))
+            .ReturnsAsync(new HoSoDangNhap(TaoTaiKhoan(), new HashSet<string> { MaQuyenPos.HT_PHAN_QUYEN }));
+        var service = new AuthService(repository.Object, hasher.Object);
 
         var ketQua = await service.DangNhapAsync(" admin ", "mat-khau", default);
 
@@ -37,13 +36,28 @@ public sealed class AuthServiceTests
     {
         var taiKhoan = TaoTaiKhoan();
         taiKhoan.Khoa();
-        var repository = new Mock<ITaiKhoanRepository>();
+        var repository = new Mock<IQuanTriTaiKhoanRepository>(MockBehavior.Strict);
         repository.Setup(x => x.LayTheoTenDangNhapAsync("admin", default)).ReturnsAsync(taiKhoan);
         var hasher = new Mock<IMatKhauHasher>(MockBehavior.Strict);
-        var authorization = new Mock<IAuthorizationService>(MockBehavior.Strict);
-        var service = new AuthService(repository.Object, hasher.Object, authorization.Object);
+        var service = new AuthService(repository.Object, hasher.Object);
 
         Assert.Null(await service.DangNhapAsync("admin", "mat-khau", default));
+    }
+
+    [Fact]
+    public async Task DangNhap_TuChoiMatKhauDaDoiTrongKhiXacThuc()
+    {
+        var repository = new Mock<IQuanTriTaiKhoanRepository>();
+        var hasher = new Mock<IMatKhauHasher>();
+        repository.Setup(x => x.LayTheoTenDangNhapAsync("admin", default)).ReturnsAsync(TaoTaiKhoan());
+        hasher.Setup(x => x.KiemTra("mat-khau-cu", "da-bam")).Returns(true);
+        var hienTai = TaoTaiKhoan();
+        hienTai.DoiMatKhauBam("da-bam-moi");
+        repository.Setup(x => x.LayHoSoDangNhapAsync("TK-1", default))
+            .ReturnsAsync(new HoSoDangNhap(hienTai, new HashSet<string> { MaQuyenPos.HT_PHAN_QUYEN }));
+        var service = new AuthService(repository.Object, hasher.Object);
+
+        Assert.Null(await service.DangNhapAsync("admin", "mat-khau-cu", default));
     }
 
     [Fact]
@@ -77,6 +91,57 @@ public sealed class AuthServiceTests
         repository.Verify(x => x.CapNhatAsync(It.IsAny<TaiKhoan>(), default), Times.Never);
         work.Verify(x => x.RollbackAsync(CancellationToken.None), Times.Once);
         work.Verify(x => x.CommitAsync(default), Times.Never);
+    }
+
+    [Fact]
+    public async Task DoiMatKhauQuanLy_YeuCauPhanQuyenNeuNguoiSuaKhongCoQuyenCuaTaiKhoanDich()
+    {
+        var repository = new Mock<IQuanTriTaiKhoanRepository>();
+        var work = new Mock<IUnitOfWork>();
+        var authorization = new Mock<IAuthorizationService>();
+        var hasher = new Mock<IMatKhauHasher>();
+        repository.Setup(x => x.KhoaVaiTroAsync("QuanLy", default)).ReturnsAsync(new VaiTro("QuanLy", "Quản lý"));
+        repository.Setup(x => x.LayTheoMaAsync("TK-1", default)).ReturnsAsync(TaoTaiKhoan());
+        repository.Setup(x => x.LayQuyenVaiTroAsync("QuanLy", default))
+            .ReturnsAsync(new HashSet<string> { MaQuyenPos.HT_QL_TAI_KHOAN, MaQuyenPos.HT_PHAN_QUYEN });
+        authorization.Setup(x => x.LayTapQuyenAsync("TK-2", default))
+            .ReturnsAsync(new HashSet<string> { MaQuyenPos.HT_QL_TAI_KHOAN });
+        authorization.Setup(x => x.KiemTraQuyenAsync("TK-2", MaQuyenPos.HT_PHAN_QUYEN, default))
+            .ThrowsAsync(new UnauthorizedActionException(MaQuyenPos.HT_PHAN_QUYEN));
+        hasher.Setup(x => x.Bam("mat-khau-moi")).Returns("da-bam-moi");
+        var service = new TaiKhoanService(repository.Object, work.Object, authorization.Object, hasher.Object);
+
+        await Assert.ThrowsAsync<UnauthorizedActionException>(() => service.LuuAsync("TK-2",
+            new("TK-1", "Quản lý", "admin", "QuanLy", "mat-khau-moi", true), default));
+
+        repository.Verify(x => x.CapNhatAsync(It.IsAny<TaiKhoan>(), default), Times.Never);
+        work.Verify(x => x.RollbackAsync(CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task PhanQuyen_TuChoiMaVaiTroCoKhoangTrangDu()
+    {
+        var repository = new Mock<IQuanTriTaiKhoanRepository>();
+        repository.Setup(x => x.KhoaVaiTroAsync("QuanLy", default)).ReturnsAsync(new VaiTro("QuanLy", "Quản lý"));
+        repository.Setup(x => x.KhoaVaiTroAsync("QuanLy ", default)).ReturnsAsync(new VaiTro("QuanLy", "Quản lý"));
+        var service = new TaiKhoanService(repository.Object, Mock.Of<IUnitOfWork>(),
+            Mock.Of<IAuthorizationService>(), Mock.Of<IMatKhauHasher>());
+
+        await Assert.ThrowsAsync<EntityNotFoundException>(
+            () => service.CapNhatQuyenAsync("TK-1", "QuanLy ", [], default));
+
+        repository.Verify(x => x.ThayQuyenVaiTroAsync(It.IsAny<string>(), It.IsAny<IReadOnlySet<string>>(), default),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task KiemTraQuyen_TuChoiMaTaiKhoanKhongChinhTac()
+    {
+        var repository = new Mock<ITaiKhoanRepository>(MockBehavior.Strict);
+        var service = new AuthorizationService(repository.Object);
+
+        await Assert.ThrowsAsync<UnauthorizedActionException>(
+            () => service.KiemTraQuyenAsync("TK-1 ", MaQuyenPos.HT_PHAN_QUYEN, default));
     }
 
     [Fact]

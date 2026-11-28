@@ -36,11 +36,13 @@ public sealed class TaiKhoanService(IQuanTriTaiKhoanRepository repository, IUnit
             throw new BusinessRuleViolationException("Cần mật khẩu để tạo tài khoản.");
         }
 
+        var tenDangNhap = yeuCau.TenDangNhap.Trim();
         var bam = string.IsNullOrWhiteSpace(yeuCau.MatKhau) ? null : hasher.Bam(yeuCau.MatKhau);
         return await InventoryTransaction.ChayAsync(work, async () =>
         {
             // Mọi đổi vai trò/trạng thái dùng cùng khóa để giữ lại ít nhất một quản lý.
             await KiemTraVaiTroAsync(QuanLy, ct);
+            await authorization.KiemTraQuyenAsync(maNguoiThaoTac, MaQuyenPos.HT_QL_TAI_KHOAN, ct);
             if (yeuCau.MaVaiTro != QuanLy)
             {
                 await KiemTraVaiTroAsync(yeuCau.MaVaiTro, ct);
@@ -49,6 +51,11 @@ public sealed class TaiKhoanService(IQuanTriTaiKhoanRepository repository, IUnit
             var cu = yeuCau.MaTaiKhoan is null ? null
                 : await repository.LayTheoMaAsync(yeuCau.MaTaiKhoan, ct)
                     ?? throw new EntityNotFoundException("Không tìm thấy tài khoản.");
+
+            if (cu is not null && cu.MaTaiKhoan != yeuCau.MaTaiKhoan)
+            {
+                throw new EntityNotFoundException("Không tìm thấy tài khoản.");
+            }
 
             if (cu is null || cu.MaVaiTro != yeuCau.MaVaiTro)
             {
@@ -62,9 +69,20 @@ public sealed class TaiKhoanService(IQuanTriTaiKhoanRepository repository, IUnit
                 throw new BusinessRuleViolationException("Cần giữ ít nhất một tài khoản Quản lý hoạt động.");
             }
 
+            if (cu is not null && cu.MaVaiTro == yeuCau.MaVaiTro
+                && (bam is not null || tenDangNhap != cu.TenDangNhap
+                    || yeuCau.HoatDong != (cu.TrangThai == TrangThaiChungTu.HoatDong)))
+            {
+                var quyenDich = await repository.LayQuyenVaiTroAsync(cu.MaVaiTro, ct);
+                var quyenNguoiThaoTac = await authorization.LayTapQuyenAsync(maNguoiThaoTac, ct);
+                if (!quyenDich.IsSubsetOf(quyenNguoiThaoTac))
+                {
+                    await authorization.KiemTraQuyenAsync(maNguoiThaoTac, MaQuyenPos.HT_PHAN_QUYEN, ct);
+                }
+            }
+
             var ma = cu?.MaTaiKhoan ?? await repository.SinhMaTaiKhoanAsync(ct);
-            var taiKhoan = new TaiKhoan(ma, yeuCau.MaVaiTro, yeuCau.HoTen.Trim(),
-                yeuCau.TenDangNhap.Trim(), bam ?? cu!.MatKhauBam);
+            var taiKhoan = new TaiKhoan(ma, yeuCau.MaVaiTro, yeuCau.HoTen.Trim(), tenDangNhap, bam ?? cu!.MatKhauBam);
             if (!yeuCau.HoatDong)
             {
                 taiKhoan.Khoa();
@@ -101,15 +119,21 @@ public sealed class TaiKhoanService(IQuanTriTaiKhoanRepository repository, IUnit
     {
         await authorization.KiemTraQuyenAsync(maNguoiThaoTac, MaQuyenPos.HT_PHAN_QUYEN, ct);
         var tapQuyen = maQuyen.ToHashSet(StringComparer.Ordinal);
-        if (maVaiTro == QuanLy && (!tapQuyen.Contains(MaQuyenPos.HT_PHAN_QUYEN)
-            || !tapQuyen.Contains(MaQuyenPos.HT_QL_TAI_KHOAN)))
-        {
-            throw new BusinessRuleViolationException("Vai trò Quản lý cần giữ quyền quản lý tài khoản và phân quyền.");
-        }
-
         await InventoryTransaction.ChayAsync(work, async () =>
         {
-            await KiemTraVaiTroAsync(maVaiTro, ct);
+            await KiemTraVaiTroAsync(QuanLy, ct);
+            await authorization.KiemTraQuyenAsync(maNguoiThaoTac, MaQuyenPos.HT_PHAN_QUYEN, ct);
+            if (maVaiTro != QuanLy)
+            {
+                await KiemTraVaiTroAsync(maVaiTro, ct);
+            }
+
+            if (maVaiTro == QuanLy && (!tapQuyen.Contains(MaQuyenPos.HT_PHAN_QUYEN)
+                || !tapQuyen.Contains(MaQuyenPos.HT_QL_TAI_KHOAN)))
+            {
+                throw new BusinessRuleViolationException("Vai trò Quản lý cần giữ quyền quản lý tài khoản và phân quyền.");
+            }
+
             var hopLe = (await repository.LayDanhSachQuyenAsync(ct)).Select(x => x.MaQuyen);
             if (tapQuyen.Except(hopLe, StringComparer.Ordinal).Any())
             {
@@ -122,7 +146,8 @@ public sealed class TaiKhoanService(IQuanTriTaiKhoanRepository repository, IUnit
 
     private async Task KiemTraVaiTroAsync(string maVaiTro, CancellationToken ct)
     {
-        if (await repository.KhoaVaiTroAsync(maVaiTro, ct) is null)
+        var vaiTro = await repository.KhoaVaiTroAsync(maVaiTro, ct);
+        if (vaiTro?.MaVaiTro != maVaiTro)
         {
             throw new EntityNotFoundException("Không tìm thấy vai trò.");
         }

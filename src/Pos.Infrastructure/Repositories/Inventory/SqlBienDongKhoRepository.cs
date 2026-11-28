@@ -83,6 +83,23 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
                 ? DateTime.SpecifyKind(luc, DateTimeKind.Utc) : null, ct,
             Ma("@hang", maHang), Loai(LoaiBienDongKho.DieuChinhKiemKho));
 
+    public Task<MocGhiBienDongKho> LayMocGhiAsync(string maHang, CancellationToken ct)
+        // Duyệt các dòng của SKU đã khóa rồi mới đọc đầu phiếu tương ứng.
+        => work.DocAsync(factory, """
+            SELECT (SELECT MAX(thoiDiemGhi) FROM dbo.BienDongKho WHERE maHang = @hang),
+                MAX(CASE WHEN p.trangThai = 'HoanTat' THEN COALESCE(d.lucDem, p.mocKiem)
+                         WHEN p.trangThai IN ('DangKiem', 'ChoDuyet') THEN d.lucDem END),
+                MAX(CASE WHEN p.trangThai IN ('DangKiem', 'ChoDuyet') THEN p.mocKiem END)
+            FROM dbo.DongKiem AS d WITH (INDEX(IX_DongKiem_Hang), FORCESEEK)
+            INNER LOOP JOIN dbo.PhieuKiem AS p ON p.maPhieuKiem = d.maPhieuKiem
+            WHERE d.maHang = @hang;
+            """, async (command, token) =>
+            {
+                await using var reader = await command.ExecuteReaderAsync(token);
+                await reader.ReadAsync(token);
+                return new MocGhiBienDongKho(reader.LucNull(0), reader.LucNull(1), reader.LucNull(2));
+            }, ct, Ma("@hang", maHang));
+
     private static async Task<int> DocTonAsync(SqlCommand command, CancellationToken ct)
         => checked((int)(long)(await command.ExecuteScalarAsync(ct))!);
 

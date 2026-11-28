@@ -14,7 +14,7 @@ public sealed class ChungTuRegressionTests
         var phieu = new PhieuKiem("PK-1", "TK-1", LucLap);
         phieu.ThemDongKiem(new("PK-1", "MH-1", 10, null, null));
 
-        phieu.GhiSoLuongDem("MH-1", 8, "Hỏng hai sản phẩm");
+        phieu.GhiSoLuongDem("MH-1", 8, LucLap, "Hỏng hai sản phẩm");
         phieu.GuiDuyet();
 
         var dong = Assert.Single(phieu.DongKiems);
@@ -22,14 +22,14 @@ public sealed class ChungTuRegressionTests
         Assert.Equal(-2, dong.ChenhLech.GetValueOrDefault());
         Assert.Equal("Hỏng hai sản phẩm", dong.GiaiTrinh);
         Assert.Equal(TrangThaiChungTu.ChoDuyet, phieu.TrangThai);
-        Assert.Throws<InvalidStateTransitionException>(() => phieu.GhiSoLuongDem("MH-1", 10));
+        Assert.Throws<InvalidStateTransitionException>(() => phieu.GhiSoLuongDem("MH-1", 10, LucLap));
     }
 
     [Fact]
     public void GuiDuyet_ChanDongLechChuaGiaiTrinh()
     {
         var phieu = new PhieuKiem("PK-1", "TK-1", LucLap);
-        phieu.ThemDongKiem(new("PK-1", "MH-1", 10, 8, null));
+        phieu.ThemDongKiem(new("PK-1", "MH-1", 10, 8, null, LucLap));
 
         Assert.Throws<BusinessRuleViolationException>(() => phieu.GuiDuyet());
 
@@ -43,10 +43,39 @@ public sealed class ChungTuRegressionTests
         phieu.ThemDongKiem(new("PK-1", "MH-1", 0, null, null));
         Assert.Throws<BusinessRuleViolationException>(() => phieu.GuiDuyet());
 
-        phieu.GhiSoLuongDem("MH-1", 0);
+        phieu.GhiSoLuongDem("MH-1", 0, LucLap);
         phieu.GuiDuyet();
 
         Assert.Equal(TrangThaiChungTu.ChoDuyet, phieu.TrangThai);
+    }
+
+    [Fact]
+    public void PhienBanKiem_TheoNoiDungVaKhongPhuThuocThuTuDong()
+    {
+        var dongA = new DongKiem("PK-1", "MH-A", 3, 2, "Hỏng một", LucLap);
+        var dongZ = new DongKiem("PK-1", "MH-Z", 1, 1, null, LucLap);
+        PhieuKiem KhoiPhuc(string trangThai, params DongKiem[] dongs) => PhieuKiem.KhoiPhuc("PK-1", "TK-1",
+            LucLap, trangThai, null, null, dongs);
+
+        var goc = KhoiPhuc(TrangThaiChungTu.DangKiem, dongA, dongZ);
+        Assert.Equal(goc.PhienBan, KhoiPhuc(TrangThaiChungTu.DangKiem, dongZ, dongA).PhienBan);
+        Assert.NotEqual(goc.PhienBan, KhoiPhuc(TrangThaiChungTu.ChoDuyet, dongA, dongZ).PhienBan);
+        Assert.NotEqual(goc.PhienBan, KhoiPhuc(TrangThaiChungTu.DangKiem,
+            new("PK-1", "MH-A", 3, 2, "Mất một", LucLap), dongZ).PhienBan);
+        Assert.NotEqual(goc.PhienBan, KhoiPhuc(TrangThaiChungTu.DangKiem,
+            new("PK-1", "MH-A", 3, 2, "Hỏng một", LucLap.AddMilliseconds(1)), dongZ).PhienBan);
+    }
+
+    [Fact]
+    public void KhoiPhucPhieuKiemHoanTatCu_GiuSoDemVaMocDemNull()
+    {
+        var phieu = PhieuKiem.KhoiPhuc("PK-1", "TK-1", LucLap, TrangThaiChungTu.HoanTat, "TK-2",
+            LucLap.AddMinutes(1), [new("PK-1", "MH-1", 10, 8, "Hỏng hai sản phẩm")]);
+
+        Assert.Equal(TrangThaiChungTu.HoanTat, phieu.TrangThai);
+        var dong = Assert.Single(phieu.DongKiems);
+        Assert.Equal(8, dong.SoLuongDem);
+        Assert.Null(dong.LucDem);
     }
 
     [Theory]

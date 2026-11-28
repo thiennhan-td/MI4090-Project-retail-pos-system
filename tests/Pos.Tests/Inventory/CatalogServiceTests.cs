@@ -62,4 +62,50 @@ public sealed class CatalogServiceTests
         repository.Verify(x => x.CapNhatNhomAsync(It.IsAny<NhomHang>(), default), Times.Never);
         work.Verify(x => x.RollbackAsync(CancellationToken.None), Times.Once);
     }
+
+    [Theory]
+    [InlineData("  Hộp  ", true, "Hộp", 0)]
+    [InlineData("Thùng", false, "Thùng", 1)]
+    public async Task LuuHang_LuuTenVaGiaKhiDonViTinhHopLe(string donViTinh, bool donViDaDuocSuDung,
+        string donViSauLuu, int soLanKiemTra)
+    {
+        var repository = TaoRepositoryMatHang(donViDaDuocSuDung);
+        var work = new Mock<IUnitOfWork>();
+        var service = new CatalogService(repository.Object, work.Object, Mock.Of<IAuthorizationService>());
+
+        var ketQua = await service.LuuHangAsync("TK-1", new("MH-1", "NH-1", "Sữa mới", donViTinh, 25_000), default);
+
+        Assert.Equal(donViSauLuu, ketQua.DonViTinh);
+        Assert.Equal("Sữa mới", ketQua.TenHang);
+        Assert.Equal(25_000, ketQua.GiaBanHienHanh);
+        repository.Verify(x => x.DonViDaDuocSuDungAsync("MH-1", default), Times.Exactly(soLanKiemTra));
+        repository.Verify(x => x.CapNhatHangAsync(ketQua, default), Times.Once);
+        work.Verify(x => x.CommitAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task LuuHang_TuChoiDoiDonViTinhDaDuocSuDung()
+    {
+        var repository = TaoRepositoryMatHang(donViDaDuocSuDung: true);
+        var work = new Mock<IUnitOfWork>();
+        var service = new CatalogService(repository.Object, work.Object, Mock.Of<IAuthorizationService>());
+
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(() =>
+            service.LuuHangAsync("TK-1", new("MH-1", "NH-1", "Sữa mới", "Thùng", 25_000), default));
+
+        repository.Verify(x => x.KhoaMatHangAsync("MH-1", default), Times.Once);
+        repository.Verify(x => x.DonViDaDuocSuDungAsync("MH-1", default), Times.Once);
+        repository.Verify(x => x.CapNhatHangAsync(It.IsAny<MatHang>(), default), Times.Never);
+        work.Verify(x => x.RollbackAsync(CancellationToken.None), Times.Once);
+    }
+
+    private static Mock<IQuanLyDanhMucRepository> TaoRepositoryMatHang(bool donViDaDuocSuDung)
+    {
+        var repository = new Mock<IQuanLyDanhMucRepository>();
+        repository.Setup(x => x.KhoaNhomHangAsync("NH-1", default)).ReturnsAsync(new NhomHang("NH-1", "Thực phẩm"));
+        repository.Setup(x => x.LayMatHangAsync("MH-1", default))
+            .ReturnsAsync(new MatHang("MH-1", "NH-1", "Sữa", "Hộp", 20_000));
+        repository.Setup(x => x.DonViDaDuocSuDungAsync("MH-1", default)).ReturnsAsync(donViDaDuocSuDung);
+        return repository;
+    }
 }

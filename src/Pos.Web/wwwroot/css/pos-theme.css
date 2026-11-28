@@ -444,6 +444,25 @@ a.pos-nav-item.is-active {
     align-items: start;
 }
 
+.pos-f3-toolbar .pos-sales-jump {
+    display: none;
+}
+
+#pos-invoice-editor,
+#pos-invoice-list {
+    scroll-margin-top: 7.5rem;
+}
+
+.pos-invoice-heading {
+    margin-bottom: 0.2rem;
+}
+
+.pos-invoice-draft-status {
+    color: var(--pos-muted);
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
 .pos-input {
     width: 100%;
     min-height: 40px;
@@ -800,6 +819,42 @@ a.pos-nav-item.is-active {
     margin-top: 1rem;
 }
 
+.pos-draft-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.pos-draft-action-error {
+    flex-basis: 100%;
+}
+
+.pos-invoice-payment {
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--pos-line);
+}
+
+.pos-invoice-confirm .pos-btn {
+    width: 100%;
+}
+
+.pos-invoice-entry {
+    display: grid;
+    min-width: 0;
+}
+
+.pos-invoice-entry.has-edit {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pos-invoice-edit {
+    white-space: nowrap;
+}
+
 .pos-sales-grid[hidden],
 .pos-sales-grid [hidden] {
     display: none;
@@ -1014,7 +1069,11 @@ a.pos-nav-item.is-active {
 @media (max-width: 1024px) {
     .pos-sales-grid,
     .pos-lookup-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pos-f3-toolbar .pos-sales-jump:not([hidden]) {
+        display: inline-flex;
     }
 }
 
@@ -1029,6 +1088,21 @@ a.pos-nav-item.is-active {
 
     .pos-summary-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 360px) {
+    .pos-invoice-entry.has-edit {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pos-invoice-edit {
+        justify-self: start;
+    }
+
+    .pos-invoice-row-top,
+    .pos-invoice-row-meta {
+        flex-wrap: wrap;
     }
 }
 

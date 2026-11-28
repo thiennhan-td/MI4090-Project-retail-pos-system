@@ -1,7 +1,7 @@
 @using System.Globalization
 @model Pos.Web.ViewModels.BanHang.BanHangPosViewModel
 @{
-    ViewData["Title"] = "Màn hình Bán hàng POS";
+    ViewData["Title"] = "Bán hàng";
     var vi = CultureInfo.GetCultureInfo("vi-VN");
     string Money(decimal v) => $"{v.ToString("#,##0", vi)} đ";
     var hoaDonNhap = Model.HoaDonNhap;
@@ -13,15 +13,24 @@
         <div class="pos-f3-meta-row">
             <span class="pos-pill pos-pill-teal" id="pos-shift-badge">Ca đang mở · @Model.MaCaHienTai</span>
             <span class="pos-pill">Thu ngân: @Model.TenThuNgan</span>
-            <span class="pos-muted" style="font-size: 0.82rem;">Chế độ giao diện mẫu (chưa ghi SQL)</span>
+            <span class="pos-muted">Chế độ demo</span>
         </div>
     </div>
     <div class="pos-f3-toolbar-actions">
         <label class="pos-toggle-label">
             <input type="checkbox" id="pos-shift-open-toggle" checked />
-            <span>Ca đang mở (bỏ chọn để thử ca đã đóng)</span>
+            <span>Ca mở (demo)</span>
         </label>
-        <a class="pos-btn pos-btn-secondary" asp-controller="BanHang" asp-action="TraCuu">Tra cứu hóa đơn</a>
+        <a class="pos-btn pos-btn-secondary"
+           asp-controller="BanHang" asp-action="TraCuu" asp-route-trangThai="Nhap" asp-fragment="pos-invoice-list">
+            Hóa đơn nháp
+        </a>
+        <a class="pos-btn pos-btn-ghost" asp-controller="BanHang" asp-action="TraCuu">Tra cứu hóa đơn</a>
+        @if (Model.ThongBaoLoi is null || Model.TraCuuUrl is not null)
+        {
+            <a class="pos-btn pos-btn-ghost pos-sales-jump" id="pos-sales-jump" href="#pos-invoice-editor"
+               hidden="@(Model.ThongBaoLoi is not null)">Đến giỏ hàng</a>
+        }
     </div>
 </section>
 
@@ -98,19 +107,15 @@
     </section>
 
     <!-- CỘT PHẢI: GIỎ HÀNG & THANH TOÁN -->
-    <section class="pos-card pos-cart-pane" aria-label="Hóa đơn bán hàng và thanh toán">
+    <section class="pos-card pos-cart-pane" id="pos-invoice-editor" tabindex="-1" aria-labelledby="pos-invoice-heading">
         <div class="pos-cart-header">
             <div>
-                <h2 class="pos-h2" style="margin-bottom: 0.15rem;">Hóa đơn hiện tại</h2>
-                <span class="pos-muted" id="pos-draft-status" role="status" style="font-size: 0.82rem;">
+                <h2 class="pos-h2 pos-invoice-heading" id="pos-invoice-heading">Hóa đơn hiện tại</h2>
+                <span class="pos-invoice-draft-status" id="pos-draft-status" role="status">
                     @(hoaDonNhap is null ? "Hóa đơn mới" : $"Đã lưu nháp · {hoaDonNhap.MaHoaDon}")
                 </span>
             </div>
-            <div class="pos-success-links">
-                <a class="pos-btn pos-btn-ghost" id="pos-link-cancel-draft" href="@(traCuuNhapUrl + "#huy-hoa-don")"
-                   hidden="@(hoaDonNhap is null)">Hủy hóa đơn nháp</a>
-                <button type="button" class="pos-btn pos-btn-ghost" id="pos-btn-new-invoice">Lập hóa đơn mới</button>
-            </div>
+            <button type="button" class="pos-btn pos-btn-secondary" id="pos-btn-new-invoice">Lập hóa đơn mới</button>
         </div>
 
         <div class="pos-cart-list" id="pos-cart-list" aria-live="polite">
@@ -123,8 +128,17 @@
             <strong class="pos-num pos-grand-total" id="pos-grand-total">0 đ</strong>
         </div>
 
+        <div class="pos-draft-actions">
+            <button type="button" class="pos-btn pos-btn-secondary" id="pos-btn-save-draft"
+                    aria-describedby="pos-save-action-error">Lưu nháp</button>
+            <a class="pos-btn pos-btn-ghost" id="pos-link-cancel-draft" href="@(traCuuNhapUrl + "#huy-hoa-don")"
+               hidden="@(hoaDonNhap is null)">Hủy nháp</a>
+            <p class="pos-field-error pos-draft-action-error" id="pos-save-action-error" role="alert" hidden></p>
+        </div>
+
         <!-- PHƯƠNG THỨC THANH TOÁN -->
-        <div class="pos-payment-box">
+        <section class="pos-payment-box pos-invoice-payment" aria-labelledby="pos-payment-heading">
+            <h3 id="pos-payment-heading" class="pos-h2">Thanh toán</h3>
             <div class="pos-payment-modes" role="group" aria-label="Chế độ thanh toán">
                 <button type="button" class="pos-mode-btn is-active" data-mode="TienMat" aria-pressed="true">Tiền mặt</button>
                 <button type="button" class="pos-mode-btn" data-mode="ChuyenKhoan" aria-pressed="false">Chuyển khoản</button>
@@ -173,7 +187,7 @@
                     <strong class="pos-num" id="pos-allocated-total">0 đ</strong>
                 </div>
                 <div>
-                    <span class="pos-muted">Còn thiếu</span>
+                    <span class="pos-muted">Còn thiếu phân bổ</span>
                     <strong class="pos-num" id="pos-remaining-total">0 đ</strong>
                 </div>
                 <div>
@@ -182,15 +196,15 @@
                 </div>
             </div>
             <p class="pos-field-error" id="pos-payment-error" role="alert" hidden></p>
-        </div>
+        </section>
 
-        <div class="pos-confirm-actions pos-success-links">
-            <button type="button" class="pos-btn pos-btn-secondary pos-btn-lg" id="pos-btn-save-draft">Lưu nháp</button>
-            <button type="button" class="pos-btn pos-btn-primary pos-btn-lg" id="pos-btn-confirm">Xác nhận bán hàng</button>
+        <div class="pos-confirm-actions pos-invoice-confirm">
+            <button type="button" class="pos-btn pos-btn-primary pos-btn-lg" id="pos-btn-confirm"
+                    aria-describedby="pos-action-error">Xác nhận bán hàng</button>
         </div>
         <p class="pos-field-error" id="pos-action-error" role="alert" hidden></p>
 
-        <div class="pos-alert pos-alert-error" id="pos-conflict-result" hidden role="alert">
+        <div class="pos-alert pos-alert-error" id="pos-conflict-result" hidden role="alert" tabindex="-1">
             <p id="pos-conflict-message"></p>
             <div class="pos-success-links">
                 <a id="pos-conflict-edit" hidden>Mở phiên bản nháp hiện tại</a>

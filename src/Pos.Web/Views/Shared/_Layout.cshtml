@@ -3,7 +3,7 @@
     var khoUser = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo ?? KhoSessions.DanhTinhHienTai(Context);
     var pageTitle = ViewData["Title"] as string ?? "Retail Core POS";
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-    var isKho = currentController is "HeThong" or "NhomHang" or "MatHang" or "NhaCungCap"
+    var stackHeaderOnMobile = currentController is "BanHang" or "HeThong" or "NhomHang" or "MatHang" or "NhaCungCap"
         or "NhapHang" or "KiemKho" or "BaoCao";
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isHome = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase)
@@ -143,7 +143,7 @@
         <div class="pos-backdrop" id="pos-backdrop" aria-hidden="true"></div>
 
         <div class="pos-main">
-            <header class="pos-header @(isKho ? "kho-header" : null)">
+            <header class="pos-header @(stackHeaderOnMobile ? "pos-header-stack" : null)">
                 <div class="pos-header-left">
                     <button type="button" class="pos-menu-btn" id="pos-menu-toggle" aria-controls="pos-sidebar" aria-expanded="false" aria-label="Mở thanh điều hướng">
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-menu"></use></svg>

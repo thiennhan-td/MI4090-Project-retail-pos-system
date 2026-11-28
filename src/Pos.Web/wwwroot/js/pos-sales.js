@@ -6,6 +6,7 @@
 
     const confirmUrl = app.dataset.confirmUrl;
     const saveUrl = app.dataset.saveUrl;
+    const cartJumpLink = document.getElementById("pos-sales-jump");
     const requestToken = app.querySelector('input[name="__RequestVerificationToken"]').value;
     const savedDraftElement = document.getElementById("pos-saved-draft");
     let savedDraft = savedDraftElement ? JSON.parse(savedDraftElement.textContent) : null;
@@ -17,6 +18,7 @@
         }
         document.getElementById("pos-draft-unavailable").hidden = true;
         app.hidden = false;
+        cartJumpLink.hidden = false;
     }
     let savedState = null;
     let currentRequestId = app.dataset.requestId;
@@ -54,6 +56,7 @@
 
     const cashGivenError = document.getElementById("pos-cash-given-error");
     const paymentError = document.getElementById("pos-payment-error");
+    const saveActionError = document.getElementById("pos-save-action-error");
     const actionError = document.getElementById("pos-action-error");
 
     const fillCashBtn = document.getElementById("pos-fill-cash-remaining");
@@ -126,7 +129,12 @@
         setError(cartError, "");
         setError(cashGivenError, "");
         setError(paymentError, "");
+        setError(saveActionError, "");
         setError(actionError, "");
+    }
+
+    function getWriteError(confirm) {
+        return confirm ? actionError : saveActionError;
     }
 
     function getEditorState() {
@@ -536,7 +544,7 @@
 
     function createPayload(confirm) {
         if (!shiftToggle.checked) {
-            setError(actionError, "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi ghi hóa đơn.");
+            setError(getWriteError(confirm), "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi ghi hóa đơn.");
             return null;
         }
         if (cart.size === 0) {
@@ -559,7 +567,7 @@
 
         const payment = getPaymentNumbers();
         if (!payment.cashAllocParsed.valid || !payment.transfer.valid || !payment.cashGiven.valid) {
-            setError(paymentError, "Số tiền thanh toán phải là số nguyên VND không âm.");
+            setError(confirm ? paymentError : saveActionError, "Số tiền thanh toán phải là số nguyên VND không âm.");
             return null;
         }
         if (confirm) {
@@ -597,6 +605,7 @@
         }
         conflictLookupLink.href = data.traCuuUrl;
         conflictResult.hidden = false;
+        conflictResult.focus();
     }
 
     function showConfirmed(data) {
@@ -619,7 +628,7 @@
 
     function showRetryMessage() {
         const action = pendingRequest.confirm ? "Thử lại" : "Thử lưu lại";
-        setError(actionError, `Chưa nhận được kết quả từ máy chủ. Bấm “${action}” để gửi lại đúng giao dịch này.`);
+        setError(getWriteError(pendingRequest.confirm), `Chưa nhận được kết quả từ máy chủ. Bấm “${action}” để gửi lại đúng giao dịch này.`);
     }
 
     async function writeInvoice(confirm) {
@@ -665,7 +674,8 @@
                 if (recoveryCode) {
                     showConflict({ message, traCuuUrl: document.getElementById("pos-unavailable-lookup").href });
                 } else {
-                    setError(errors[data?.field] || actionError, message);
+                    const errorElement = confirm || data?.field === "cart" ? errors[data?.field] : null;
+                    setError(errorElement || getWriteError(confirm), message);
                 }
             } else if (confirm) {
                 showConfirmed(data);
@@ -698,6 +708,16 @@
 
     searchInput.addEventListener("input", filterProducts);
 
+    cartJumpLink.addEventListener("click", (event) => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+            return;
+        }
+        event.preventDefault();
+        const editor = document.getElementById("pos-invoice-editor");
+        editor.focus({ preventScroll: true });
+        editor.scrollIntoView({ block: "start" });
+    });
+
     for (const btn of modeButtons) {
         btn.addEventListener("click", () => {
             if (isLocked()) {
@@ -712,6 +732,7 @@
         if (isLocked()) {
             return;
         }
+        setError(saveActionError, "");
         if (paymentMode === "HonHop") {
             const parsed = parseMoneyInput(cashAllocInput);
             const due = getGrandTotal();
@@ -726,6 +747,7 @@
         if (isLocked()) {
             return;
         }
+        setError(saveActionError, "");
         if (paymentMode === "HonHop") {
             const parsed = parseMoneyInput(transferInput);
             const due = getGrandTotal();
@@ -740,6 +762,7 @@
         if (isLocked()) {
             return;
         }
+        setError(saveActionError, "");
         updateTotalsOnly();
     });
 
@@ -787,6 +810,7 @@
             shiftBadge.textContent = "Ca đang mở · " + app.dataset.currentShift;
             shiftBadge.classList.add("pos-pill-teal");
             setError(paymentError, "");
+            setError(saveActionError, "");
             setError(actionError, "");
         } else {
             shiftBadge.textContent = "Ca đã đóng (giả lập)";

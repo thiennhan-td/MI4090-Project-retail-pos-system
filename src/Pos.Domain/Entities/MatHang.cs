@@ -20,13 +20,24 @@ public sealed class MatHang
     }
 
     public string MaHang { get; }
-    public string MaNhom { get; }
-    public string TenHang { get; }
-    public string DonViTinh { get; }
+    public string MaNhom { get; private set; }
+    public string TenHang { get; private set; }
+    public string DonViTinh { get; private set; }
     public decimal GiaBanHienHanh { get; private set; }
     public string TrangThai { get; private set; }
 
     public void DoiGiaBan(decimal gia) => GiaBanHienHanh = QuyTac.Tien(gia);
+    public void CapNhatDanhMuc(string maNhom, string tenHang, string donViTinh, decimal gia)
+    {
+        var nhom = QuyTac.Chuoi(maNhom, 32);
+        var ten = QuyTac.Chuoi(tenHang, 150);
+        var donVi = QuyTac.Chuoi(donViTinh, 32);
+        var giaHopLe = QuyTac.Tien(gia);
+        MaNhom = nhom;
+        TenHang = ten;
+        DonViTinh = donVi;
+        GiaBanHienHanh = giaHopLe;
+    }
     public void NgungSuDung() => TrangThai = TrangThaiChungTu.NgungSuDung;
     public void KichHoat() => TrangThai = TrangThaiChungTu.HoatDong;
 }

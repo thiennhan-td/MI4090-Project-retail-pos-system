@@ -17,9 +17,11 @@ public sealed record PhieuNhapDto(string MaPhieuNhap, string MaNhaCungCap, strin
 public sealed record LichSuTraNhaCungCapDto(decimal DaTra, decimal DuNo, IReadOnlyList<TraNhaCungCap> KhoanTras);
 
 public sealed class PurchaseService(IPhieuNhapRepository phieuNhapRepo, IDanhMucRepository danhMucRepo,
-    IAuthorizationService auth, IShiftCashService shiftCash, IGhiBienDongKhoNoiBo ledger, IUnitOfWork work,
-    TimeProvider? dongHo = null)
+    IQuanTriTaiKhoanRepository taiKhoanRepo, IAuthorizationService auth, IShiftCashService shiftCash,
+    IGhiBienDongKhoNoiBo ledger, IUnitOfWork work, TimeProvider? dongHo = null)
 {
+    private const string NhanVienKho = "NhanVienKho";
+    private const string QuanLy = "QuanLy";
     private readonly TimeProvider _dongHo = dongHo ?? TimeProvider.System;
 
     public async Task<PhieuNhapDto> LapNhapAsync(string maTaiKhoan, string maNhaCungCap, DateOnly? hanThanhToan,
@@ -64,7 +66,7 @@ public sealed class PurchaseService(IPhieuNhapRepository phieuNhapRepo, IDanhMuc
     public async Task<PhieuNhapDto> XacNhanNhapAsync(string maPhieuNhap, string maTaiKhoan, string phienBan,
         CancellationToken ct = default)
     {
-        await KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.NHAP_XAC_NHAN, ct);
+        await KiemTraVaiTroAsync(maTaiKhoan, MaQuyenPos.NHAP_XAC_NHAN, NhanVienKho, ct);
         return await InventoryTransaction.ChayAsync(work, async () =>
         {
             var phieu = await KhoaPhieuAsync(maPhieuNhap, ct);
@@ -99,7 +101,14 @@ public sealed class PurchaseService(IPhieuNhapRepository phieuNhapRepo, IDanhMuc
             TrangThaiChungTu.DaXacNhan => MaQuyenPos.NHAP_HUY_XAC_NHAN,
             _ => throw new InvalidStateTransitionException("Chỉ hủy được phiếu nháp hoặc phiếu đã xác nhận.")
         };
-        await KiemTraQuyenAsync(maTaiKhoan, maQuyen, ct);
+        if (trangThaiTruoc == TrangThaiChungTu.DaXacNhan)
+        {
+            await KiemTraVaiTroAsync(maTaiKhoan, maQuyen, QuanLy, ct);
+        }
+        else
+        {
+            await KiemTraQuyenAsync(maTaiKhoan, maQuyen, ct);
+        }
         return await InventoryTransaction.ChayAsync(work, async () =>
         {
             var phieu = await KhoaPhieuAsync(maPhieuNhap, ct);
@@ -132,7 +141,7 @@ public sealed class PurchaseService(IPhieuNhapRepository phieuNhapRepo, IDanhMuc
     public async Task<TraNhaCungCap> GhiTraNhaCungCapAsync(string maPhieuNhap, string maTaiKhoan, decimal soTienTra,
         string phuongThuc, string nguonChi, string? maCaChi, Guid maYeuCau, CancellationToken ct = default)
     {
-        await KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.NCC_GHI_TRA_TIEN, ct);
+        await KiemTraVaiTroAsync(maTaiKhoan, MaQuyenPos.NCC_GHI_TRA_TIEN, QuanLy, ct);
         if (maYeuCau == Guid.Empty)
         {
             throw new BusinessRuleViolationException("Cần mã yêu cầu ghi trả nhà cung cấp.");
@@ -266,7 +275,7 @@ public sealed class PurchaseService(IPhieuNhapRepository phieuNhapRepo, IDanhMuc
     public async Task<IReadOnlyList<ThongTinCaMoDto>> LayDanhSachCaChiAsync(string maTaiKhoan,
         CancellationToken ct = default)
     {
-        await KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.NCC_GHI_TRA_TIEN, ct);
+        await KiemTraVaiTroAsync(maTaiKhoan, MaQuyenPos.NCC_GHI_TRA_TIEN, QuanLy, ct);
         return await shiftCash.LayDanhSachCaDangMoAsync(ct);
     }
 
@@ -274,6 +283,18 @@ public sealed class PurchaseService(IPhieuNhapRepository phieuNhapRepo, IDanhMuc
     {
         KiemTraMa(maTaiKhoan);
         await auth.KiemTraQuyenAsync(maTaiKhoan, maQuyen, ct);
+    }
+
+    private async Task KiemTraVaiTroAsync(string maTaiKhoan, string maQuyen, string maVaiTro, CancellationToken ct)
+    {
+        await KiemTraQuyenAsync(maTaiKhoan, maQuyen, ct);
+        // Đối chiếu vai trò và quyền trên cùng hồ sơ khi phân quyền có thể vừa thay đổi.
+        var hoSo = await taiKhoanRepo.LayHoSoDangNhapAsync(maTaiKhoan, ct);
+        if (hoSo?.TaiKhoan is not { TrangThai: TrangThaiChungTu.HoatDong } taiKhoan
+            || taiKhoan.MaVaiTro != maVaiTro || !hoSo.Quyen.Contains(maQuyen))
+        {
+            throw new UnauthorizedActionException(maQuyen);
+        }
     }
 
     private async Task<PhieuNhap> KhoaPhieuAsync(string maPhieuNhap, CancellationToken ct)
@@ -361,7 +382,7 @@ public sealed class PurchaseService(IPhieuNhapRepository phieuNhapRepo, IDanhMuc
             ghi.Write(dong.MaDongNhap);
             ghi.Write(dong.MaHang);
             ghi.Write(dong.SoLuongNhap);
-            ghi.Write(decimal.Truncate(dong.DonGiaNhap));
+            ghi.Write(dong.DonGiaNhap == 0m ? 0m : decimal.Truncate(dong.DonGiaNhap));
         }
         ghi.Flush();
         return Convert.ToHexString(SHA256.HashData(duLieu.GetBuffer().AsSpan(0, checked((int)duLieu.Length))));

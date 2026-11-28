@@ -16,6 +16,9 @@ public sealed class PurchaseServiceTests
     private const string MaDong = "DN-1";
     private const string MaNguoiLap = "TK-KHO";
     private const string MaQuanLy = "TK-QL";
+    private const string MaQuanLyKhac = "TK-QL-2";
+    private const string NhanVienKho = "NhanVienKho";
+    private const string QuanLy = "QuanLy";
     private const string MaCa = "CA-1";
     private static readonly DateTime LucLap = new(2026, 11, 28, 1, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime LucXacNhan = LucLap.AddHours(1);
@@ -27,13 +30,156 @@ public sealed class PurchaseServiceTests
 
     private readonly Mock<IPhieuNhapRepository> _phieus = new();
     private readonly Mock<IDanhMucRepository> _danhMuc = new();
+    private readonly Mock<IQuanTriTaiKhoanRepository> _taiKhoans = new();
     private readonly Mock<IAuthorizationService> _auth = new();
     private readonly Mock<IShiftCashService> _kets = new();
     private readonly Mock<IGhiBienDongKhoNoiBo> _ledger = new();
     private readonly Mock<IUnitOfWork> _work = new();
 
-    private PurchaseService TaoService() => new(_phieus.Object, _danhMuc.Object, _auth.Object, _kets.Object,
-        _ledger.Object, _work.Object, new DongHoCoDinh());
+    public PurchaseServiceTests()
+    {
+        _taiKhoans.Setup(x => x.LayHoSoDangNhapAsync(MaNguoiLap, Ct))
+            .ReturnsAsync(TaoHoSo(MaNguoiLap, NhanVienKho, MaQuyenPos.NHAP_XAC_NHAN));
+        _taiKhoans.Setup(x => x.LayHoSoDangNhapAsync(MaQuanLy, Ct))
+            .ReturnsAsync(TaoHoSo(MaQuanLy, QuanLy, MaQuyenPos.NCC_GHI_TRA_TIEN, MaQuyenPos.NHAP_HUY_XAC_NHAN));
+        _taiKhoans.Setup(x => x.LayHoSoDangNhapAsync(MaQuanLyKhac, Ct))
+            .ReturnsAsync(TaoHoSo(MaQuanLyKhac, QuanLy, MaQuyenPos.NCC_GHI_TRA_TIEN));
+    }
+
+    private PurchaseService TaoService() => new(_phieus.Object, _danhMuc.Object, _taiKhoans.Object,
+        _auth.Object, _kets.Object, _ledger.Object, _work.Object, new DongHoCoDinh());
+
+    [Theory]
+    [InlineData(MaQuyenPos.NHAP_XAC_NHAN, MaQuanLy)]
+    [InlineData(MaQuyenPos.NHAP_HUY_XAC_NHAN, MaNguoiLap)]
+    [InlineData(MaQuyenPos.NCC_GHI_TRA_TIEN, MaNguoiLap)]
+    public async Task GhiPhieuNhap_CoQuyenNhungSaiVaiTro_TuChoiTruocGiaoDich(string maQuyen, string maTaiKhoan)
+    {
+        var vaiTro = maTaiKhoan == MaQuanLy ? QuanLy : NhanVienKho;
+        _auth.Setup(x => x.KiemTraQuyenAsync(maTaiKhoan, maQuyen, Ct)).Returns(Task.CompletedTask);
+        _taiKhoans.Setup(x => x.LayHoSoDangNhapAsync(maTaiKhoan, Ct))
+            .ReturnsAsync(TaoHoSo(maTaiKhoan, vaiTro, maQuyen));
+
+        var loi = await Assert.ThrowsAsync<UnauthorizedActionException>(() => ThucHienThaoTacGhi(maQuyen, maTaiKhoan));
+
+        Assert.Equal(maQuyen, loi.MaQuyen);
+        _auth.Verify(x => x.KiemTraQuyenAsync(maTaiKhoan, maQuyen, Ct), Times.Once);
+        _taiKhoans.Verify(x => x.LayHoSoDangNhapAsync(maTaiKhoan, Ct), Times.Once);
+        _work.VerifyNoOtherCalls();
+        _phieus.VerifyNoOtherCalls();
+        _kets.VerifyNoOtherCalls();
+        _ledger.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task XacNhan_VaiTroHienTaiThieuQuyenSauKhiKiemTraQuyenBanDau_TuChoi()
+    {
+        _auth.Setup(x => x.KiemTraQuyenAsync(MaNguoiLap, MaQuyenPos.NHAP_XAC_NHAN, Ct)).Returns(Task.CompletedTask);
+        _taiKhoans.Setup(x => x.LayHoSoDangNhapAsync(MaNguoiLap, Ct))
+            .ReturnsAsync(TaoHoSo(MaNguoiLap, NhanVienKho));
+
+        var loi = await Assert.ThrowsAsync<UnauthorizedActionException>(() =>
+            TaoService().XacNhanNhapAsync(MaPhieu, MaNguoiLap, "phien-ban"));
+
+        Assert.Equal(MaQuyenPos.NHAP_XAC_NHAN, loi.MaQuyen);
+        _auth.VerifyAll();
+        _taiKhoans.Verify(x => x.LayHoSoDangNhapAsync(MaNguoiLap, Ct), Times.Once);
+        _work.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(MaQuyenPos.NHAP_XAC_NHAN, MaNguoiLap)]
+    [InlineData(MaQuyenPos.NHAP_HUY_XAC_NHAN, MaQuanLy)]
+    [InlineData(MaQuyenPos.NCC_GHI_TRA_TIEN, MaQuanLy)]
+    public async Task GhiPhieuNhap_DungVaiTroNhungThieuQuyen_TuChoiTruocGiaoDich(string maQuyen, string maTaiKhoan)
+    {
+        var thieuQuyen = new UnauthorizedActionException(maQuyen);
+        _auth.Setup(x => x.KiemTraQuyenAsync(maTaiKhoan, maQuyen, Ct)).ThrowsAsync(thieuQuyen);
+
+        var loi = await Assert.ThrowsAsync<UnauthorizedActionException>(() => ThucHienThaoTacGhi(maQuyen, maTaiKhoan));
+
+        Assert.Same(thieuQuyen, loi);
+        _auth.Verify(x => x.KiemTraQuyenAsync(maTaiKhoan, maQuyen, Ct), Times.Once);
+        _taiKhoans.VerifyNoOtherCalls();
+        _work.VerifyNoOtherCalls();
+        _phieus.VerifyNoOtherCalls();
+        _kets.VerifyNoOtherCalls();
+        _ledger.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task XacNhan_CoQuyenNhungTaiKhoanBiKhoaHoacKhongTonTai_TuChoi(bool biKhoa)
+    {
+        var hoSo = TaoHoSo(MaNguoiLap, NhanVienKho, MaQuyenPos.NHAP_XAC_NHAN);
+        hoSo.TaiKhoan.Khoa();
+        _taiKhoans.Setup(x => x.LayHoSoDangNhapAsync(MaNguoiLap, Ct)).ReturnsAsync(biKhoa ? hoSo : null);
+
+        var loi = await Assert.ThrowsAsync<UnauthorizedActionException>(() =>
+            TaoService().XacNhanNhapAsync(MaPhieu, MaNguoiLap, "phien-ban"));
+
+        Assert.Equal(MaQuyenPos.NHAP_XAC_NHAN, loi.MaQuyen);
+        _work.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task LayCaChi_ChiQuanLyCoQuyenDuocTraCuu()
+    {
+        var ca = new ThongTinCaMoDto(MaCa, "TK-THU-NGAN", LucLap);
+        _auth.Setup(x => x.KiemTraQuyenAsync(MaNguoiLap, MaQuyenPos.NCC_GHI_TRA_TIEN, Ct))
+            .Returns(Task.CompletedTask);
+        _taiKhoans.Setup(x => x.LayHoSoDangNhapAsync(MaNguoiLap, Ct))
+            .ReturnsAsync(TaoHoSo(MaNguoiLap, NhanVienKho, MaQuyenPos.NCC_GHI_TRA_TIEN));
+        var service = TaoService();
+
+        var saiVaiTro = await Assert.ThrowsAsync<UnauthorizedActionException>(() =>
+            service.LayDanhSachCaChiAsync(MaNguoiLap));
+        Assert.Equal(MaQuyenPos.NCC_GHI_TRA_TIEN, saiVaiTro.MaQuyen);
+
+        var thieuQuyen = new UnauthorizedActionException(MaQuyenPos.NCC_GHI_TRA_TIEN);
+        _auth.Setup(x => x.KiemTraQuyenAsync(MaQuanLy, MaQuyenPos.NCC_GHI_TRA_TIEN, Ct)).ThrowsAsync(thieuQuyen);
+        var loi = await Assert.ThrowsAsync<UnauthorizedActionException>(() => service.LayDanhSachCaChiAsync(MaQuanLy));
+        Assert.Same(thieuQuyen, loi);
+        _kets.VerifyNoOtherCalls();
+
+        _auth.Setup(x => x.KiemTraQuyenAsync(MaQuanLy, MaQuyenPos.NCC_GHI_TRA_TIEN, Ct)).Returns(Task.CompletedTask);
+        _kets.Setup(x => x.LayDanhSachCaDangMoAsync(Ct)).ReturnsAsync([ca]);
+        Assert.Equal(ca, Assert.Single(await service.LayDanhSachCaChiAsync(MaQuanLy)));
+    }
+
+    [Fact]
+    public async Task HuyNhapNhap_GiuQuyenDaCapChoVaiTroKhac()
+    {
+        const string maThuNgan = "TK-THU-NGAN";
+        var phieu = TaoPhieu(TrangThaiChungTu.Nhap);
+        _phieus.Setup(x => x.LayTheoMaAsync(MaPhieu, Ct)).ReturnsAsync(phieu);
+        _phieus.Setup(x => x.KhoaTheoMaAsync(MaPhieu, Ct)).ReturnsAsync(phieu);
+        _auth.Setup(x => x.KiemTraQuyenAsync(maThuNgan, MaQuyenPos.NHAP_HUY_NHAP, Ct)).Returns(Task.CompletedTask);
+        var service = TaoService();
+        var nhap = Assert.IsType<PhieuNhapDto>(await service.LayPhieuNhapAsync(MaPhieu, maThuNgan));
+
+        var daHuy = await service.HuyNhapAsync(MaPhieu, maThuNgan, nhap.TrangThai, nhap.PhienBan, "Nhập sai");
+
+        Assert.Equal(TrangThaiChungTu.DaHuy, daHuy.TrangThai);
+        _auth.Verify(x => x.KiemTraQuyenAsync(maThuNgan, MaQuyenPos.NHAP_HUY_NHAP, Ct), Times.Once);
+        _taiKhoans.VerifyNoOtherCalls();
+        _ledger.VerifyNoOtherCalls();
+    }
+
+    private Task ThucHienThaoTacGhi(string maQuyen, string maTaiKhoan)
+    {
+        var service = TaoService();
+        return maQuyen switch
+        {
+            MaQuyenPos.NHAP_XAC_NHAN => service.XacNhanNhapAsync(MaPhieu, maTaiKhoan, "phien-ban"),
+            MaQuyenPos.NHAP_HUY_XAC_NHAN => service.HuyNhapAsync(MaPhieu, maTaiKhoan, TrangThaiChungTu.DaXacNhan,
+                "phien-ban", "Nhập sai"),
+            MaQuyenPos.NCC_GHI_TRA_TIEN => service.GhiTraNhaCungCapAsync(MaPhieu, maTaiKhoan, 40,
+                PhuongThucThanhToan.ChuyenKhoan, NguonQuy.QuyCuaHang, null, MaYeuCau),
+            _ => throw new ArgumentOutOfRangeException(nameof(maQuyen))
+        };
+    }
 
     [Fact]
     public async Task TraTuKet_KhoaCaTruocPhieuVaGhiTrongGiaoDich()
@@ -122,7 +268,7 @@ public sealed class PurchaseServiceTests
 
     [Theory]
     [InlineData("PN-2", MaQuanLy, 40)]
-    [InlineData(MaPhieu, "TK-QL-2", 40)]
+    [InlineData(MaPhieu, MaQuanLyKhac, 40)]
     [InlineData(MaPhieu, MaQuanLy, 45)]
     public async Task TraNcc_GuiLaiMaVoiPhieuNguoiGhiHoacTienKhac_TuChoi(string maPhieu, string maNguoiGhi, int soTien)
     {
@@ -264,6 +410,32 @@ public sealed class PurchaseServiceTests
         PhieuNhap.KhoiPhuc(MaPhieu, MaNcc, MaNguoiLap, LucLap, null, trangThai,
             trangThai == TrangThaiChungTu.DaXacNhan ? LucXacNhan : null, null, null, null,
             [new DongNhap(MaDong, MaPhieu, MaHang, 2, 50)], khoanTras);
+
+    [Fact]
+    public async Task XacNhan_DonGiaAmKhongVaGiaKhongDocTuSql_CungPhienBan()
+    {
+        var giaAmKhong = new decimal(0, 0, 0, true, 0);
+        var phieu = TaoPhieu(TrangThaiChungTu.Nhap);
+        _phieus.Setup(x => x.LayTheoMaAsync(MaPhieu, Ct)).ReturnsAsync(phieu);
+        _phieus.Setup(x => x.KhoaTheoMaAsync(MaPhieu, Ct)).ReturnsAsync(() => phieu);
+        _danhMuc.Setup(x => x.LayNhaCungCapAsync(MaNcc, Ct)).ReturnsAsync(new NhaCungCap(MaNcc, "Nhà cung cấp", "Liên hệ"));
+        _danhMuc.Setup(x => x.LayMatHangAsync(MaHang, Ct)).ReturnsAsync(new MatHang(MaHang, "NH-1", "Sữa", "Hộp", 60));
+        var service = TaoService();
+        var truocSua = Assert.IsType<PhieuNhapDto>(await service.LayPhieuNhapAsync(MaPhieu, MaNguoiLap));
+        var daSua = await service.SuaNhapAsync(MaPhieu, MaNguoiLap, truocSua.PhienBan, MaNcc, null,
+            [new(MaHang, 2, giaAmKhong)]);
+
+        phieu = PhieuNhap.KhoiPhuc(MaPhieu, MaNcc, MaNguoiLap, LucLap, null, TrangThaiChungTu.Nhap,
+            null, null, null, null, [new DongNhap(MaDong, MaPhieu, MaHang, 2, 0m)], []);
+        var daXacNhan = await service.XacNhanNhapAsync(MaPhieu, MaNguoiLap, daSua.PhienBan);
+
+        Assert.Equal(TrangThaiChungTu.DaXacNhan, daXacNhan.TrangThai);
+        Assert.Equal(daSua.PhienBan, daXacNhan.PhienBan);
+    }
+
+    private static HoSoDangNhap TaoHoSo(string maTaiKhoan, string vaiTro, params string[] quyens) =>
+        new(new TaiKhoan(maTaiKhoan, vaiTro, maTaiKhoan, maTaiKhoan, "hash"),
+            quyens.ToHashSet(StringComparer.Ordinal));
 
     private static TraNhaCungCap KhoanTra(string ma, decimal soTien) => new(ma, MaPhieu, MaQuanLy, null,
         LucXacNhan, soTien, PhuongThucThanhToan.ChuyenKhoan, NguonQuy.QuyCuaHang);

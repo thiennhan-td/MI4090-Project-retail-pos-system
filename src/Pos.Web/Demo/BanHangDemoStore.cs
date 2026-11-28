@@ -31,9 +31,13 @@ public sealed class BanHangDemoSessionProvider
 
 public sealed partial class BanHangDemoStore
 {
-    public const string MaCaHienTai = "S-CA-1126";
     private const string MaThuNgan = "S-TK-TN1";
     private readonly object _sync = new();
+    private KhoDemoStore? _kho;
+
+    // Ghi khoản chi NCC và chốt két dùng cùng khóa trong một phiên.
+    internal object KhoaPhien => _sync;
+    internal KhoDemoStore Kho => _kho ??= new(this);
     private readonly List<MatHangDemoItem> _matHangs;
     private readonly List<CaBanDemoItem> _caBans;
     private readonly List<HoaDonDemoRecord> _hoaDons;
@@ -111,7 +115,7 @@ public sealed partial class BanHangDemoStore
                 ],
                 ThanhToans =
                 [
-                    new ThanhToanDemoRecord("TienMat", 52000m, 60000m)
+                    new ThanhToanDemoRecord("ChuyenKhoan", 52000m, null)
                 ]
             },
             new HoaDonDemoRecord
@@ -158,6 +162,23 @@ public sealed partial class BanHangDemoStore
                 ]
             }
         ];
+        // S-HD-NOV-02 đến S-HD-NOV-12 trong 02_SeedData.sql cùng mẫu dòng với S-HD-NOV-01.
+        var mau = _hoaDons.Single(h => h.MaHoaDon == "S-HD-NOV-01");
+        for (int i = 2; i <= 12; i++)
+        {
+            var dong = new List<DongBanDemoRecord>
+            {
+                mau.DongBans[0] with { SoLuongBan = 1 + (i - 1) % 3 },
+                mau.DongBans[1] with { SoLuongBan = i % 2 == 0 ? 2 : 1 }
+            };
+            _hoaDons.Add(new HoaDonDemoRecord
+            {
+                MaHoaDon = $"S-HD-NOV-{i:D2}", MaCa = mau.MaCa, MaNguoiLap = mau.MaNguoiLap,
+                TenNguoiLap = mau.TenNguoiLap, LucLap = mau.LucLap, LucXacNhan = mau.LucXacNhan?.AddMinutes(3 * (i-1)),
+                TrangThai = "DaXacNhan", DongBans = dong,
+                ThanhToans = [new("ChuyenKhoan", dong.Sum(d => d.ThanhTien), null)]
+            });
+        }
     }
 
     public IReadOnlyList<MatHangDemoItem> LayDanhSachMatHang()
@@ -238,12 +259,19 @@ public sealed partial class BanHangDemoStore
         }
     }
 
-    public CaBanDemoItem LayCaHienTai() => _caBans.First(ca => ca.MaCa == MaCaHienTai);
+    public CaBanDemoItem? LayCaHienTai()
+    {
+        lock (_sync)
+        {
+            return _caBans.FirstOrDefault(ca => ca.MaNguoiMo == MaThuNgan && ca.TrangThai == "DangMo");
+        }
+    }
 
     public bool CoQuyenSuaNhap(HoaDonDemoRecord hoaDon)
     {
         var ca = LayCaHienTai();
-        return ca.TrangThai == "DangMo"
+        return ca is not null
+            && ca.TrangThai == "DangMo"
             && ca.MaNguoiMo == MaThuNgan
             && hoaDon.MaCa == ca.MaCa
             && hoaDon.MaNguoiLap == MaThuNgan;
@@ -254,22 +282,18 @@ public sealed partial class BanHangDemoStore
         string? maNhap,
         int? phienBan,
         bool caDangMo,
+        string? maCa,
         IReadOnlyList<DongBanDemoRecord> dongBans,
         ThanhToanNhapDemoRecord? thanhToanNhap,
         IReadOnlyList<ThanhToanDemoRecord> thanhToans)
     {
         lock (_sync)
         {
-            var ca = LayCaHienTai();
-            if (!caDangMo || ca.TrangThai != "DangMo" || ca.MaNguoiMo != MaThuNgan)
-            {
-                return new(TrangThaiGhiHoaDonDemo.CaDaDong, null, "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi ghi hóa đơn.");
-            }
-
             if (_lanGhiHoaDon.TryGetValue(maYeuCau, out var lanTruoc))
             {
                 var daGhi = _hoaDons.First(h => h.MaHoaDon == lanTruoc.HoaDon.MaHoaDon);
                 var trungKhop = string.Equals(maNhap, lanTruoc.MaNhap, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(maCa, lanTruoc.HoaDon.MaCa, StringComparison.OrdinalIgnoreCase)
                     && phienBan == lanTruoc.PhienBan
                     && thanhToanNhap == lanTruoc.HoaDon.ThanhToanNhap
                     && LaCungNoiDungNghiepVu(lanTruoc.HoaDon, dongBans, thanhToans);
@@ -282,6 +306,17 @@ public sealed partial class BanHangDemoStore
                 return daGhi.PhienBan == lanTruoc.HoaDon.PhienBan
                     ? new(TrangThaiGhiHoaDonDemo.GuiLaiTrungKhop, daGhi with { })
                     : new(TrangThaiGhiHoaDonDemo.XungDot, daGhi with { }, $"Hóa đơn {daGhi.MaHoaDon} đã thay đổi sau yêu cầu này.");
+            }
+
+            var ca = LayCaHienTai();
+            if (!caDangMo || ca is null)
+            {
+                return new(TrangThaiGhiHoaDonDemo.CaDaDong, null, "Ca bán đã đóng. Vui lòng mở ca và tải lại màn bán hàng.");
+            }
+
+            if (!string.Equals(maCa, ca.MaCa, StringComparison.OrdinalIgnoreCase))
+            {
+                return new(TrangThaiGhiHoaDonDemo.CaDaDong, null, "Ca bán đã thay đổi. Vui lòng tải lại màn bán hàng để làm việc trên ca hiện tại.");
             }
 
             var chiSo = maNhap is null ? -1 : _hoaDons.FindIndex(h =>
@@ -454,7 +489,7 @@ public sealed partial class BanHangDemoStore
                 }
 
                 var coTienMat = hoaDon.ThanhToans.Any(t => t.PhuongThuc == "TienMat" && t.SoTienThanhToan > 0);
-                if (coTienMat && !coCaDaoMo)
+                if (coTienMat && (!coCaDaoMo || MaCaMo == null))
                 {
                     return (false, $"Hóa đơn {hoaDon.MaHoaDon} có thanh toán tiền mặt, cần có một ca đang mở để ghi nhận đảo tiền mặt.");
                 }
@@ -463,10 +498,10 @@ public sealed partial class BanHangDemoStore
                 hoaDon.PhienBan++;
                 hoaDon.LucHuy = DateTime.Now;
                 hoaDon.TenNguoiHuy = "Nguyễn An";
-                hoaDon.MaCaDao = coTienMat ? "S-CA-1126" : null;
+                hoaDon.MaCaDao = coTienMat ? MaCaMo : null;
                 hoaDon.LyDoHuy = lyDoHuy.Trim();
                 return (true, coTienMat
-                    ? $"Đã hủy hóa đơn {hoaDon.MaHoaDon} và ghi nhận ca đảo tiền mặt S-CA-1126."
+                    ? $"Đã hủy hóa đơn {hoaDon.MaHoaDon} và ghi nhận ca đảo tiền mặt {hoaDon.MaCaDao}."
                     : $"Đã hủy hóa đơn {hoaDon.MaHoaDon} (thanh toán chuyển khoản, không tác động két ca).");
             }
 

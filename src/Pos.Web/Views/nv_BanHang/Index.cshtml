@@ -11,14 +11,14 @@
 <section class="pos-f3-toolbar">
     <div>
         <div class="pos-f3-meta-row">
-            <span class="pos-pill pos-pill-teal" id="pos-shift-badge">Ca đang mở · @Model.MaCaHienTai</span>
+            <span class="pos-pill pos-pill-teal" id="pos-shift-badge">@(Model.MaCaHienTai.Length > 0 ? "Ca đang mở · " + Model.MaCaHienTai : "Chưa mở ca")</span>
             <span class="pos-pill">Thu ngân: @Model.TenThuNgan</span>
             <span class="pos-muted">Chế độ demo</span>
         </div>
     </div>
     <div class="pos-f3-toolbar-actions">
         <label class="pos-toggle-label">
-            <input type="checkbox" id="pos-shift-open-toggle" checked />
+            <input type="checkbox" id="pos-shift-open-toggle" checked="@(Model.MaCaHienTai.Length > 0)" disabled="@(Model.MaCaHienTai.Length == 0)" />
             <span>Ca mở (demo)</span>
         </label>
         <a class="pos-btn pos-btn-secondary"

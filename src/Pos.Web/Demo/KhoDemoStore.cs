@@ -1,12 +1,9 @@
 using System.Security.Cryptography;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Pos.Web.Demo;
 
-public sealed class KhoDemoSessionProvider(IMemoryCache cache)
+public sealed class KhoDemoSessionProvider(BanHangDemoSessionProvider sessions)
 {
-    private readonly object _sync = new();
-
     public DanhTinhKhoDemo? DanhTinhHienTai(HttpContext context) =>
         context.Session.GetString("KhoDemo") is null ? null : TrongPhien(context, store => store.DanhTinh);
 
@@ -16,18 +13,9 @@ public sealed class KhoDemoSessionProvider(IMemoryCache cache)
         if (session.GetString("KhoDemo") is null)
             session.SetString("KhoDemo", "1");
 
-        KhoDemoStore store;
-        lock (_sync)
-        {
-            store = cache.GetOrCreate($"kho-demo:{session.Id}", entry =>
-            {
-                entry.SlidingExpiration = TimeSpan.FromHours(4);
-                return new KhoDemoStore();
-            })!;
-        }
-
-        lock (store)
-            return operation(store);
+        var quay = sessions.LayKhoTheoPhien(context);
+        lock (quay.KhoaPhien)
+            return operation(quay.Kho);
     }
 }
 
@@ -52,13 +40,18 @@ public sealed partial class KhoDemoStore
     private readonly Dictionary<string, NhaCungCapDemo> _nhaCungCaps = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PhieuNhapDemo> _phieuNhaps = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PhieuKiemDemo> _phieuKiems = new(StringComparer.OrdinalIgnoreCase);
-    private readonly List<CaChiDemo> _caChis = [];
     private readonly List<TraNhaCungCapDemo> _khoanTras = [];
     private readonly List<BienDongKhoDemo> _bienDongs = [];
     private string? _maDangNhap;
     private readonly string _bamMatKhauMau = BamMatKhau(MatKhauMau);
 
-    public KhoDemoStore() => NapDuLieuMau();
+    private readonly BanHangDemoStore _quay;
+
+    internal KhoDemoStore(BanHangDemoStore quay)
+    {
+        _quay = quay;
+        NapDuLieuMau();
+    }
 
     public DanhTinhKhoDemo? DanhTinh
     {
@@ -141,7 +134,7 @@ public sealed partial class KhoDemoStore
     public MatHangKhoDemo[] MatHangs() => _matHangs.Values.OrderBy(x => x.Ten).ToArray();
     public MatHangKhoDemo[] MatHangDangDung() => MatHangs().Where(x => DangDung(x.Ma)).ToArray();
     public NhaCungCapDemo[] NhaCungCaps() => _nhaCungCaps.Values.OrderBy(x => x.Ten).ToArray();
-    public CaChiDemo[] CaDangMo() => _caChis.Where(x => x.DangMo).ToArray();
+    public CaChiDemo[] CaDangMo() => _quay.CaDangMoDeChi();
 
     public string TenHang(string ma) => _matHangs[ma].Ten;
     public string TenNcc(string ma) => _nhaCungCaps[ma].Ten;

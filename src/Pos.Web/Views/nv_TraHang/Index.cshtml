@@ -16,7 +16,7 @@
 
 <section class="pos-f3-toolbar">
     <div class="pos-f3-meta-row">
-        <span class="pos-pill pos-pill-teal">Ca đang mở · S-CA-1126</span>
+        <span class="pos-pill pos-pill-teal">@(ViewData["CaMo"] ?? "Chưa mở ca")</span>
         <span class="pos-pill">Thu ngân: Lê Linh</span>
         @if (nhap != null)
         {
@@ -59,7 +59,7 @@
                 <legend>Hàng nhận trả · @Model.MaHoaDon</legend>
                 <div style="margin-bottom: 0.75rem;">
                     <label class="pos-toggle-label">
-                        <input id="shift" type="checkbox" checked />
+                        <input id="shift" type="checkbox" checked="@(ViewData["CaMo"] != null)" disabled="@(ViewData["CaMo"] == null)" />
                         <span>Ca đang mở · Lê Linh (bỏ chọn để thử ca đã đóng)</span>
                     </label>
                 </div>

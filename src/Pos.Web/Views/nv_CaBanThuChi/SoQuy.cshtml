@@ -1,0 +1,22 @@
+@using static Pos.Web.ViewModels.CaBan.CaBanViewModel
+@model Pos.Web.ViewModels.CaBan.CaBanViewModel
+@{ ViewData["Title"]="Sổ quỹ & Thu chi tiền mặt"; var open=Model.CacCa.Where(c=>c.TrangThai=="DangMo").ToArray(); }
+<partial name="~/Views/nv_CaBanThuChi/_Loc.cshtml" model="Model"/>
+<section class="pos-card"><h2>Lập phiếu thu / chi riêng</h2>
+@if(open.Length==0){<p>Chưa có ca đang mở để lập phiếu.</p>}else{
+<form asp-action="Ghi" method="post" class="pos-filter-grid" data-shift>
+<input type="hidden" name="VaiTro" value="@Model.Loc.VaiTro"/><input type="hidden" name="MaYeuCau" value="@Guid.NewGuid()"/>
+<label>Ca đang mở<select class="pos-input" name="MaCa">@foreach(var c in open){<option>@c.MaCa</option>}</select></label>
+<label>Loại phiếu<select class="pos-input" name="Loai"><option>Thu</option><option>Chi</option></select></label>
+<label>Nguồn quỹ<select class="pos-input" name="Nguon"><option value="KetCa">Két ca</option><option value="QuyCuaHang">Quỹ cửa hàng</option></select></label>
+<label>Phương thức<select class="pos-input" name="PhuongThuc"><option value="TienMat">Tiền mặt</option><option value="ChuyenKhoan">Chuyển khoản</option></select></label>
+<label>Số tiền (đ)<input class="pos-input" required name="SoTien" type="number" min="1" step="1"/></label>
+<label>Lý do<input class="pos-input" required name="LyDo"/></label>
+<label>Số chứng từ kèm theo<input class="pos-input" name="ChungTu"/></label>
+<button class="pos-btn pos-btn-primary">Lưu phiếu</button></form>
+}</section>
+<section class="pos-card"><h2>Sổ quỹ</h2><div class="pos-table-wrap"><table class="pos-table"><thead><tr><th>Thời điểm</th><th>Ca</th><th>Chứng từ</th><th>Nghiệp vụ</th><th>Nguồn quỹ</th><th>Phương thức</th><th>Vào / ra két</th><th>Ngoài két</th><th>Lý do / chứng từ kèm</th></tr></thead><tbody>
+@foreach(var d in Model.So){
+<tr><td>@d.Luc.ToString("dd/MM/yyyy HH:mm")</td><td>@d.MaCa</td><td>@d.Ma</td><td>@d.Loai</td><td>@(d.Nguon=="KetCa"?"Két ca":"Quỹ cửa hàng")</td><td>@(d.PhuongThuc=="TienMat"?"Tiền mặt":"Chuyển khoản")</td><td>@Tien(d.TienKet)</td><td>@Tien(d.GiaTri-d.TienKet)</td><td>@d.LyDo @d.ChungTu</td></tr>}
+</tbody></table></div>@if(Model.So.Length==0){<p>Chưa có giao dịch phù hợp.</p>}</section>
+@section Scripts {<script src="~/js/pos-shifts.js" asp-append-version="true"></script>}

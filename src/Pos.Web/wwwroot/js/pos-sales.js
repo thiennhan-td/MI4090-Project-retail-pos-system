@@ -27,7 +27,7 @@
     let hasConflict = false;
     let activeCategory = "all";
     let paymentMode = "TienMat";
-    let lastShiftOpenState = true;
+    let lastShiftOpenState = Boolean(app.dataset.currentShift);
 
     const cart = new Map();
     const productButtons = Array.from(document.querySelectorAll(".pos-product-card"));
@@ -188,7 +188,7 @@
         transferInput.disabled = locked;
         fillCashBtn.disabled = locked;
         fillTransferBtn.disabled = locked;
-        shiftToggle.disabled = locked;
+        shiftToggle.disabled = locked || !app.dataset.currentShift;
 
         const blockWrite = isSubmitting || isConfirmed || hasConflict;
         const saving = pendingRequest?.confirm === false;
@@ -592,6 +592,7 @@
                 ? null : payment.cashGiven.value,
             tienChuyenKhoan: payment.transfer.empty ? null : payment.transfer.value,
             caDangMo: shiftToggle.checked,
+            maCa: app.dataset.currentShift,
             dongBans: lines
         };
     }
@@ -807,7 +808,9 @@
         }
         lastShiftOpenState = shiftToggle.checked;
         if (shiftToggle.checked) {
-            shiftBadge.textContent = "Ca đang mở · " + app.dataset.currentShift;
+            shiftBadge.textContent = app.dataset.currentShift
+                ? "Ca đang mở · " + app.dataset.currentShift
+                : "Chưa mở ca";
             shiftBadge.classList.add("pos-pill-teal");
             setError(paymentError, "");
             setError(saveActionError, "");

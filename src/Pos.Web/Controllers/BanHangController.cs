@@ -56,8 +56,8 @@ public sealed class BanHangController : Controller
 
         var vm = new BanHangPosViewModel
         {
-            MaCaHienTai = ca.MaCa,
-            TenThuNgan = ca.TenNguoiMo,
+            MaCaHienTai = ca?.MaCa ?? string.Empty,
+            TenThuNgan = ca?.TenNguoiMo ?? "Lê Linh",
             MaYeuCauMacDinh = Guid.NewGuid().ToString("N"),
             HoaDonNhap = hoaDonNhap,
             ThongBaoLoi = thongBaoLoi,
@@ -94,11 +94,6 @@ public sealed class BanHangController : Controller
                 ? "cart"
                 : "form";
             return Loi(field, "Dữ liệu hóa đơn không hợp lệ. Vui lòng kiểm tra số lượng, phiên bản và các khoản thanh toán.");
-        }
-
-        if (!req.CaDangMo)
-        {
-            return Loi("shift", "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi ghi hóa đơn.");
         }
 
         var maNhap = string.IsNullOrWhiteSpace(req.MaNhap) ? null : req.MaNhap.Trim();
@@ -196,7 +191,7 @@ public sealed class BanHangController : Controller
             };
         }
 
-        var ketQua = store.GhiHoaDon(req.MaYeuCau, maNhap, req.PhienBan, req.CaDangMo, dongBans, thanhToanNhap, thanhToans);
+        var ketQua = store.GhiHoaDon(req.MaYeuCau, maNhap, req.PhienBan, req.CaDangMo, req.MaCa, dongBans, thanhToanNhap, thanhToans);
         var hoaDon = ketQua.HoaDon;
         if (hoaDon is null)
         {
@@ -206,7 +201,8 @@ public sealed class BanHangController : Controller
                 TrangThaiGhiHoaDonDemo.KhongCoQuyen => StatusCodes.Status403Forbidden,
                 _ => StatusCodes.Status400BadRequest
             };
-            return StatusCode(status, new { ok = false, field = "form", message = ketQua.ThongBao });
+            var field = ketQua.TrangThai == TrangThaiGhiHoaDonDemo.CaDaDong ? "shift" : "form";
+            return StatusCode(status, new { ok = false, field, message = ketQua.ThongBao });
         }
 
         var traCuuUrl = Url.Action(nameof(TraCuu), new { chon = hoaDon.MaHoaDon });

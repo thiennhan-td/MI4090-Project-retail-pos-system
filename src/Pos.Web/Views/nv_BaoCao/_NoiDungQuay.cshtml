@@ -47,7 +47,16 @@
                             @for (var i = 0; i < dong.Length; i++)
                             {
                                 var cell = dong[i];
-                                <td class="@(cell is int or decimal ? "pos-num" : "") @(i == bang.CotChenhLech ? MauLech(cell) : "")">@HienThi(cell, i >= bang.CotTienTu)</td>
+                                <td class="@(cell is int or decimal ? "pos-num" : "") @(i == bang.CotChenhLech ? MauLech(cell) : "")">
+                                    @if (cell is Pos.Web.ViewModels.CaBan.DongQuyViewModel chungTu)
+                                    {
+                                        <partial name="~/Views/nv_CaBanThuChi/_ChungTu.cshtml" model="chungTu" />
+                                    }
+                                    else
+                                    {
+                                        @HienThi(cell, i >= bang.CotTienTu)
+                                    }
+                                </td>
                             }
                         </tr>
                     }

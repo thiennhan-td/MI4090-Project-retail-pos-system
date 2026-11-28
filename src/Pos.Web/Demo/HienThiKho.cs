@@ -21,6 +21,7 @@ public static class HienThiKho
         "DaoXuatBan" => "Đảo xuất bán",
         "NhapTraHang" => "Nhập lại hàng trả",
         "DieuChinhKiemKho" => "Điều chỉnh kiểm kho",
+        "TonDauDemo" => "Tồn đầu dữ liệu mẫu",
         "ChuyenKhoan" => "Chuyển khoản",
         "TienMat" => "Tiền mặt",
         "KetCa" => "Két ca",

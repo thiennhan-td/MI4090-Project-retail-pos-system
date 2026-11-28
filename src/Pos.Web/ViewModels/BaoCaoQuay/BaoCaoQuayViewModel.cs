@@ -2,11 +2,11 @@ namespace Pos.Web.ViewModels.BaoCaoQuay;
 
 public sealed record LocBaoCaoQuayViewModel(
     DateOnly? Ngay, DateOnly? Tu, DateOnly? Den, string? MaHang, string? MaCa,
-    string? TrangThaiCa, string VaiTro = "QuanLy")
+    string? TrangThaiCa)
 {
     public Dictionary<string, string> ThamSo()
     {
-        var values = new Dictionary<string, string> { ["vaiTro"] = VaiTro };
+        var values = new Dictionary<string, string>();
         if (Ngay is { } ngay) values["ngay"] = ngay.ToString("yyyy-MM-dd");
         if (Tu is { } tu) values["tu"] = tu.ToString("yyyy-MM-dd");
         if (Den is { } den) values["den"] = den.ToString("yyyy-MM-dd");

@@ -1,35 +1,99 @@
+@using System.Globalization
 @using static Pos.Web.ViewModels.CaBan.CaBanViewModel
 @model Pos.Web.ViewModels.CaBan.CaBanViewModel
-@{ ViewData["Title"]="Quản lý ca & Bàn giao két"; var l=Model.Loc; }
-<partial name="~/Views/nv_CaBanThuChi/_Loc.cshtml" model="Model"/>
-@if(l.VaiTro=="ThuNgan" && Model.CacCa.All(c=>c.TrangThai!="DangMo")){
-<section class="pos-card"><h2>Mở ca bán hàng</h2>
-<form asp-action="Mo" method="post" class="pos-filter-grid" data-shift>
-<input type="hidden" name="VaiTro" value="@l.VaiTro" />
-<label>Tiền mặt đầu ca (đ)<input class="pos-input" required name="Dau" type="number" min="0" step="1"/></label>
-<button class="pos-btn pos-btn-primary">Mở ca</button></form></section>
+@{
+    ViewData["Title"] = "Quản lý ca & Bàn giao két";
+    var loc = Model.Loc;
+    var loginUrl = Url.Action("DangNhap", "HeThong", new { troVe = Context.Request.Path + Context.Request.QueryString });
 }
-@if(Model.Chon is {} ca && Model.BanGiao is {} b){
-<section class="pos-card"><h2>Đối chiếu két · @ca.MaCa</h2><p>@ca.TenNguoiMo · @ca.LucMo.ToString("dd/MM/yyyy HH:mm") · @(ca.TrangThai=="DangMo"?"Đang mở":"Đã đóng")</p>
-<div class="pos-table-wrap"><table class="pos-table"><tbody>
-@foreach(var row in new (string Label, decimal Amount)[]{("Tiền mặt đầu ca",b.Dau),("Thu bán tiền mặt",Model.Tong("Thu bán")),("Hoàn tiền mặt",Model.Tong("Hoàn trả")),("Thu / chi riêng từ két",Model.Tong("Thu riêng")+Model.Tong("Chi riêng")),("Chi trả nhà cung cấp",Model.Tong("Trả nhà cung cấp")),("Đảo hủy hóa đơn",Model.Tong("Đảo hủy"))}){
-<tr><th>@row.Label</th><td>@Tien(row.Amount)</td></tr>}
-<tr><th>Tiền dự kiến trong két</th><td><strong id="expected" data-value="@Model.DuKien">@Tien(Model.DuKien)</strong></td></tr>
-</tbody></table></div>
-@if(b.Dem is decimal dem){
-<p>Thực đếm <strong>@Tien(dem)</strong> · Chênh lệch <strong>@Tien(dem-Model.DuKien)</strong> · Chốt lúc @b.Dong?.ToString("dd/MM/yyyy HH:mm")</p>
-}else if(l.VaiTro=="ThuNgan"){
-<h3>Đếm tiền bàn giao</h3><form asp-action="Dong" method="post" data-shift>
-<input type="hidden" name="VaiTro" value="@l.VaiTro"/><input type="hidden" name="Ma" value="@ca.MaCa"/>
-<div class="pos-filter-grid">
-@foreach(var mg in new[]{500000,200000,100000,50000,20000,10000,5000,2000,1000}){
-<label>@Tien(mg) · số tờ<input class="pos-input" type="number" min="0" step="1" data-note="@mg" placeholder="0"/></label>}
-</div><label>Tiền thực đếm (đ)<input class="pos-input" type="number" name="Dem" min="0" step="1" required /></label>
-<p>Chênh lệch <output id="delta">—</output></p><button class="pos-btn pos-btn-primary">Chốt đóng ca</button></form>
-}</section>
+<partial name="~/Views/nv_CaBanThuChi/_Loc.cshtml" model="Model" />
+@if (Model.CoTheMo)
+{
+    <section class="pos-card">
+        <h2>Mở ca bán hàng</h2>
+        <form asp-action="Mo" method="post" class="pos-filter-grid" data-shift="ca" data-login-url="@loginUrl">
+            <input type="hidden" name="MaYeuCau" value="@Guid.NewGuid()" />
+            <label>Tiền mặt đầu ca (đ)
+                <input class="pos-input" required name="Dau" type="number" min="0" max="999999999999999" step="1" />
+            </label>
+            <button class="pos-btn pos-btn-primary">Mở ca</button>
+        </form>
+    </section>
 }
-<section class="pos-card"><h2>Lịch sử ca và bàn giao</h2><div class="pos-table-wrap"><table class="pos-table"><thead><tr><th>Ca bán</th><th>Thu ngân</th><th>Ngày mở</th><th>Trạng thái</th></tr></thead><tbody>
-@foreach(var c in Model.LichSu){
-<tr><td><a asp-action="Index" asp-route-chon="@c.MaCa" asp-route-vaiTro="@l.VaiTro" asp-route-ma="@l.Ma" asp-route-tu="@l.Tu?.ToString("yyyy-MM-dd")" asp-route-den="@l.Den?.ToString("yyyy-MM-dd")" asp-route-trangThai="@l.TrangThai">@c.MaCa</a></td><td>@c.TenNguoiMo</td><td>@c.LucMo.ToString("dd/MM/yyyy HH:mm")</td><td>@(c.TrangThai=="DangMo"?"Đang mở":"Đã đóng")</td></tr>}
-</tbody></table></div></section>
-@section Scripts {<script src="~/js/pos-shifts.js" asp-append-version="true"></script>}
+@if (Model.Chon is { } ca && Model.BanGiao is { } banGiao)
+{
+    var dongKet = new (string Nhan, decimal SoTien)[]
+    {
+        ("Tiền mặt đầu ca", banGiao.Dau),
+        ("Thu bán tiền mặt", Model.Tong("Thu bán")),
+        ("Hoàn tiền mặt", Model.Tong("Hoàn trả")),
+        ("Thu / chi riêng từ két", Model.Tong("Thu riêng") + Model.Tong("Chi riêng")),
+        ("Chi trả nhà cung cấp", Model.Tong("Trả nhà cung cấp")),
+        ("Đảo hủy hóa đơn", Model.Tong("Đảo hủy"))
+    };
+    <section class="pos-card">
+        <h2>Đối chiếu két · @ca.MaCa</h2>
+        <p>@ca.TenNguoiMo · @ca.LucMo.ToString("dd/MM/yyyy HH:mm") · @(ca.TrangThai == "DangMo" ? "Đang mở" : "Đã đóng")</p>
+        <div class="pos-table-wrap">
+            <table class="pos-table">
+                <tbody>
+                    @foreach (var dong in dongKet)
+                    {
+                        <tr><th scope="row">@dong.Nhan</th><td>@Tien(dong.SoTien)</td></tr>
+                    }
+                    <tr><th scope="row">Tiền dự kiến trong két</th><td><strong id="expected" data-value="@Model.DuKien.ToString(CultureInfo.InvariantCulture)">@Tien(Model.DuKien)</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+        @if (banGiao.Dem is decimal dem)
+        {
+            <p>Thực đếm <strong>@Tien(dem)</strong> · Chênh lệch <strong>@Tien(dem - Model.DuKien)</strong> · Chốt lúc @banGiao.Dong?.ToString("dd/MM/yyyy HH:mm")</p>
+        }
+        else if (Model.CoTheDong)
+        {
+            <h3>Đếm tiền bàn giao</h3>
+            <form asp-action="Dong" method="post" data-shift="ca" data-login-url="@loginUrl">
+                <input type="hidden" name="Ma" value="@ca.MaCa" />
+                <div class="pos-filter-grid">
+                    @foreach (var menhGia in new[] { 500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000 })
+                    {
+                        <label>@Tien(menhGia) · số tờ
+                            <input class="pos-input" type="number" min="0" step="1" data-note="@menhGia" placeholder="0" />
+                        </label>
+                    }
+                </div>
+                <label>Tiền thực đếm (đ)
+                    <input class="pos-input" type="number" name="Dem" min="0" max="999999999999999" step="1" required />
+                </label>
+                <p>Chênh lệch <output id="delta">—</output></p>
+                <button class="pos-btn pos-btn-primary">Chốt đóng ca</button>
+            </form>
+        }
+    </section>
+}
+<section class="pos-card">
+    <h2>Lịch sử ca và bàn giao</h2>
+    <div class="pos-table-wrap">
+        <table class="pos-table">
+            <thead><tr><th scope="col">Ca bán</th><th scope="col">Thu ngân</th><th scope="col">Ngày mở</th><th scope="col">Trạng thái</th></tr></thead>
+            <tbody>
+                @foreach (var caLichSu in Model.LichSu)
+                {
+                    <tr>
+                        <td><a asp-action="Index" asp-route-chon="@caLichSu.MaCa" asp-route-ma="@loc.Ma"
+                               asp-route-tu="@loc.Tu?.ToString("yyyy-MM-dd")" asp-route-den="@loc.Den?.ToString("yyyy-MM-dd")"
+                               asp-route-trangThai="@loc.TrangThai">@caLichSu.MaCa</a></td>
+                        <td>@caLichSu.TenNguoiMo</td>
+                        <td>@caLichSu.LucMo.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(caLichSu.TrangThai == "DangMo" ? "Đang mở" : "Đã đóng")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.LichSu.Length == 0 && ViewData["F7FilterError"] is null)
+    {
+        <p>Không có ca phù hợp.</p>
+    }
+</section>
+@section Scripts { <script src="~/js/pos-shifts.js" asp-append-version="true"></script> }

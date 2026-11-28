@@ -856,7 +856,8 @@ a.pos-nav-item.is-active {
 }
 
 .pos-sales-grid[hidden],
-.pos-sales-grid [hidden] {
+.pos-sales-grid [hidden],
+#return-write [hidden] {
     display: none;
 }
 

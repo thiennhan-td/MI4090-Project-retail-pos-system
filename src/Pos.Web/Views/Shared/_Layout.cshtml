@@ -4,7 +4,7 @@
     var pageTitle = ViewData["Title"] as string ?? "Retail Core POS";
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var stackHeaderOnMobile = currentController is "BanHang" or "HeThong" or "NhomHang" or "MatHang" or "NhaCungCap"
-        or "NhapHang" or "KiemKho" or "BaoCao";
+        or "NhapHang" or "KiemKho" or "BaoCao" or "TraHang" or "CaBan" or "BaoCaoQuay";
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isHome = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase)
         && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
@@ -75,12 +75,8 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f3"></use></svg>
                         <span>F3 · Bán hàng &amp; Thu tiền</span>
                     </h2>
-                    <a class="pos-nav-item @(isBanHangPos ? "is-active" : string.Empty)" asp-controller="BanHang" asp-action="Index">
-                        <span>Màn hình Bán hàng POS</span>
-                    </a>
-                    <a class="pos-nav-item @(isTraCuuHoaDon ? "is-active" : string.Empty)" asp-controller="BanHang" asp-action="TraCuu">
-                        <span>Tra cứu, in và hủy hóa đơn</span>
-                    </a>
+                    <partial name="_KhoNav" model='(("BanHang", "Index", "Màn hình Bán hàng POS", isBanHangPos, khoUser is null || khoUser.CoQuyen("BAN_LAP_HD", "ThuNgan")))' />
+                    <partial name="_KhoNav" model='(("BanHang", "TraCuu", "Tra cứu, in và hủy hóa đơn", isTraCuuHoaDon, khoUser is null || khoUser.CoQuyen("BAN_TRA_IN_HD")))' />
                 </section>
 
                 <section class="pos-nav-group" aria-label="F4 Nhận trả và Hoàn tiền">
@@ -88,8 +84,8 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f4"></use></svg>
                         <span>F4 · Nhận trả &amp; Hoàn tiền</span>
                     </h2>
-                    <a class="pos-nav-item @(currentController == "TraHang" && currentAction == "Index" ? "is-active" : "")" asp-controller="TraHang" asp-action="Index">Lập phiếu trả &amp; Hoàn tiền</a>
-                    <a class="pos-nav-item @(currentController == "TraHang" && currentAction == "TraCuu" ? "is-active" : "")" asp-controller="TraHang" asp-action="TraCuu">Tra cứu phiếu trả hàng</a>
+                    <partial name="_KhoNav" model='(("TraHang", "Index", "Lập phiếu trả & Hoàn tiền", currentController == "TraHang" && currentAction == "Index", khoUser is null || khoUser.CoQuyen("TRA_LAP_PHIEU", "ThuNgan")))' />
+                    <partial name="_KhoNav" model='(("TraHang", "TraCuu", "Tra cứu phiếu trả hàng", currentController == "TraHang" && currentAction == "TraCuu", khoUser is null || khoUser.CoQuyen("TRA_TRA_CUU")))' />
                 </section>
 
                 <section class="pos-nav-group" aria-label="F5 Nhập hàng và Trả tiền">
@@ -115,8 +111,8 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f7"></use></svg>
                         <span>F7 · Quản lý ca &amp; Sổ quỹ</span>
                     </h2>
-                    <a class="pos-nav-item @(currentController == "CaBan" && currentAction == "Index" ? "is-active" : "")" asp-controller="CaBan" asp-action="Index">Quản lý ca &amp; Bàn giao két</a>
-                    <a class="pos-nav-item @(currentController == "CaBan" && currentAction == "SoQuy" ? "is-active" : "")" asp-controller="CaBan" asp-action="SoQuy">Sổ quỹ &amp; Thu chi tiền mặt</a>
+                    <partial name="_KhoNav" model='(("CaBan", "Index", "Quản lý ca & Bàn giao két", currentController == "CaBan" && currentAction == "Index", khoUser is null || khoUser.CoQuyen("CA_TRA_BAN_GIAO")))' />
+                    <partial name="_KhoNav" model='(("CaBan", "SoQuy", "Sổ quỹ & Thu chi tiền mặt", currentController == "CaBan" && currentAction == "SoQuy", khoUser is null || khoUser.CoQuyen("QUY_TRA_SO")))' />
                 </section>
 
                 <section class="pos-nav-group" aria-label="F8 Báo cáo thống kê">

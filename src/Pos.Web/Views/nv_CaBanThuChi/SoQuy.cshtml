@@ -1,22 +1,84 @@
 @using static Pos.Web.ViewModels.CaBan.CaBanViewModel
 @model Pos.Web.ViewModels.CaBan.CaBanViewModel
-@{ ViewData["Title"]="Sổ quỹ & Thu chi tiền mặt"; var open=Model.CacCa.Where(c=>c.TrangThai=="DangMo").ToArray(); }
-<partial name="~/Views/nv_CaBanThuChi/_Loc.cshtml" model="Model"/>
-<section class="pos-card"><h2>Lập phiếu thu / chi riêng</h2>
-@if(open.Length==0){<p>Chưa có ca đang mở để lập phiếu.</p>}else{
-<form asp-action="Ghi" method="post" class="pos-filter-grid" data-shift>
-<input type="hidden" name="VaiTro" value="@Model.Loc.VaiTro"/><input type="hidden" name="MaYeuCau" value="@Guid.NewGuid()"/>
-<label>Ca đang mở<select class="pos-input" name="MaCa">@foreach(var c in open){<option>@c.MaCa</option>}</select></label>
-<label>Loại phiếu<select class="pos-input" name="Loai"><option>Thu</option><option>Chi</option></select></label>
-<label>Nguồn quỹ<select class="pos-input" name="Nguon"><option value="KetCa">Két ca</option><option value="QuyCuaHang">Quỹ cửa hàng</option></select></label>
-<label>Phương thức<select class="pos-input" name="PhuongThuc"><option value="TienMat">Tiền mặt</option><option value="ChuyenKhoan">Chuyển khoản</option></select></label>
-<label>Số tiền (đ)<input class="pos-input" required name="SoTien" type="number" min="1" step="1"/></label>
-<label>Lý do<input class="pos-input" required name="LyDo"/></label>
-<label>Số chứng từ kèm theo<input class="pos-input" name="ChungTu"/></label>
-<button class="pos-btn pos-btn-primary">Lưu phiếu</button></form>
-}</section>
-<section class="pos-card"><h2>Sổ quỹ</h2><div class="pos-table-wrap"><table class="pos-table"><thead><tr><th>Thời điểm</th><th>Ca</th><th>Chứng từ</th><th>Nghiệp vụ</th><th>Nguồn quỹ</th><th>Phương thức</th><th>Vào / ra két</th><th>Ngoài két</th><th>Lý do / chứng từ kèm</th></tr></thead><tbody>
-@foreach(var d in Model.So){
-<tr><td>@d.Luc.ToString("dd/MM/yyyy HH:mm")</td><td>@d.MaCa</td><td>@d.Ma</td><td>@d.Loai</td><td>@(d.Nguon=="KetCa"?"Két ca":"Quỹ cửa hàng")</td><td>@(d.PhuongThuc=="TienMat"?"Tiền mặt":"Chuyển khoản")</td><td>@Tien(d.TienKet)</td><td>@Tien(d.GiaTri-d.TienKet)</td><td>@d.LyDo @d.ChungTu</td></tr>}
-</tbody></table></div>@if(Model.So.Length==0){<p>Chưa có giao dịch phù hợp.</p>}</section>
-@section Scripts {<script src="~/js/pos-shifts.js" asp-append-version="true"></script>}
+@{
+    ViewData["Title"] = "Sổ quỹ & Thu chi tiền mặt";
+    var cacCaMo = Model.CacCa.Where(ca => ca.TrangThai == "DangMo").ToArray();
+    var loginUrl = Url.Action("DangNhap", "HeThong", new { troVe = Context.Request.Path + Context.Request.QueryString });
+}
+<partial name="~/Views/nv_CaBanThuChi/_Loc.cshtml" model="Model" />
+@if (TempData["F7Success"] is string thongBao)
+{
+    <p class="pos-alert pos-alert-success" role="status">@thongBao</p>
+}
+@if (Model.CoTheLapThuChi)
+{
+    <section class="pos-card">
+        <h2>Lập phiếu thu, chi riêng</h2>
+        @if (cacCaMo.Length == 0)
+        {
+            <p>Chưa có ca đang mở để lập phiếu.</p>
+        }
+        else
+        {
+            <form asp-action="Ghi" method="post" class="pos-filter-grid" data-shift="quy" data-login-url="@loginUrl">
+                <input type="hidden" name="MaYeuCau" value="@Guid.NewGuid()" />
+                <label>Ca đang mở
+                    <select class="pos-input" name="MaCa">
+                        @foreach (var ca in cacCaMo)
+                        {
+                            <option value="@ca.MaCa">@ca.MaCa</option>
+                        }
+                    </select>
+                </label>
+                <label>Loại phiếu
+                    <select class="pos-input" name="Loai"><option>Thu</option><option>Chi</option></select>
+                </label>
+                <label>Nguồn quỹ
+                    <select class="pos-input" name="Nguon"><option value="KetCa">Két ca</option><option value="QuyCuaHang">Quỹ cửa hàng</option></select>
+                </label>
+                <label>Phương thức
+                    <select class="pos-input" name="PhuongThuc"><option value="TienMat">Tiền mặt</option><option value="ChuyenKhoan" disabled>Chuyển khoản</option></select>
+                </label>
+                <label>Số tiền (đ)
+                    <input class="pos-input" required name="SoTien" type="number" min="1" max="999999999999999" step="1" />
+                </label>
+                <label>Lý do <input class="pos-input" required name="LyDo" maxlength="500" /></label>
+                <label>Số chứng từ kèm theo <input class="pos-input" name="ChungTu" maxlength="64" /></label>
+                <button class="pos-btn pos-btn-primary">Lưu phiếu</button>
+            </form>
+        }
+    </section>
+}
+<section class="pos-card">
+    <h2>Sổ quỹ</h2>
+    <div class="pos-table-wrap">
+        <table class="pos-table">
+            <thead><tr>
+                <th scope="col">Thời điểm</th><th scope="col">Ca</th><th scope="col">Chứng từ</th>
+                <th scope="col">Nghiệp vụ</th><th scope="col">Nguồn quỹ</th><th scope="col">Phương thức</th>
+                <th scope="col">Vào / ra két</th><th scope="col">Ngoài két</th><th scope="col">Lý do / chứng từ kèm</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var dong in Model.So)
+                {
+                    <tr>
+                        <td>@dong.Luc.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@dong.MaCa</td>
+                        <td><partial name="~/Views/nv_CaBanThuChi/_ChungTu.cshtml" model="dong" /></td>
+                        <td>@dong.Loai</td>
+                        <td>@(dong.Nguon == "KetCa" ? "Két ca" : "Quỹ cửa hàng")</td>
+                        <td>@(dong.PhuongThuc == "TienMat" ? "Tiền mặt" : "Chuyển khoản")</td>
+                        <td>@Tien(dong.TienKet)</td>
+                        <td>@Tien(dong.GiaTri - dong.TienKet)</td>
+                        <td>@dong.LyDo @dong.ChungTu</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.So.Length == 0 && ViewData["F7FilterError"] is null)
+    {
+        <p>Chưa có giao dịch phù hợp.</p>
+    }
+</section>
+@section Scripts { <script src="~/js/pos-shifts.js" asp-append-version="true"></script> }

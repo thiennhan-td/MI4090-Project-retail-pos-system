@@ -28,7 +28,7 @@
     <div class="pos-table-wrap"><table class="pos-table kho-table">
         <thead><tr><th>Mã hàng</th><th>Mặt hàng</th><th>Nhóm</th><th>Đơn vị</th><th class="kho-num">Tồn đầu</th>
             <th class="kho-num">Nhập mua ròng</th><th class="kho-num">Xuất bán ròng</th>
-            <th class="kho-num">Trả nhập lại</th><th class="kho-num">Điều chỉnh kiểm kê</th>
+            <th class="kho-num">Trả nhập lại</th><th class="kho-num">Điều chỉnh tồn</th>
             <th class="kho-num">Tổng nhập</th><th class="kho-num">Tổng xuất</th><th class="kho-num">Tồn cuối</th></tr></thead>
         <tbody>
         @foreach (var dong in Model.Dongs)
@@ -44,7 +44,7 @@
                 <td class="kho-num">@HienThiKho.So(dong.NhapMuaRong)</td>
                 <td class="kho-num">@HienThiKho.So(dong.XuatBanRong)</td>
                 <td class="kho-num">@HienThiKho.So(dong.TraNhapLai)</td>
-                <td class="kho-num">@HienThiKho.So(dong.DieuChinhKiemKe)</td>
+                <td class="kho-num">@HienThiKho.So(dong.DieuChinhTon)</td>
                 <td class="kho-num">@HienThiKho.So(dong.Nhap)</td><td class="kho-num">@HienThiKho.So(dong.Xuat)</td><td class="kho-num"><strong>@HienThiKho.So(dong.TonCuoi)</strong></td>
             </tr>
         }
@@ -52,3 +52,8 @@
     </table></div>
     @if (Model.Dongs.Count == 0) { <p class="kho-empty">Không có dữ liệu phù hợp.</p> }
 </section>
+@if (Model.Ky.Tu <= new DateOnly(2026, 10, 11) && Model.Ky.Den >= new DateOnly(2026, 10, 11)
+    && Model.Dongs.Any(dong => dong.Hang.Ma == "S-SUA"))
+{
+    <p class="pos-muted">Dữ liệu demo tính thêm 2 hộp S-SUA đã bán trên hóa đơn S-HD-1011-01 ngày 11/10/2026.</p>
+}

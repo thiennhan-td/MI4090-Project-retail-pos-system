@@ -1,29 +1,16 @@
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Pos.Web.Demo;
 using Pos.Web.ViewModels.BanHang;
 
 namespace Pos.Web.Controllers;
 
-public sealed class BanHangController : Controller
+public sealed class BanHangController(BanHangDemoSessionProvider sessions) : QuayDemoController(sessions)
 {
     private const decimal SoTienToiDaTrongBanNhap = 9007199254740991m;
-    private readonly BanHangDemoSessionProvider _sessionProvider;
-
-    public BanHangController(BanHangDemoSessionProvider sessionProvider)
-    {
-        _sessionProvider = sessionProvider;
-    }
-
-    private BanHangDemoStore LayKhoPhien() => _sessionProvider.LayKhoTheoPhien(HttpContext);
-
-    private static string ChuanHoaVaiTro(string? vaiTro) =>
-        string.Equals(vaiTro, "QuanLy", StringComparison.OrdinalIgnoreCase) ? "QuanLy" : "ThuNgan";
 
     [HttpGet]
-    public IActionResult Index(string? maNhap)
+    public IActionResult Index(string? maNhap) => TrongPhien("BAN_LAP_HD", (store, danhTinh) =>
     {
-        var store = LayKhoPhien();
         var ca = store.LayCaHienTai();
         var matHangs = store.LayDanhSachMatHang();
         HoaDonDemoRecord? hoaDonNhap = null;
@@ -32,7 +19,7 @@ public sealed class BanHangController : Controller
         if (!string.IsNullOrWhiteSpace(maNhap))
         {
             var (hoaDon, biChan) = store.TimHoaDonTheoPhamVi(maNhap.Trim(), "ThuNgan");
-            if (biChan || (hoaDon is not null && !store.CoQuyenSuaNhap(hoaDon)))
+            if (biChan)
             {
                 Response.StatusCode = StatusCodes.Status403Forbidden;
                 thongBaoLoi = "Thu ngân chỉ được sửa hóa đơn nháp thuộc ca đang mở của chính mình.";
@@ -48,6 +35,12 @@ public sealed class BanHangController : Controller
                 thongBaoLoi = $"Hóa đơn {hoaDon.MaHoaDon} đã xác nhận hoặc đã hủy.";
                 traCuuUrl = Url.Action(nameof(TraCuu), new { chon = hoaDon.MaHoaDon });
             }
+            else if (!store.CoQuyenSuaNhap(hoaDon))
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                thongBaoLoi = "Ca của hóa đơn nháp không còn mở. Bạn có thể xem hóa đơn trong tra cứu.";
+                traCuuUrl = Url.Action(nameof(TraCuu), new { chon = hoaDon.MaHoaDon });
+            }
             else
             {
                 hoaDonNhap = hoaDon;
@@ -57,7 +50,7 @@ public sealed class BanHangController : Controller
         var vm = new BanHangPosViewModel
         {
             MaCaHienTai = ca?.MaCa ?? string.Empty,
-            TenThuNgan = ca?.TenNguoiMo ?? "Lê Linh",
+            TenThuNgan = danhTinh.HoTen,
             MaYeuCauMacDinh = Guid.NewGuid().ToString("N"),
             HoaDonNhap = hoaDonNhap,
             ThongBaoLoi = thongBaoLoi,
@@ -67,25 +60,20 @@ public sealed class BanHangController : Controller
         };
 
         return View("~/Views/nv_BanHang/Index.cshtml", vm);
-    }
+    }, vaiTro: "ThuNgan");
 
     [HttpPost, ValidateAntiForgeryToken]
-    public IActionResult LuuNhap([FromBody] GhiHoaDonRequestViewModel? req) => GhiHoaDon(req, xacNhan: false);
+    public IActionResult LuuNhap([FromBody] GhiHoaDonRequestViewModel? req) =>
+        TrongPhien("BAN_LAP_HD", (store, _) => GhiHoaDon(store, req, xacNhan: false), json: true, vaiTro: "ThuNgan");
 
-    [HttpPost]
-    public async Task<IActionResult> XacNhanBan(
-        [FromBody] GhiHoaDonRequestViewModel? req,
-        [FromServices] IAntiforgery antiforgery)
-    {
-        if (!string.IsNullOrWhiteSpace(req?.MaNhap) && !await antiforgery.IsRequestValidAsync(HttpContext))
-        {
-            return Loi("form", "Phiên bảo mật đã hết hạn. Vui lòng mở lại hóa đơn trước khi xác nhận.");
-        }
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult XacNhanBan([FromBody] GhiHoaDonRequestViewModel? req) =>
+        TrongPhien("BAN_XAC_NHAN", (store, danhTinh) => danhTinh.CoQuyen("BAN_THANH_TOAN")
+            ? GhiHoaDon(store, req, xacNhan: true)
+            : StatusCode(StatusCodes.Status403Forbidden, new { ok = false, message = "Tài khoản không có quyền ghi nhận thanh toán." }),
+            json: true, vaiTro: "ThuNgan");
 
-        return GhiHoaDon(req, xacNhan: true);
-    }
-
-    private IActionResult GhiHoaDon(GhiHoaDonRequestViewModel? req, bool xacNhan)
+    private IActionResult GhiHoaDon(BanHangDemoStore store, GhiHoaDonRequestViewModel? req, bool xacNhan)
     {
         if (req is null || !ModelState.IsValid)
         {
@@ -107,8 +95,7 @@ public sealed class BanHangController : Controller
             return Loi("cart", "Giỏ hàng đang trống. Vui lòng chọn ít nhất một mặt hàng.");
         }
 
-        var store = LayKhoPhien();
-        var catalog = store.LayDanhSachMatHang().ToDictionary(m => m.MaHang, StringComparer.OrdinalIgnoreCase);
+        var catalog = store.LayDanhSachMatHang(req.MaYeuCau).ToDictionary(m => m.MaHang, StringComparer.OrdinalIgnoreCase);
         var dongTheoMa = new Dictionary<string, DongBanDemoRecord>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var line in req.DongBans)
@@ -129,9 +116,9 @@ public sealed class BanHangController : Controller
             }
 
             var soLuong = (long)(dongTheoMa.GetValueOrDefault(item.MaHang)?.SoLuongBan ?? 0) + line.SoLuong;
-            if (soLuong > item.TonMau)
+            if (soLuong > int.MaxValue)
             {
-                return Loi("cart", $"Tổng số lượng bán của {item.TenHang} vượt tồn mẫu hiện có ({item.TonMau} {item.DonViTinh}).");
+                return Loi("cart", $"Tổng số lượng bán của {item.TenHang} vượt giới hạn cho phép.");
             }
 
             dongTheoMa[item.MaHang] = new(item.MaHang, item.TenHang, item.DonViTinh, (int)soLuong, item.GiaBanHienHanh);
@@ -201,7 +188,12 @@ public sealed class BanHangController : Controller
                 TrangThaiGhiHoaDonDemo.KhongCoQuyen => StatusCodes.Status403Forbidden,
                 _ => StatusCodes.Status400BadRequest
             };
-            var field = ketQua.TrangThai == TrangThaiGhiHoaDonDemo.CaDaDong ? "shift" : "form";
+            var field = ketQua.TrangThai switch
+            {
+                TrangThaiGhiHoaDonDemo.CaDaDong => "shift",
+                TrangThaiGhiHoaDonDemo.TonKhongHopLe => "cart",
+                _ => "form"
+            };
             return StatusCode(status, new { ok = false, field, message = ketQua.ThongBao });
         }
 
@@ -255,17 +247,17 @@ public sealed class BanHangController : Controller
         DateOnly? denNgay,
         string? maCa,
         string? trangThai,
-        string? vaiTro,
-        bool? coCaDaoMo,
-        string? chon)
+        string? chon) => TrongPhien("BAN_TRA_IN_HD", (store, danhTinh) =>
     {
-        var store = LayKhoPhien();
-        var vaiTroHienTai = ChuanHoaVaiTro(vaiTro);
         var trangThaiLoc = string.IsNullOrWhiteSpace(trangThai) ? "TatCa" : trangThai;
-        var caDaoMo = coCaDaoMo ?? true;
-
-        var caThuocVaiTro = store.LayDanhSachCaBanTheoVaiTro(vaiTroHienTai);
-        var query = store.LayDanhSachHoaDonTheoPhamVi(vaiTroHienTai).AsEnumerable();
+        var caThuocVaiTro = store.LayDanhSachCaBanTheoVaiTro(danhTinh.VaiTro);
+        var query = store.LayDanhSachHoaDonTheoPhamVi(danhTinh.VaiTro).AsEnumerable();
+        string? loiLoc = null;
+        if (!ModelState.IsValid || tuNgay > denNgay || trangThaiLoc is not ("TatCa" or "Nhap" or "DaXacNhan" or "DaHuy"))
+        {
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            loiLoc = "Vui lòng kiểm tra ngày, thứ tự từ ngày đến ngày và trạng thái hóa đơn.";
+        }
 
         if (!string.IsNullOrWhiteSpace(maHoaDon))
         {
@@ -293,10 +285,23 @@ public sealed class BanHangController : Controller
             query = query.Where(h => string.Equals(h.TrangThai, trangThaiLoc, StringComparison.OrdinalIgnoreCase));
         }
 
-        var danhSach = query.ToList();
-        var dangChon = !string.IsNullOrWhiteSpace(chon)
-            ? danhSach.FirstOrDefault(h => string.Equals(h.MaHoaDon, chon, StringComparison.OrdinalIgnoreCase)) ?? danhSach.FirstOrDefault()
-            : danhSach.FirstOrDefault();
+        var danhSach = loiLoc is null ? query.ToList() : [];
+        HoaDonDemoRecord? dangChon = null;
+        string? loiChon = null;
+        if (loiLoc is null && !string.IsNullOrWhiteSpace(chon))
+        {
+            var (hoaDon, biChan) = store.TimHoaDonTheoPhamVi(chon.Trim(), danhTinh.VaiTro);
+            dangChon = hoaDon;
+            if (hoaDon is null)
+            {
+                Response.StatusCode = biChan ? StatusCodes.Status403Forbidden : StatusCodes.Status404NotFound;
+                loiChon = biChan ? "Bạn không có quyền xem hóa đơn đã chọn." : "Không tìm thấy hóa đơn đã chọn.";
+            }
+        }
+        else if (loiLoc is null)
+        {
+            dangChon = danhSach.FirstOrDefault();
+        }
         var maHuyLoi = TempData.Peek("F3CancelInvoice") as string;
         var hienLoiHuyTaiHoaDon = dangChon is not null && string.Equals(dangChon.MaHoaDon, maHuyLoi, StringComparison.OrdinalIgnoreCase);
         if (hienLoiHuyTaiHoaDon)
@@ -311,25 +316,25 @@ public sealed class BanHangController : Controller
             DenNgay = denNgay,
             MaCa = maCa,
             TrangThai = trangThaiLoc,
-            VaiTroDemo = vaiTroHienTai,
-            CoCaDaoMo = caDaoMo,
-            MaHoaDonDangChon = dangChon?.MaHoaDon,
+            CaDao = dangChon is null ? null : store.LayCaDaoTienMat(dangChon.MaCa)?.MaCa,
+            MaCaHienTai = store.LayCaHienTai()?.MaCa,
+            NgoaiBoLoc = dangChon is not null && !danhSach.Any(h => h.MaHoaDon == dangChon.MaHoaDon),
             ThongBaoThanhCong = TempData["F3Success"] as string,
-            ThongBaoLoi = TempData["F3Error"] as string,
+            ThongBaoLoi = loiLoc ?? loiChon ?? TempData["F3Error"] as string,
             ThongBaoLoiHuy = hienLoiHuyTaiHoaDon ? TempData["F3CancelError"] as string : null,
             LyDoHuyNhap = hienLoiHuyTaiHoaDon ? TempData["F3CancelReason"] as string : null,
-            CoTheSuaNhap = vaiTroHienTai == "ThuNgan" && dangChon?.TrangThai == "Nhap" && store.CoQuyenSuaNhap(dangChon),
+            CoTheSuaNhap = danhTinh.CoQuyen("BAN_LAP_HD", "ThuNgan") && dangChon?.TrangThai == "Nhap" && store.CoQuyenSuaNhap(dangChon),
             DanhSachCaBan = caThuocVaiTro,
             DanhSachHoaDon = danhSach,
             HoaDonDangChon = dangChon
         };
 
         return View("~/Views/nv_BanHang/TraCuu.cshtml", vm);
-    }
+    });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult HuyHoaDon(HuyHoaDonRequestViewModel req)
+    public IActionResult HuyHoaDon(HuyHoaDonRequestViewModel req) => TrongPhien("BAN_TRA_IN_HD", (store, _) =>
     {
         string? thongBaoLoi = null;
         if (!ModelState.IsValid)
@@ -341,9 +346,7 @@ public sealed class BanHangController : Controller
         }
         else
         {
-            var store = LayKhoPhien();
-            var vaiTroHienTai = ChuanHoaVaiTro(req.VaiTroDemo);
-            var (thanhCong, thongBao) = store.HuyHoaDon(req.MaHoaDon, req.PhienBan, req.LyDoHuy, vaiTroHienTai, req.CoCaDaoMo);
+            var (thanhCong, thongBao) = store.HuyHoaDon(req.MaHoaDon, req.PhienBan, req.LyDoHuy, req.MaCaDao);
             if (thanhCong)
             {
                 TempData["F3Success"] = thongBao;
@@ -364,17 +367,18 @@ public sealed class BanHangController : Controller
         return RedirectToAction(nameof(TraCuu), null, new
         {
             chon = req.MaHoaDon,
-            vaiTro = ChuanHoaVaiTro(req.VaiTroDemo),
-            coCaDaoMo = req.CoCaDaoMo
+            maHoaDon = req.LocMaHoaDon,
+            tuNgay = req.TuNgay?.ToString("yyyy-MM-dd"),
+            denNgay = req.DenNgay?.ToString("yyyy-MM-dd"),
+            maCa = req.MaCa,
+            trangThai = req.TrangThai
         }, thongBaoLoi is null ? null : "huy-hoa-don");
-    }
+    });
 
     [HttpGet]
-    public IActionResult InHoaDon(string maHoaDon, string? vaiTro)
+    public IActionResult InHoaDon(string maHoaDon) => TrongPhien("BAN_TRA_IN_HD", (store, danhTinh) =>
     {
-        var store = LayKhoPhien();
-        var vaiTroHienTai = ChuanHoaVaiTro(vaiTro);
-        var (hoaDon, biChanPhamVi) = store.TimHoaDonTheoPhamVi(maHoaDon, vaiTroHienTai);
+        var (hoaDon, biChanPhamVi) = store.TimHoaDonTheoPhamVi(maHoaDon, danhTinh.VaiTro);
         if (biChanPhamVi)
         {
             return StatusCode(StatusCodes.Status403Forbidden);
@@ -390,15 +394,15 @@ public sealed class BanHangController : Controller
             TempData["F3Error"] = hoaDon.TrangThai == "Nhap"
                 ? $"Hóa đơn {hoaDon.MaHoaDon} đang là bản nháp. Vui lòng xác nhận bán hàng trước khi in."
                 : $"Bản nháp {hoaDon.MaHoaDon} đã hủy trước khi xác nhận. Xem thông tin hủy trong tra cứu.";
-            return RedirectToAction(nameof(TraCuu), new { chon = hoaDon.MaHoaDon, vaiTro = vaiTroHienTai });
+            return RedirectToAction(nameof(TraCuu), new { chon = hoaDon.MaHoaDon });
         }
 
         var vm = new InHoaDonViewModel
         {
             HoaDon = hoaDon,
-            QuayLaiUrl = Url.Action(nameof(TraCuu), "BanHang", new { chon = hoaDon.MaHoaDon, vaiTro = vaiTroHienTai })
+            QuayLaiUrl = Url.Action(nameof(TraCuu), "BanHang", new { chon = hoaDon.MaHoaDon })
         };
 
         return View("~/Views/nv_BanHang/InHoaDon.cshtml", vm);
-    }
+    });
 }

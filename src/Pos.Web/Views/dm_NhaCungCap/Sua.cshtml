@@ -1,0 +1,12 @@
+@model NhaCungCapFormViewModel
+@{
+    var ma = ViewData["Ma"] as string;
+    ViewData["Title"] = ma is null ? "Thêm nhà cung cấp" : "Sửa nhà cung cấp";
+}
+<a class="kho-back" asp-action="Index">← Nhà cung cấp</a>
+<form asp-action="Sua" asp-route-id="@ma" method="post" class="kho-card kho-stack kho-form">
+    <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
+    <label asp-for="Ten">Tên nhà cung cấp<input asp-for="Ten" class="pos-input" required /></label>
+    <label asp-for="LienHe">Thông tin liên hệ<textarea asp-for="LienHe" class="pos-input" rows="3"></textarea></label>
+    <button class="pos-btn pos-btn-primary" type="submit">Lưu nhà cung cấp</button>
+</form>

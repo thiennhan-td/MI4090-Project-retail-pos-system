@@ -1,0 +1,39 @@
+@model PhanQuyenViewModel
+@{
+    ViewData["Title"] = "Phân quyền vai trò";
+    var groups = new (string Title, string[] Prefixes)[]
+    {
+        ("Quản trị hệ thống", ["HT"]), ("Danh mục", ["DM"]), ("Bán hàng", ["BAN"]),
+        ("Trả hàng", ["TRA"]), ("Nhập hàng và công nợ", ["NHAP", "NCC"]),
+        ("Kiểm soát kho", ["KHO"]), ("Ca và sổ quỹ", ["CA", "QUY"]), ("Báo cáo", ["BC"])
+    };
+}
+<nav class="kho-tabs" aria-label="Chọn vai trò">
+    @foreach (var vaiTro in KhoDemoStore.VaiTros)
+    {
+        <a asp-action="PhanQuyen" asp-route-vaiTro="@vaiTro.Key" class="pos-btn @(Model.VaiTro == vaiTro.Key ? "pos-btn-primary" : "pos-btn-secondary")"
+           aria-current="@(Model.VaiTro == vaiTro.Key ? "page" : null)">@vaiTro.Value</a>
+    }
+</nav>
+<form asp-action="PhanQuyen" method="post" class="kho-stack">
+    <input type="hidden" asp-for="VaiTro" />
+    <div class="kho-validation" asp-validation-summary="All" role="alert"></div>
+    <div class="kho-toolbar"><h2>@KhoDemoStore.VaiTros[Model.VaiTro]</h2><button class="pos-btn pos-btn-primary" type="submit">Lưu phân quyền</button></div>
+    <div class="kho-permissions">
+    @foreach (var group in groups)
+    {
+        <fieldset class="kho-card">
+            <legend>@group.Title</legend>
+            @foreach (var quyen in KhoDemoStore.DanhSachQuyen.Where(x => group.Prefixes.Contains(x.Ma.Split('_')[0])))
+            {
+                var required = Model.VaiTro == KhoDemoStore.QuanLy && quyen.Ma is "HT_QL_TAI_KHOAN" or "HT_PHAN_QUYEN";
+                <label class="kho-check kho-permission">
+                    <input type="checkbox" name="Quyen" value="@quyen.Ma" checked="@Model.Quyen.Contains(quyen.Ma)" disabled="@required" />
+                    <span><strong>@quyen.Ten</strong><small>@quyen.Ma</small></span>
+                </label>
+                @if (required) { <input type="hidden" name="Quyen" value="@quyen.Ma" /> }
+            }
+        </fieldset>
+    }
+    </div>
+</form>

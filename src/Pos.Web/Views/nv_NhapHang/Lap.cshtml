@@ -1,0 +1,68 @@
+@model PhieuNhapFormViewModel
+@{
+    var ma = ViewData["Ma"] as string;
+    var nccs = (NhaCungCapDemo[])ViewData["NhaCungCaps"]!;
+    var items = (MatHangKhoDemo[])ViewData["MatHangs"]!;
+    ViewData["Title"] = ma is null ? "Lập phiếu nhập kho" : "Sửa phiếu nhập nháp";
+}
+<div class="kho-toolbar">
+    <a asp-action="Index" class="kho-back">← Sổ phiếu nhập</a>
+    @if (ma is not null) { <span class="kho-badge">@ma</span> }
+</div>
+<form asp-action="Lap" asp-route-id="@ma" method="post" class="kho-stack" data-kho-receipt>
+    <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
+    <section class="kho-card">
+        <div class="kho-card-head"><h2>Thông tin phiếu nhập</h2></div>
+        <div class="kho-fields">
+            <label asp-for="MaNcc">Nhà cung cấp<select asp-for="MaNcc" class="pos-input" required>
+                <option value="">Chọn nhà cung cấp</option>
+                @foreach (var ncc in nccs) { <option value="@ncc.Ma">@ncc.Ten</option> }
+            </select></label>
+            <label asp-for="HanThanhToan">Hạn thanh toán<input asp-for="HanThanhToan" asp-format="{0:dd/MM/yyyy}" type="text" class="pos-input" placeholder="dd/MM/yyyy" maxlength="10" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" /></label>
+        </div>
+    </section>
+    <section class="kho-card">
+        <div class="kho-card-head"><h2>Chi tiết hàng nhập</h2><button class="pos-btn pos-btn-secondary" type="button" data-kho-add>Thêm dòng</button></div>
+        <div class="pos-table-wrap">
+            <table class="pos-table kho-table">
+                <thead><tr><th>Mặt hàng</th><th>Số lượng</th><th>Đơn giá nhập (₫)</th><th></th></tr></thead>
+                <tbody data-kho-lines>
+                @for (var i = 0; i < Model.Dongs.Count; i++)
+                {
+                    var current = Model.Dongs[i].MaHang;
+                    <tr>
+                        <td><select asp-for="Dongs[i].MaHang" class="pos-input" data-kho-field="MaHang" aria-label="Mặt hàng" required>
+                            <option value="">Chọn mặt hàng</option>
+                            @if (!string.IsNullOrEmpty(current) && !items.Any(x => x.Ma == current))
+                            { <option value="@current" disabled>@current · Ngừng sử dụng</option> }
+                            @foreach (var item in items) { <option value="@item.Ma">@item.Ma · @item.Ten</option> }
+                        </select></td>
+                        <td><input asp-for="Dongs[i].SoLuong" class="pos-input" type="number" min="1" max="1000000" data-kho-field="SoLuong" aria-label="Số lượng" required /></td>
+                        <td><input asp-for="Dongs[i].DonGia" class="pos-input" type="number" min="0" max="999999999" step="1" data-kho-field="DonGia" aria-label="Đơn giá nhập" required /></td>
+                        <td><button type="button" class="pos-btn pos-btn-danger" data-kho-remove aria-label="Bỏ dòng hàng">Bỏ dòng</button></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <template data-kho-template>
+            <tr>
+                <td><select class="pos-input" data-kho-field="MaHang" aria-label="Mặt hàng" required>
+                    <option value="">Chọn mặt hàng</option>
+                    @foreach (var item in items) { <option value="@item.Ma">@item.Ma · @item.Ten</option> }
+                </select></td>
+                <td><input class="pos-input" type="number" min="1" max="1000000" data-kho-field="SoLuong" aria-label="Số lượng" required /></td>
+                <td><input class="pos-input" type="number" min="0" max="999999999" step="1" data-kho-field="DonGia" aria-label="Đơn giá nhập" required /></td>
+                <td><button type="button" class="pos-btn pos-btn-danger" data-kho-remove aria-label="Bỏ dòng hàng">Bỏ dòng</button></td>
+            </tr>
+        </template>
+    </section>
+    <div class="kho-toolbar">
+        <a asp-action="Index" class="pos-btn pos-btn-secondary">Quay lại</a>
+        <div class="kho-actions">
+            <strong>Tổng tiền <output class="kho-num" data-kho-total>0 ₫</output></strong>
+            <button type="submit" class="pos-btn pos-btn-primary">Lưu phiếu nháp</button>
+        </div>
+    </div>
+</form>
+@section Scripts { <script src="~/js/pos-kho.js" asp-append-version="true"></script> }

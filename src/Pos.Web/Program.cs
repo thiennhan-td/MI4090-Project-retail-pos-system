@@ -16,6 +16,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromHours(4);
 });
 builder.Services.AddSingleton<BanHangDemoSessionProvider>();
+builder.Services.AddSingleton<KhoDemoSessionProvider>();
 
 var app = builder.Build();
 

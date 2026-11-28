@@ -1,0 +1,18 @@
+@model MatHangKhoDemo[]
+@{
+    ViewData["Title"] = "Lập phiếu kiểm kê";
+    var chon = (string[])ViewData["DaChon"]!;
+}
+<a asp-action="Index" class="kho-back">← Danh sách phiếu kiểm</a>
+<form asp-action="Lap" method="post" class="kho-card kho-stack kho-form">
+    <h2>Mặt hàng cần kiểm</h2>
+    <p>Tồn sổ được chốt tại thời điểm lập phiếu.</p>
+    <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
+    @foreach (var item in Model)
+    {
+        <label class="kho-check"><input type="checkbox" name="MaHangs" value="@item.Ma" checked="@chon.Contains(item.Ma)" />
+            <span>@item.Ten <small class="kho-muted">@item.Ma</small></span></label>
+    }
+    @if (Model.Length == 0) { <p class="kho-empty">Chưa có mặt hàng đang hoạt động.</p> }
+    <button class="pos-btn pos-btn-primary" type="submit" disabled="@(Model.Length == 0)">Lập phiếu và chốt tồn sổ</button>
+</form>

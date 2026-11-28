@@ -1,0 +1,25 @@
+@model PhieuKiemDemo[]
+@{
+    ViewData["Title"] = "Phiếu kiểm kê";
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+}
+<div class="kho-toolbar">
+    <p>Đối chiếu tồn sổ với số đếm thực tế trước khi điều chỉnh kho.</p>
+    @if (user?.CoQuyen("KHO_LAP_KIEM", KhoDemoStore.NhanVienKho) == true)
+    { <a class="pos-btn pos-btn-primary" asp-action="Lap">Lập phiếu kiểm</a> }
+</div>
+<div class="kho-card">
+    <div class="kho-card-head"><h2>Danh sách phiếu kiểm</h2></div>
+    <div class="pos-table-wrap"><table class="pos-table kho-table">
+        <thead><tr><th>Mã phiếu</th><th>Mốc chốt tồn sổ</th><th>Trạng thái</th><th>Người lập</th><th class="kho-num">Mặt hàng</th></tr></thead>
+        <tbody>
+            @foreach (var phieu in Model)
+            {
+                <tr><td><a asp-action="ChiTiet" asp-route-id="@phieu.Ma">@phieu.Ma</a></td>
+                    <td>@KhoDemoStore.HienThiNgayGio(phieu.MocKiem)</td><td><span class="@HienThiKho.Mau(phieu.TrangThai)">@HienThiKho.Nhan(phieu.TrangThai)</span></td>
+                    <td>@phieu.NguoiLap</td><td class="kho-num">@phieu.Dongs.Count</td></tr>
+            }
+        </tbody>
+    </table></div>
+    @if (Model.Length == 0) { <p class="kho-empty">Chưa có phiếu kiểm.</p> }
+</div>

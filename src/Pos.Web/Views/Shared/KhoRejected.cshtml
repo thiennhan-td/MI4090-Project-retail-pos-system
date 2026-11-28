@@ -1,0 +1,6 @@
+@model string
+@{ ViewData["Title"] = "Dữ liệu cần kiểm tra"; }
+<section class="kho-card">
+    <div class="kho-validation" asp-validation-summary="All" role="alert"></div>
+    <a class="pos-btn pos-btn-secondary" href="@Model">Quay lại</a>
+</section>

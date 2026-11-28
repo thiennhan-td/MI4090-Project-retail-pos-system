@@ -36,7 +36,12 @@
                     return;
                 }
                 const url = new URL(location.href);
-                if (form.action.endsWith('/Mo')) url.searchParams.set('Chon',result.message);
+                if (form.action.endsWith('/Mo')) {
+                    for (const key of [...url.searchParams.keys()]) {
+                        if (key.toLowerCase() === 'chon') url.searchParams.delete(key);
+                    }
+                    url.searchParams.set('chon', result.message);
+                }
                 location.assign(url.href);
             } catch {
                 notice.textContent = 'Chưa nhận được kết quả. Hãy kiểm tra lại giao dịch.';

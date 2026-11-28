@@ -164,15 +164,6 @@ public sealed partial class KhoDemoStore
         foreach (var nhaCungCap in nhaCungCaps)
             _nhaCungCaps.Add(nhaCungCap.Ma, nhaCungCap);
 
-        CaChiDemo[] caChis =
-        [
-        new("S-CA-1010", 500000m, false),
-        new("S-CA-1011", 500000m, false),
-        new("S-CA-1112", 500000m, false),
-        new("S-CA-1126", 300000m, true),
-        ];
-        _caChis.AddRange(caChis);
-
         PhieuNhapDemo[] phieuNhaps =
         [
         new("S-PN-SEP-SUA", "S-NCC-SUA", "S-TK-KHO", Utc("2026-09-15T01:30:00"), DateOnly.ParseExact("2026-09-30", "yyyy-MM-dd", CultureInfo.InvariantCulture), "DaXacNhan", Utc("2026-09-15T02:00:00"), null, null, [new("S-DN-SEP-SUA", "S-SUA", 100, 15000m)]),

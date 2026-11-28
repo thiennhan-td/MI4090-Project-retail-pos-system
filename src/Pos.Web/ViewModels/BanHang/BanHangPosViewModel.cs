@@ -41,5 +41,6 @@ public sealed class GhiHoaDonRequestViewModel
     public decimal? TienKhachDua { get; set; }
     public decimal? TienChuyenKhoan { get; set; }
     public bool CaDangMo { get; set; } = true;
+    public string? MaCa { get; set; }
     public List<DongBanYeuCauViewModel> DongBans { get; set; } = [];
 }

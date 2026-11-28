@@ -14,9 +14,10 @@ public sealed class NhomHang
     }
 
     public string MaNhom { get; }
-    public string TenNhom { get; }
+    public string TenNhom { get; private set; }
     public string TrangThai { get; private set; }
 
+    public void DoiTen(string tenNhom) => TenNhom = QuyTac.Chuoi(tenNhom, 150);
     public void NgungSuDung() => TrangThai = TrangThaiChungTu.NgungSuDung;
     public void KichHoat() => TrangThai = TrangThaiChungTu.HoatDong;
 }

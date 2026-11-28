@@ -94,6 +94,45 @@ public sealed class SqlInventoryReportRepository(SqlUnitOfWork work, SqlConnecti
                 reader.GetDecimal(4), reader.GetDecimal(5)), token),
             ct, Luc("@tuUtc", tuUtc, 7), Luc("@denUtc", denUtc, 7), Ma("@maNhaCungCap", maNhaCungCap));
 
+    public Task<IReadOnlyList<DongChiTietNhapCongNoDto>> LayChiTietNhapCongNoAsync(
+        DateTime tuUtc, DateTime denUtc, string maNhaCungCap, CancellationToken ct)
+        => work.DocAsync(factory, """
+            WITH PhieuCoHieuLuc AS (
+                SELECT maPhieuNhap, maNhaCungCap, lucXacNhan, lucHuy
+                FROM dbo.PhieuNhap WITH (HOLDLOCK)
+                WHERE lucXacNhan < @denUtc AND maNhaCungCap = @maNhaCungCap
+            ),
+            SuKien AS (
+                SELECT sk.loai, sk.thoiDiem, p.maPhieuNhap, p.maNhaCungCap,
+                    CAST(NULL AS varchar(32)) AS maKhoanTra, nhap.giaTri AS soTien
+                FROM PhieuCoHieuLuc AS p
+                OUTER APPLY (
+                    SELECT COALESCE(SUM(d.soLuongNhap * d.donGiaNhap), 0) AS giaTri
+                    FROM dbo.DongNhap AS d
+                    WHERE d.maPhieuNhap = p.maPhieuNhap
+                ) AS nhap
+                CROSS APPLY (VALUES (@xacNhanNhap, p.lucXacNhan), (@daoNhap, p.lucHuy)) AS sk(loai, thoiDiem)
+                WHERE sk.thoiDiem < @denUtc
+
+                UNION ALL
+
+                SELECT @traNhaCungCap, t.lucTra, p.maPhieuNhap, p.maNhaCungCap, t.maKhoanTra, t.soTienTra
+                FROM PhieuCoHieuLuc AS p
+                INNER JOIN dbo.TraNhaCungCap AS t ON t.maPhieuNhap = p.maPhieuNhap
+                WHERE t.lucTra < @denUtc
+            )
+            SELECT loai, thoiDiem, maPhieuNhap, maNhaCungCap, maKhoanTra, soTien,
+                CAST(CASE WHEN thoiDiem < @tuUtc THEN 1 ELSE 0 END AS bit) AS truocKy
+            FROM SuKien
+            ORDER BY thoiDiem, loai, maPhieuNhap, maKhoanTra;
+            """,
+            (command, token) => DocNhieuAsync(command, reader => new DongChiTietNhapCongNoDto(
+                (LoaiSuKienNhapCongNo)reader.GetInt32(0), reader.Utc(1), reader.GetString(2), reader.GetString(3),
+                reader.ChuNull(4), reader.GetDecimal(5), reader.GetBoolean(6)), token),
+            ct, Luc("@tuUtc", tuUtc, 7), Luc("@denUtc", denUtc, 7), Ma("@maNhaCungCap", maNhaCungCap),
+            So("@xacNhanNhap", (int)LoaiSuKienNhapCongNo.XacNhanNhap), So("@daoNhap", (int)LoaiSuKienNhapCongNo.DaoNhap),
+            So("@traNhaCungCap", (int)LoaiSuKienNhapCongNo.TraNhaCungCap));
+
     public Task<decimal> TinhTongChiNccTuKetTheoCaAsync(string maCa, CancellationToken ct)
         => work.DocAsync(factory, """
             SELECT COALESCE(SUM(soTienTra), 0)

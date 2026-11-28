@@ -118,6 +118,103 @@ public sealed class InventoryReportTests
         repository.VerifyAll();
     }
 
+    [Fact]
+    public async Task NhapCongNo_ChiTietDungNhaCungCapVaKhoangUtcCuaBaoCao()
+    {
+        const string maNcc = "S-NCC-SUA";
+        var auth = new Mock<IAuthorizationService>(MockBehavior.Strict);
+        var repository = new Mock<IInventoryReportRepository>(MockBehavior.Strict);
+        using var cancellation = new CancellationTokenSource();
+        var ct = cancellation.Token;
+        var baoCao = new BaoCaoNhapCongNo(repository.Object, auth.Object, MuiGioCuaHang);
+        var boLoc = new BoLocNhapCongNoDto(DauThangMuoi, CuoiThangMuoi, maNcc);
+        DongChiTietNhapCongNoDto[] suKiens =
+        [
+            new(LoaiSuKienNhapCongNo.XacNhanNhap, TuUtc.AddDays(-5), "PN-CU", maNcc, null, 100m, TruocKy: true),
+            new(LoaiSuKienNhapCongNo.TraNhaCungCap, TuUtc.AddTicks(-1), "PN-CU", maNcc, "TNCC-CU", 40m, TruocKy: true),
+            new(LoaiSuKienNhapCongNo.XacNhanNhap, TuUtc, "PN-DAO", maNcc, null, 50m, TruocKy: false),
+            new(LoaiSuKienNhapCongNo.DaoNhap, TuUtc.AddDays(1), "PN-DAO", maNcc, null, 50m, TruocKy: false),
+            new(LoaiSuKienNhapCongNo.TraNhaCungCap, DenUtc.AddTicks(-1), "PN-CU", maNcc, "TNCC-MOI", 20m, TruocKy: false)
+        ];
+        var thuTu = new MockSequence();
+        auth.InSequence(thuTu).Setup(x => x.KiemTraQuyenAsync(MaTaiKhoan, MaQuyenPos.BC_NHAP_CONG_NO, ct))
+            .Returns(Task.CompletedTask);
+        repository.InSequence(thuTu).Setup(x => x.LayNhapCongNoAsync(
+            It.Is<DateTime>(tu => tu == TuUtc && tu.Kind == DateTimeKind.Utc),
+            It.Is<DateTime>(den => den == DenUtc && den.Kind == DateTimeKind.Utc), maNcc, ct))
+            .ReturnsAsync([new DongNhapCongNoDto(maNcc, "NCC sữa", 60m, 50m, 50m, 20m)]);
+        auth.InSequence(thuTu).Setup(x => x.KiemTraQuyenAsync(MaTaiKhoan, MaQuyenPos.BC_NHAP_CONG_NO, ct))
+            .Returns(Task.CompletedTask);
+        repository.InSequence(thuTu).Setup(x => x.LayChiTietNhapCongNoAsync(
+            It.Is<DateTime>(tu => tu == TuUtc && tu.Kind == DateTimeKind.Utc),
+            It.Is<DateTime>(den => den == DenUtc && den.Kind == DateTimeKind.Utc), maNcc, ct))
+            .ReturnsAsync(suKiens);
+
+        var tongHop = await baoCao.ThucThiAsync(boLoc, MaTaiKhoan, ct);
+        var chiTiet = await baoCao.LayChiTietAsync(boLoc, MaTaiKhoan, ct);
+
+        Assert.Equal(new object?[] { maNcc, "NCC sữa", 60m, 50m, 50m, 20m, 40m }, Assert.Single(tongHop.Dong));
+        Assert.Equal(suKiens, chiTiet);
+        auth.Verify(x => x.KiemTraQuyenAsync(MaTaiKhoan, MaQuyenPos.BC_NHAP_CONG_NO, ct), Times.Exactly(2));
+        repository.VerifyAll();
+    }
+
+    [Fact]
+    public async Task NhapCongNo_ChiTietThieuQuyen_TuChoiTruocKhiKiemTraBoLoc()
+    {
+        var auth = new Mock<IAuthorizationService>(MockBehavior.Strict);
+        var repository = new Mock<IInventoryReportRepository>(MockBehavior.Strict);
+        var thieuQuyen = new UnauthorizedActionException(MaQuyenPos.BC_NHAP_CONG_NO);
+        auth.Setup(x => x.KiemTraQuyenAsync(MaTaiKhoan, MaQuyenPos.BC_NHAP_CONG_NO, CancellationToken.None))
+            .ThrowsAsync(thieuQuyen);
+        var baoCao = new BaoCaoNhapCongNo(repository.Object, auth.Object, MuiGioCuaHang);
+
+        var loi = await Assert.ThrowsAsync<UnauthorizedActionException>(() =>
+            baoCao.LayChiTietAsync(new BoLocNhapCongNoDto(CuoiThangMuoi, DauThangMuoi), MaTaiKhoan));
+
+        Assert.Same(thieuQuyen, loi);
+        auth.VerifyAll();
+        repository.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task NhapCongNo_ChiTietThieuNhaCungCap_KhongTruyVan()
+    {
+        var auth = new Mock<IAuthorizationService>(MockBehavior.Strict);
+        var repository = new Mock<IInventoryReportRepository>(MockBehavior.Strict);
+        auth.Setup(x => x.KiemTraQuyenAsync(MaTaiKhoan, MaQuyenPos.BC_NHAP_CONG_NO, CancellationToken.None))
+            .Returns(Task.CompletedTask);
+        var baoCao = new BaoCaoNhapCongNo(repository.Object, auth.Object, MuiGioCuaHang);
+
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(() =>
+            baoCao.LayChiTietAsync(new BoLocNhapCongNoDto(DauThangMuoi, CuoiThangMuoi), MaTaiKhoan));
+
+        auth.VerifyAll();
+        repository.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("NCC có dấu")]
+    [InlineData("123456789012345678901234567890123")]
+    public async Task NhapCongNo_MaNhaCungCapSaiDinhDang_KhongTruyVan(string maNcc)
+    {
+        var auth = new Mock<IAuthorizationService>(MockBehavior.Strict);
+        var repository = new Mock<IInventoryReportRepository>(MockBehavior.Strict);
+        auth.Setup(x => x.KiemTraQuyenAsync(MaTaiKhoan, MaQuyenPos.BC_NHAP_CONG_NO, CancellationToken.None))
+            .Returns(Task.CompletedTask);
+        var baoCao = new BaoCaoNhapCongNo(repository.Object, auth.Object, MuiGioCuaHang);
+        var boLoc = new BoLocNhapCongNoDto(DauThangMuoi, CuoiThangMuoi, maNcc);
+
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(() =>
+            baoCao.ThucThiAsync(boLoc, MaTaiKhoan, CancellationToken.None));
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(() => baoCao.LayChiTietAsync(boLoc, MaTaiKhoan));
+
+        auth.Verify(x => x.KiemTraQuyenAsync(MaTaiKhoan, MaQuyenPos.BC_NHAP_CONG_NO, CancellationToken.None),
+            Times.Exactly(2));
+        repository.VerifyNoOtherCalls();
+    }
+
     [Theory]
     [InlineData(MaQuyenPos.BC_XUAT_NHAP_TON)]
     [InlineData(MaQuyenPos.BC_NHAP_CONG_NO)]

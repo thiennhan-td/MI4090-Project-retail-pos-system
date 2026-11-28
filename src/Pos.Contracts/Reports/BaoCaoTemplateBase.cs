@@ -11,15 +11,16 @@ public abstract class BaoCaoTemplateBase<TFilter, TResult>(
     public async Task<KetQuaBaoCaoDto> ThucThiAsync(
         BoLocBaoCaoDto boLoc, string maTaiKhoan, CancellationToken ct)
     {
-        await authorizationService.KiemTraQuyenAsync(maTaiKhoan, MaQuyenYeuCau, ct);
-        var ky = ChuanHoaKhoangNgay(boLoc);
+        var ky = await KiemTraVaChuanHoaKhoangNgayAsync(boLoc, maTaiKhoan, ct);
         var duLieu = await TruyVanDuLieuNguonAsync(TaoBoLocTruyVan(boLoc, ky), ct);
         var tongHop = TongHopSoLieu(duLieu);
         return ChuyenThanhBangXuat(tongHop);
     }
 
-    private KhoangBaoCaoUtcDto ChuanHoaKhoangNgay(BoLocBaoCaoDto boLoc)
+    protected async Task<KhoangBaoCaoUtcDto> KiemTraVaChuanHoaKhoangNgayAsync(
+        BoLocBaoCaoDto boLoc, string maTaiKhoan, CancellationToken ct)
     {
+        await authorizationService.KiemTraQuyenAsync(maTaiKhoan, MaQuyenYeuCau, ct);
         if (boLoc.TuNgay > boLoc.DenNgay || boLoc.DenNgay == DateOnly.MaxValue)
         {
             throw new BusinessRuleViolationException("Khoảng ngày báo cáo không hợp lệ.");

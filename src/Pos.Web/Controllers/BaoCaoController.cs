@@ -19,9 +19,9 @@ public sealed class BaoCaoController(KhoDemoSessionProvider sessions) : KhoDemoC
         if (csv && !ModelState.IsValid) return BadRequest("Khoảng ngày báo cáo không hợp lệ.");
         return csv
             ? Csv("xuat-nhap-ton", ["Mã hàng", "Mặt hàng", "Nhóm hàng", "Đơn vị", "Tồn đầu", "Nhập mua ròng", "Xuất bán ròng",
-                    "Trả nhập lại", "Điều chỉnh kiểm kê", "Tổng nhập", "Tổng xuất", "Tồn cuối"],
+                    "Trả nhập lại", "Điều chỉnh tồn", "Tổng nhập", "Tổng xuất", "Tồn cuối"],
                 dongs.Select(x => new object[] { x.Hang.Ma, x.Hang.Ten, x.TenNhom, x.Hang.DonVi, x.TonDau,
-                    x.NhapMuaRong, x.XuatBanRong, x.TraNhapLai, x.DieuChinhKiemKe, x.Nhap, x.Xuat, x.TonCuoi }))
+                    x.NhapMuaRong, x.XuatBanRong, x.TraNhapLai, x.DieuChinhTon, x.Nhap, x.Xuat, x.TonCuoi }))
             : View("~/Views/nv_BaoCao/XuatNhapTon.cshtml", new XuatNhapTonViewModel(ky, nhomHangs, dongs));
     }, "BC_XUAT_NHAP_TON");
 

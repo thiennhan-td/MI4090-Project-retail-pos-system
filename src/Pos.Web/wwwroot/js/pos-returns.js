@@ -1,23 +1,13 @@
 (() => {
-    const form = document.querySelector("#return-form");
-    const searchForm = document.querySelector("#return-search-form");
-    const key = "pos-return:" + searchForm.dataset.session;
-    const saved = sessionStorage.getItem(key);
-    const restored = saved ? JSON.parse(saved) : null;
-    if (restored && (!form || form.dataset.invoice !== JSON.parse(restored.body).maHoaDon)) {
-        const url = new URL(location.pathname, location.origin);
-        url.searchParams.set("maHoaDon", JSON.parse(restored.body).maHoaDon);
-        if (url.href !== location.href) location.replace(url);
-        return;
-    }
-    if (!form) {
-        return;
-    }
-
-    const field = form.querySelector("fieldset");
-    const search = document.querySelector("#return-search-form");
-    const rows = [...form.querySelectorAll("[data-line]")];
     const get = id => document.getElementById(id);
+    const writePanel = get("return-write");
+    if (!writePanel?.dataset.actor) return;
+
+    const form = document.querySelector("#return-form");
+    const searchForm = get("return-search-form");
+    const field = form?.querySelector("fieldset");
+    const rows = [...(form?.querySelectorAll("[data-line]") ?? [])];
+    const key = "pos-return:" + writePanel.dataset.session + ":" + writePanel.dataset.actor;
     const cash = get("cash");
     const bank = get("bank");
     const mode = get("mode");
@@ -25,13 +15,66 @@
     const conflictBox = get("return-conflict");
     const conflictCode = get("return-conflict-code");
     const conflictLookup = get("return-conflict-lookup");
+    const recoveryBox = get("return-recovery");
+    const memoryOnly = get("return-memory-only");
     const retryBtn = get("retry");
+    const discardBtn = get("discard-return-request");
+    const receiptBox = get("return-receipt");
     const receiptLink = get("receipt");
+    const refreshLink = get("return-refresh");
+    const requestToken = writePanel.querySelector('input[name="__RequestVerificationToken"]').value;
 
     const money = n => Math.round(n || 0).toLocaleString("vi-VN") + " đ";
-    let pending = restored;
-    let draft = form.dataset.draft || null;
     let busy = false;
+    let pending = readPending();
+    let savedInTab = Boolean(pending);
+
+    function readPending() {
+        let saved;
+        try {
+            saved = sessionStorage.getItem(key);
+        } catch {
+            return null;
+        }
+        if (!saved) return null;
+
+        try {
+            const request = JSON.parse(saved);
+            const snapshot = JSON.parse(request.body);
+            if (typeof request.confirm !== "boolean" || typeof snapshot.maHoaDon !== "string"
+                || typeof snapshot.maYeuCau !== "string" || !Array.isArray(snapshot.dongTra)) {
+                throw new Error("Malformed snapshot");
+            }
+            return { ...request, snapshot };
+        } catch {
+            rememberPending(null);
+            showMessage("Bản lưu giao dịch không đọc được. Hãy tra cứu phiếu trả trước khi ghi lại.", true);
+            return null;
+        }
+    }
+
+    function rememberPending(request) {
+        try {
+            if (request) {
+                sessionStorage.setItem(key, JSON.stringify({ confirm: request.confirm, body: request.body }));
+            } else {
+                sessionStorage.removeItem(key);
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function updateRecovery() {
+        recoveryBox.hidden = !pending;
+        const keepThisTab = Boolean(pending) && !savedInTab;
+        memoryOnly.hidden = !keepThisTab;
+        searchForm.target = keepThisTab ? "_blank" : "_self";
+        retryBtn.disabled = busy;
+        discardBtn.disabled = busy;
+        if (field) field.disabled = Boolean(pending);
+    }
 
     function update(source) {
         let total = 0;
@@ -59,19 +102,8 @@
             cash.value = "0";
         } else if (source === bank) {
             cash.value = String(Math.max(0, total - (Number(bank.value) || 0)));
-        } else if (source === cash || source === mode || !source) {
-            bank.value = String(Math.max(0, total - (Number(cash.value) || 0)));
         } else {
             bank.value = String(Math.max(0, total - (Number(cash.value) || 0)));
-        }
-    }
-
-    function lock(value) {
-        field.disabled = value;
-        if (search) {
-            for (const control of search.elements) {
-                control.disabled = value;
-            }
         }
     }
 
@@ -85,75 +117,109 @@
     function showConflict(code, lookupUrl, message) {
         feedback.hidden = true;
         get("conflict-message").textContent = message || "Phiếu trả đã thay đổi.";
-        conflictCode.textContent = code || "";
-        if (lookupUrl) {
-            conflictLookup.href = lookupUrl;
-        }
+        conflictCode.textContent = code ? " · Phiếu " + code : "";
+        conflictLookup.href = lookupUrl || writePanel.dataset.lookup;
         conflictBox.hidden = false;
+        conflictBox.focus();
     }
 
     async function send() {
         if (busy || !pending) {
             return;
         }
+        const request = pending;
+        const wasRecovering = recoveryBox.contains(document.activeElement);
         busy = true;
-        lock(true);
-        retryBtn.hidden = true;
+        updateRecovery();
         conflictBox.hidden = true;
+        receiptBox.hidden = true;
+        refreshLink.hidden = true;
+        const sameInvoice = form?.dataset.invoice.toUpperCase() === request.snapshot.maHoaDon.toUpperCase();
+        const sameDraft = (form?.dataset.draft || null) === (request.snapshot.maNhap || null);
+        const sameVersion = Number(form?.dataset.version) === request.snapshot.phienBan;
+        let readOnly = false;
 
         try {
-            const response = await fetch(form.dataset.save + "?xacNhan=" + pending.confirm, {
+            const response = await fetch(writePanel.dataset.save + "?xacNhan=" + request.confirm, {
                 method: "POST",
                 signal: AbortSignal.timeout(20000),
                 headers: {
                     "Content-Type": "application/json",
-                    RequestVerificationToken: form.elements.__RequestVerificationToken.value
+                    RequestVerificationToken: requestToken
                 },
-                body: pending.body
+                body: request.body
             });
 
             if (response.status >= 500) {
                 throw new Error("Server error");
             }
 
-            const data = response.ok ? await response.json() : await response.json().catch(() => ({}));
-            const isConfirm = pending.confirm;
-            const done = isConfirm && response.ok;
-            sessionStorage.removeItem(key);
+            const data = await response.json().catch(() => null);
+            if (response.status === 401 || response.status === 403) {
+                const message = data?.message || "Không có quyền đối chiếu phiếu trả trong phiên hiện tại.";
+                showMessage(message + " Yêu cầu chờ vẫn được giữ lại.", true);
+                return;
+            }
+            if (!data?.message) throw new Error("Missing result");
+            const isConfirm = request.confirm;
+            rememberPending(null);
             pending = null;
 
             if (response.status === 409 || data.conflict) {
-                showConflict(data.ma, data.traCuuUrl || (form.dataset.lookup + "?chon=" + encodeURIComponent(data.ma || "")), data.message);
-                lock(false);
-                field.disabled = true;
+                showConflict(data.ma, data.traCuuUrl, data.message);
+                readOnly = sameInvoice && sameDraft && sameVersion;
                 return;
             }
 
-            showMessage(data.message || (response.ok ? "Đã xử lý phiếu trả." : "Không thể lưu phiếu trả."), !response.ok);
+            showMessage(data.message, !response.ok);
 
             if (data.ma) {
-                receiptLink.href = data.traCuuUrl || (form.dataset.lookup + "?chon=" + encodeURIComponent(data.ma));
-                receiptLink.hidden = false;
-                if (response.ok) {
-                    draft = isConfirm ? null : data.ma;
-                    if (draft) {
-                        const url = new URL(location.href);
-                        url.searchParams.set("maNhap", draft);
-                        location.replace(url);
-                        return;
-                    }
+                receiptLink.href = data.traCuuUrl || (writePanel.dataset.lookup + "?chon=" + encodeURIComponent(data.ma));
+                receiptBox.hidden = false;
+                if (response.ok && !isConfirm && sameInvoice && sameDraft && sameVersion) {
+                    const url = new URL(location.href);
+                    url.searchParams.set("maNhap", data.ma);
+                    location.replace(url);
+                    return;
                 }
             }
-
-            lock(false);
-            field.disabled = done;
+            readOnly = response.ok && isConfirm && sameInvoice;
+            if (readOnly) {
+                const url = new URL(location.href);
+                if (sameDraft) url.searchParams.delete("maNhap");
+                refreshLink.href = url.href;
+                refreshLink.hidden = false;
+            }
         } catch {
-            showMessage("Chưa nhận được phản hồi từ máy chủ. Bấm \"Thử lại\" để gửi lại đúng giao dịch này.", true);
-            retryBtn.hidden = false;
+            if (pending) {
+                showMessage(`Chưa xác định kết quả cho hóa đơn ${request.snapshot.maHoaDon}. Bấm “Thử lại” để đối chiếu đúng giao dịch này.`, true);
+            }
         } finally {
             busy = false;
+            updateRecovery();
+            if (readOnly && field) field.disabled = true;
+            if (wasRecovering && !feedback.hidden) feedback.focus();
         }
     }
+
+    retryBtn.addEventListener("click", send);
+    window.addEventListener("beforeunload", event => {
+        if (pending && !savedInTab) event.preventDefault();
+    });
+    discardBtn.addEventListener("click", () => {
+        if (!pending || busy || !window.confirm("Máy chủ có thể đã ghi phiếu. Chỉ bỏ yêu cầu chờ sau khi đã kiểm tra tra cứu phiếu trả. Bạn muốn tiếp tục?")) return;
+        rememberPending(null);
+        pending = null;
+        updateRecovery();
+        showMessage("Đã bỏ yêu cầu chờ trên tab này. Hãy kiểm tra phiếu đã ghi trước khi lập lại.", false);
+        feedback.focus();
+    });
+
+    if (pending) {
+        showMessage(`Hóa đơn ${pending.snapshot.maHoaDon} đang có yêu cầu ghi ${pending.confirm ? "xác nhận" : "nháp"} chờ kết quả. Bạn vẫn có thể tìm hóa đơn khác.`, true);
+    }
+    updateRecovery();
+    if (!form) return;
 
     form.addEventListener("input", e => update(e.target));
     form.addEventListener("change", e => update(e.target));
@@ -164,7 +230,7 @@
             return;
         }
 
-        if (!get("shift").checked) {
+        if (!form.dataset.shift) {
             showMessage("Cần mở ca để nhận trả hàng.", true);
             return;
         }
@@ -205,38 +271,21 @@
             ? window.crypto.randomUUID()
             : String(Date.now()) + Math.random().toString(16).slice(2);
 
-        pending = {
-            confirm: isConfirm,
-            body: JSON.stringify({
-                maHoaDon: form.dataset.invoice,
-                maYeuCau: requestId,
-                maNhap: draft || null,
-                phienBan: Number(form.dataset.version),
-                caMo: get("shift").checked,
-                dongTra: lines,
-                tienMat: Number(cash.value) || 0,
-                chuyenKhoan: Number(bank.value) || 0
-            })
+        const snapshot = {
+            maHoaDon: form.dataset.invoice,
+            maYeuCau: requestId,
+            maNhap: form.dataset.draft || null,
+            phienBan: Number(form.dataset.version),
+            caMo: true,
+            maCa: form.dataset.shift,
+            dongTra: lines,
+            tienMat: Number(cash.value) || 0,
+            chuyenKhoan: Number(bank.value) || 0
         };
-
-        sessionStorage.setItem(key, JSON.stringify(pending));
+        pending = { confirm: isConfirm, snapshot, body: JSON.stringify(snapshot) };
+        savedInTab = rememberPending(pending);
         send();
     });
 
-    retryBtn.addEventListener("click", send);
     update(null);
-    if (pending) {
-        const snapshot = JSON.parse(pending.body);
-        for (const row of rows) {
-            const line = snapshot.dongTra.find(d => d.dong === Number(row.dataset.line));
-            row.querySelector(".qty").value = line?.soLuong ?? 0;
-            row.querySelector(".stock").value = line?.nhapLai ?? 0;
-        }
-        mode.value = snapshot.tienMat && snapshot.chuyenKhoan ? "mixed" : snapshot.tienMat ? "cash" : "bank";
-        cash.value = snapshot.tienMat;
-        update(null);
-        lock(true);
-        showMessage("Giao dịch đang chờ kết quả. Hãy thử lại để đối chiếu phiếu đã gửi.", true);
-        retryBtn.hidden = false;
-    }
 })();

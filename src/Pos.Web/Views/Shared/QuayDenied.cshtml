@@ -1,0 +1,12 @@
+@model string
+@{
+    ViewData["Title"] = "Không thể thực hiện thao tác";
+}
+<section class="pos-card">
+    <p role="alert">@Model</p>
+    <a class="pos-btn pos-btn-secondary" asp-controller="Home" asp-action="Index">Về trang chủ</a>
+    @if (ViewData["KhoDanhTinh"] is null)
+    {
+        <a class="pos-btn pos-btn-primary" asp-controller="HeThong" asp-action="DangNhap">Đăng nhập</a>
+    }
+</section>

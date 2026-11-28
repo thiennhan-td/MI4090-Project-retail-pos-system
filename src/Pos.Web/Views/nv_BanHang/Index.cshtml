@@ -5,6 +5,8 @@
     var vi = CultureInfo.GetCultureInfo("vi-VN");
     string Money(decimal v) => $"{v.ToString("#,##0", vi)} đ";
     var hoaDonNhap = Model.HoaDonNhap;
+    var actor = (Pos.Web.Demo.DanhTinhKhoDemo)ViewData["KhoDanhTinh"]!;
+    var canConfirm = actor.CoQuyen("BAN_XAC_NHAN") && actor.CoQuyen("BAN_THANH_TOAN");
     var traCuuNhapUrl = hoaDonNhap is null ? null : Url.Action("TraCuu", "BanHang", new { chon = hoaDonNhap.MaHoaDon });
 }
 
@@ -17,15 +19,17 @@
         </div>
     </div>
     <div class="pos-f3-toolbar-actions">
-        <label class="pos-toggle-label">
-            <input type="checkbox" id="pos-shift-open-toggle" checked="@(Model.MaCaHienTai.Length > 0)" disabled="@(Model.MaCaHienTai.Length == 0)" />
-            <span>Ca mở (demo)</span>
-        </label>
-        <a class="pos-btn pos-btn-secondary"
-           asp-controller="BanHang" asp-action="TraCuu" asp-route-trangThai="Nhap" asp-fragment="pos-invoice-list">
-            Hóa đơn nháp
-        </a>
-        <a class="pos-btn pos-btn-ghost" asp-controller="BanHang" asp-action="TraCuu">Tra cứu hóa đơn</a>
+        <input type="checkbox" id="pos-shift-open-toggle" checked="@(Model.MaCaHienTai.Length > 0)" hidden />
+        @if (Model.MaCaHienTai.Length == 0 && actor.CoQuyen("CA_MO"))
+        {
+            <a class="pos-btn pos-btn-primary" asp-controller="CaBan" asp-action="Index">Mở ca</a>
+        }
+        @if (actor.CoQuyen("BAN_TRA_IN_HD"))
+        {
+            <a class="pos-btn pos-btn-secondary" asp-controller="BanHang" asp-action="TraCuu"
+               asp-route-trangThai="Nhap" asp-fragment="pos-invoice-list">Hóa đơn nháp</a>
+            <a class="pos-btn pos-btn-ghost" asp-controller="BanHang" asp-action="TraCuu">Tra cứu hóa đơn</a>
+        }
         @if (Model.ThongBaoLoi is null || Model.TraCuuUrl is not null)
         {
             <a class="pos-btn pos-btn-ghost pos-sales-jump" id="pos-sales-jump" href="#pos-invoice-editor"
@@ -55,6 +59,9 @@
      data-save-url="@Url.Action("LuuNhap", "BanHang")"
      data-new-url="@Url.Action("Index", "BanHang")"
      data-current-shift="@Model.MaCaHienTai"
+     data-actor-id="@actor.Ma"
+     data-can-save="true"
+     data-can-confirm="@(canConfirm ? "true" : "false")"
      data-request-id="@Model.MaYeuCauMacDinh">
     @Html.AntiForgeryToken()
     @if (hoaDonNhap is not null)
@@ -64,7 +71,7 @@
             hoaDonNhap.MaHoaDon,
             hoaDonNhap.PhienBan,
             hoaDonNhap.ThanhToanNhap,
-            DongBans = hoaDonNhap.DongBans.Select(d => new { d.MaHang, d.SoLuongBan })
+            DongBans = hoaDonNhap.DongBans.Select(d => new { d.MaHang, d.SoLuongBan, d.TenHang, d.DonViTinh, d.DonGiaThucBan })
         })</script>
     }
 
@@ -93,10 +100,10 @@
                         data-nhom="@item.TenNhom"
                         data-dvt="@item.DonViTinh"
                         data-gia="@item.GiaBanHienHanh"
-                        data-ton="@item.TonMau">
+                        data-ton="@item.TonHienTai">
                     <span class="pos-product-top">
                         <span class="pos-product-code">@item.MaHang</span>
-                        <span class="pos-product-stock pos-num">Tồn mẫu: @item.TonMau @item.DonViTinh</span>
+                        <span class="pos-product-stock pos-num">Tồn hiện có: @item.TonHienTai @item.DonViTinh</span>
                     </span>
                     <span class="pos-product-name">@item.TenHang</span>
                     <span class="pos-product-price pos-num">@Money(item.GiaBanHienHanh)</span>
@@ -201,6 +208,7 @@
         <div class="pos-confirm-actions pos-invoice-confirm">
             <button type="button" class="pos-btn pos-btn-primary pos-btn-lg" id="pos-btn-confirm"
                     aria-describedby="pos-action-error">Xác nhận bán hàng</button>
+            <button type="button" class="pos-btn pos-btn-secondary" id="pos-discard-pending" hidden>Bỏ yêu cầu chờ</button>
         </div>
         <p class="pos-field-error" id="pos-action-error" role="alert" hidden></p>
 

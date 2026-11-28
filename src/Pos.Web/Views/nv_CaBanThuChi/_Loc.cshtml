@@ -1,15 +1,44 @@
 @model Pos.Web.ViewModels.CaBan.CaBanViewModel
-@{ var l = Model.Loc; var so = ViewContext.RouteData.Values["action"]?.ToString()=="SoQuy"; }
-<form method="get" class="pos-card pos-filter-grid">
-<label>Vai trò demo<select name="VaiTro" class="pos-input"><option value="ThuNgan">Thu ngân · Lê Linh</option><option value="QuanLy" selected="@(l.VaiTro=="QuanLy")">Quản lý · Nguyễn An</option></select></label>
-@if(so){
-<label>Ca bán<select name="Chon" class="pos-input"><option value="">Tất cả</option>@foreach(var c in Model.CacCa){<option selected="@(l.Chon==c.MaCa)">@c.MaCa</option>}</select></label>
-<label>Phương thức<select name="PhuongThuc" class="pos-input"><option value="">Tất cả</option><option value="TienMat" selected="@(l.PhuongThuc=="TienMat")">Tiền mặt</option><option value="ChuyenKhoan" selected="@(l.PhuongThuc=="ChuyenKhoan")">Chuyển khoản</option></select></label>
-}else{
-<label>Mã ca<input class="pos-input" name="Ma" value="@l.Ma" /></label>
-<label>Trạng thái<select name="TrangThai" class="pos-input"><option value="">Tất cả</option><option value="DangMo" selected="@(l.TrangThai=="DangMo")">Đang mở</option><option value="DaDong" selected="@(l.TrangThai=="DaDong")">Đã đóng</option></select></label>
+@{
+    var loc = Model.Loc;
+    var xemSoQuy = ViewContext.RouteData.Values["action"]?.ToString() == "SoQuy";
 }
-<label>Từ ngày<input class="pos-input" type="date" name="Tu" value="@l.Tu?.ToString("yyyy-MM-dd")" /></label>
-<label>Đến ngày<input class="pos-input" type="date" name="Den" value="@l.Den?.ToString("yyyy-MM-dd")" /></label>
-<button class="pos-btn pos-btn-secondary">Tra cứu</button>
+@if (ViewData["F7FilterError"] is string loi)
+{
+    <p class="pos-alert pos-alert-error" role="alert">@loi</p>
+}
+<form method="get" class="pos-card pos-filter-grid">
+    @if (xemSoQuy)
+    {
+        <label>Ca bán
+            <select name="Chon" class="pos-input">
+                <option value="">Tất cả</option>
+                @foreach (var ca in Model.CacCa)
+                {
+                    <option value="@ca.MaCa" selected="@(string.Equals(loc.Chon, ca.MaCa, StringComparison.OrdinalIgnoreCase))">@ca.MaCa</option>
+                }
+            </select>
+        </label>
+        <label>Phương thức
+            <select name="PhuongThuc" class="pos-input">
+                <option value="">Tất cả</option>
+                <option value="TienMat" selected="@(loc.PhuongThuc == "TienMat")">Tiền mặt</option>
+                <option value="ChuyenKhoan" selected="@(loc.PhuongThuc == "ChuyenKhoan")">Chuyển khoản</option>
+            </select>
+        </label>
+    }
+    else
+    {
+        <label>Mã ca <input class="pos-input" name="Ma" value="@loc.Ma" /></label>
+        <label>Trạng thái
+            <select name="TrangThai" class="pos-input">
+                <option value="">Tất cả</option>
+                <option value="DangMo" selected="@(loc.TrangThai == "DangMo")">Đang mở</option>
+                <option value="DaDong" selected="@(loc.TrangThai == "DaDong")">Đã đóng</option>
+            </select>
+        </label>
+    }
+    <label>Từ ngày <input class="pos-input" type="date" name="Tu" value="@loc.Tu?.ToString("yyyy-MM-dd")" /></label>
+    <label>Đến ngày <input class="pos-input" type="date" name="Den" value="@loc.Den?.ToString("yyyy-MM-dd")" /></label>
+    <button class="pos-btn pos-btn-secondary">Tra cứu</button>
 </form>

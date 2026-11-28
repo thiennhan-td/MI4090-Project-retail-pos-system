@@ -22,6 +22,8 @@ public sealed class HeThongController(KhoDemoSessionProvider sessions) : KhoDemo
                 return LocalRedirect(form.TroVe!);
             if (store.CoQuyen("NHAP_TRA_CUU"))
                 return RedirectToAction("Index", "NhapHang");
+            if (store.CoQuyen("BAN_LAP_HD", "ThuNgan"))
+                return RedirectToAction("Index", "BanHang");
             return RedirectToAction("Index", "Home");
         }
         if (ModelState.IsValid)

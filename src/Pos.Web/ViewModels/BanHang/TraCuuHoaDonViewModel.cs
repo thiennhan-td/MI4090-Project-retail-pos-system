@@ -10,9 +10,9 @@ public sealed class TraCuuHoaDonViewModel
     public DateOnly? DenNgay { get; set; }
     public string? MaCa { get; set; }
     public string TrangThai { get; set; } = "TatCa";
-    public string VaiTroDemo { get; set; } = "ThuNgan";
-    public bool CoCaDaoMo { get; set; } = true;
-    public string? MaHoaDonDangChon { get; set; }
+    public string? MaCaHienTai { get; init; }
+    public string? CaDao { get; init; }
+    public bool NgoaiBoLoc { get; init; }
     public string? ThongBaoThanhCong { get; set; }
     public string? ThongBaoLoi { get; set; }
     public string? ThongBaoLoiHuy { get; init; }
@@ -36,8 +36,12 @@ public sealed class HuyHoaDonRequestViewModel
     [StringLength(500, ErrorMessage = "Lý do hủy tối đa 500 ký tự.")]
     public string LyDoHuy { get; set; } = string.Empty;
 
-    public string VaiTroDemo { get; set; } = "ThuNgan";
-    public bool CoCaDaoMo { get; set; } = true;
+    public string? MaCaDao { get; set; }
+    public string? LocMaHoaDon { get; set; }
+    public DateOnly? TuNgay { get; set; }
+    public DateOnly? DenNgay { get; set; }
+    public string? MaCa { get; set; }
+    public string? TrangThai { get; set; }
 }
 
 public sealed class InHoaDonViewModel

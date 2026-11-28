@@ -5,16 +5,15 @@
     var loc = Model.Loc;
     var vi = CultureInfo.GetCultureInfo("vi-VN");
     var successMsg = TempData["F4Success"] as string;
+    var actor = (Pos.Web.Demo.DanhTinhKhoDemo)ViewData["KhoDanhTinh"]!;
 }
 
-<section class="pos-f3-toolbar">
-    <div class="pos-f3-meta-row">
-        <span class="pos-pill">@(loc.VaiTro == "QuanLy" ? "Vai trò demo: Quản lý (Nguyễn An · Toàn cửa hàng)" : "Vai trò demo: Thu ngân (Lê Linh · Các ca của mình)")</span>
-    </div>
-    <div class="pos-f3-toolbar-actions">
+@if (actor.CoQuyen("TRA_LAP_PHIEU", "ThuNgan"))
+{
+    <div class="pos-f3-toolbar">
         <a class="pos-btn pos-btn-secondary" asp-controller="TraHang" asp-action="Index">Lập phiếu trả mới</a>
     </div>
-</section>
+}
 
 @if ((ViewData["FilterError"] ?? TempData["F4Error"]) is string error)
 {
@@ -27,13 +26,6 @@
 
 <section class="pos-card" style="margin-bottom: 1rem;">
     <form method="get" class="pos-filter-grid">
-        <div class="pos-field">
-            <label for="f-vaiTro">Vai trò demo</label>
-            <select id="f-vaiTro" name="vaiTro" class="pos-input">
-                <option value="ThuNgan" selected="@(loc.VaiTro != "QuanLy")">Thu ngân · Lê Linh</option>
-                <option value="QuanLy" selected="@(loc.VaiTro == "QuanLy")">Quản lý · Nguyễn An</option>
-            </select>
-        </div>
         <div class="pos-field">
             <label for="f-ma">Mã phiếu trả</label>
             <input id="f-ma" class="pos-input" name="ma" value="@loc.Ma" placeholder="VD: S-PT-01, PT-..." />
@@ -68,16 +60,9 @@
                 <option value="DaXacNhan" selected="@(loc.TrangThai == "DaXacNhan")">Đã xác nhận</option>
             </select>
         </div>
-        <div class="pos-field">
-            <label for="f-caMo">Ca hiện tại</label>
-            <select id="f-caMo" name="caMo" class="pos-input">
-                <option value="true" selected="@loc.CaMo">Đang mở</option>
-                <option value="false" selected="@(!loc.CaMo)">Đã đóng</option>
-            </select>
-        </div>
         <div class="pos-filter-actions">
             <button type="submit" class="pos-btn pos-btn-primary">Tra cứu</button>
-            <a class="pos-btn pos-btn-ghost" asp-action="TraCuu" asp-route-vaiTro="@loc.VaiTro" asp-route-caMo="@(loc.CaMo ? "true" : "false")">Xóa lọc</a>
+            <a class="pos-btn pos-btn-ghost" asp-action="TraCuu">Xóa lọc</a>
         </div>
     </form>
 </section>
@@ -113,8 +98,6 @@
                                asp-route-denNgay="@(loc.DenNgay?.ToString("yyyy-MM-dd"))"
                                asp-route-ca="@loc.Ca"
                                asp-route-trangThai="@loc.TrangThai"
-                               asp-route-vaiTro="@loc.VaiTro"
-                               asp-route-caMo="@(loc.CaMo ? "true" : "false")"
                                asp-route-chon="@p.Ma"><strong>@p.Ma</strong></a>
                         </td>
                         <td class="pos-num">@p.HoaDon</td>
@@ -196,13 +179,13 @@
             </div>
         </div>
 
-        @if (!ph.XacNhan && loc.CaMo && loc.VaiTro != "QuanLy" && ph.Ca == ViewData["CaMo"] as string && ph.Nguoi == "Lê Linh")
+        @if (!ph.XacNhan && actor.CoQuyen("TRA_LAP_PHIEU", "ThuNgan") && ph.Ca == ViewData["CaMo"] as string)
         {
             <div class="pos-f3-toolbar-actions" style="margin-top: 1rem;">
                 <a class="pos-btn pos-btn-primary"
                    asp-action="Index"
                    asp-route-maHoaDon="@ph.HoaDon"
-                   asp-route-maNhap="@ph.Ma">Mở phiếu nháp để xác nhận</a>
+                   asp-route-maNhap="@ph.Ma">Mở phiếu nháp</a>
 
                 <form asp-action="Xoa" method="post" style="display: inline;">
                     @Html.AntiForgeryToken()
@@ -213,8 +196,7 @@
                     <input type="hidden" name="loc.TuNgay" value="@loc.TuNgay?.ToString("yyyy-MM-dd")" />
                     <input type="hidden" name="loc.DenNgay" value="@loc.DenNgay?.ToString("yyyy-MM-dd")" />
                     <input type="hidden" name="ma" value="@ph.Ma" />
-                    <input type="hidden" name="caMo" value="@(loc.CaMo ? "true" : "false")" />
-                    <input type="hidden" name="vaiTro" value="@(loc.VaiTro ?? "ThuNgan")" />
+                    <input type="hidden" name="phienBan" value="@ph.PhienBan" />
                     <button type="submit" class="pos-btn pos-btn-danger">Xóa phiếu nháp</button>
                 </form>
             </div>

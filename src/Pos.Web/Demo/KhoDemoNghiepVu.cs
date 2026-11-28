@@ -213,7 +213,7 @@ public sealed partial class KhoDemoStore
                 bienDongs.Where(x => x.Loai is "NhapKho" or "DaoNhapKho").Sum(x => (long)x.SoLuong),
                 bienDongs.Where(x => x.Loai is "XuatBan" or "DaoXuatBan").Sum(x => -(long)x.SoLuong),
                 bienDongs.Where(x => x.Loai == "NhapTraHang").Sum(x => (long)x.SoLuong),
-                bienDongs.Where(x => x.Loai == "DieuChinhKiemKho").Sum(x => (long)x.SoLuong));
+                bienDongs.Where(x => x.Loai is "DieuChinhKiemKho" or "TonDauDemo").Sum(x => (long)x.SoLuong));
         }).ToArray();
 
     public CongNoNccDemo[] CongNoNcc(DateOnly tu, DateOnly den, string? maNcc) =>
@@ -245,8 +245,11 @@ public sealed partial class KhoDemoStore
             throw new ThaoTacKhoDemoException("Biến động đã được ghi.");
         foreach (var group in dongs.GroupBy(x => x.MaHang))
         {
-            var ton = TonHienTai(group.Key) + group.Sum(x => (long)x.SoLuong);
-            if (ton is < 0 or > int.MaxValue)
+            var tonHienTai = TonHienTai(group.Key);
+            var tonMoi = tonHienTai + group.Sum(x => (long)x.SoLuong);
+            if (tonMoi < 0)
+                throw new ThaoTacKhoDemoException($"Mặt hàng {group.Key} không đủ tồn. Tồn hiện có: {tonHienTai}.");
+            if (tonMoi > int.MaxValue)
                 throw new ThaoTacKhoDemoException($"Tồn mặt hàng {group.Key} sẽ vượt phạm vi cho phép.");
         }
 
@@ -293,5 +296,5 @@ public sealed record BienDongKhoDemo(string Ma, string MaHang, string Loai, int 
 public sealed record DongTheKhoDemo(BienDongKhoDemo BienDong, long TonSau, string? MaChungTu);
 public sealed record TheKhoDemo(MatHangKhoDemo Hang, long TonDau, long TonCuoi, IReadOnlyList<DongTheKhoDemo> Dongs);
 public sealed record XuatNhapTonDemo(MatHangKhoDemo Hang, string TenNhom, long TonDau, long Nhap, long Xuat,
-    long TonCuoi, long NhapMuaRong, long XuatBanRong, long TraNhapLai, long DieuChinhKiemKe);
+    long TonCuoi, long NhapMuaRong, long XuatBanRong, long TraNhapLai, long DieuChinhTon);
 public sealed record CongNoNccDemo(NhaCungCapDemo Ncc, decimal Dau, decimal Nhap, decimal Dao, decimal Tra, decimal Cuoi);

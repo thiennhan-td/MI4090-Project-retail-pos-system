@@ -29,7 +29,7 @@ public sealed partial class BanHangDemoStore
             };
             var chungTu = trongNgay.OrderBy(d => d.Luc).Select(d => new object?[]
             {
-                d.Luc, d.Ma, d.MaCa, d.Loai, TenQuy(d.Nguon), TenPhuongThuc(d.PhuongThuc), d.LyDo, d.GiaTri
+                d.Luc, d, d.MaCa, d.Loai, TenQuy(d.Nguon), TenPhuongThuc(d.PhuongThuc), d.LyDo, d.GiaTri
             }).ToArray();
             var caCoButToan = trongNgay.Select(d => d.MaCa).ToHashSet();
             var ca = _caBans.Where(c => TrongKy(c.LucMo, ngay, ngay)
@@ -113,7 +113,7 @@ public sealed partial class BanHangDemoStore
     {
         var rong = so.Where(d => DateOnly.FromDateTime(d.Luc) <= den)
             .GroupBy(d => d.MaCa).ToDictionary(g => g.Key, g => g.Sum(d => d.TienKet));
-        var tongLech = 0m;
+        decimal? tongLech = null;
         var dong = new List<object?[]>();
         foreach (var c in ca.OrderBy(c => c.LucMo))
         {
@@ -122,7 +122,8 @@ public sealed partial class BanHangDemoStore
             var duKien = (daChot ? b.Chot : null) ?? b.Dau + rong.GetValueOrDefault(c.MaCa);
             var thucDem = daChot ? b.Dem : null;
             var lech = thucDem - duKien;
-            tongLech += lech ?? 0;
+            if (lech is decimal chenhLech)
+                tongLech = (tongLech ?? 0m) + chenhLech;
             dong.Add([c.MaCa, c.TenNguoiMo, daChot ? "Đã đóng" : "Đang mở",
                 c.LucMo, daChot ? b.Dong : null, b.Dau, duKien - b.Dau, duKien, thucDem, lech]);
         }

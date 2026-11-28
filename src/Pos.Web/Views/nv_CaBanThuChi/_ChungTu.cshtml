@@ -1,0 +1,22 @@
+@model Pos.Web.ViewModels.CaBan.DongQuyViewModel
+@{
+    var actor = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+    var duocXemHoaDonGoc = Model.MaNguoiLapHoaDon is null || actor?.VaiTro == KhoDemoStore.QuanLy
+        || actor?.Ma == Model.MaNguoiLapHoaDon;
+}
+@if (Model.Loai is ("Thu bán" or "Đảo hủy") && duocXemHoaDonGoc && actor?.CoQuyen("BAN_TRA_IN_HD") == true)
+{
+    <a asp-controller="BanHang" asp-action="TraCuu" asp-route-chon="@Model.Ma">@Model.Ma</a>
+}
+else if (Model.Loai == "Hoàn trả" && actor?.CoQuyen("TRA_TRA_CUU") == true)
+{
+    <a asp-controller="TraHang" asp-action="TraCuu" asp-route-chon="@Model.Ma">@Model.Ma</a>
+}
+else if (Model.Loai == "Trả nhà cung cấp" && Model.ChungTu is { } maPhieu && actor?.CoQuyen("NHAP_TRA_CUU") == true)
+{
+    <a asp-controller="NhapHang" asp-action="ChiTiet" asp-route-id="@maPhieu">@Model.Ma</a>
+}
+else
+{
+    @Model.Ma
+}

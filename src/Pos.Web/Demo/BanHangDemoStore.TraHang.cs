@@ -4,8 +4,6 @@ namespace Pos.Web.Demo;
 
 public sealed partial class BanHangDemoStore
 {
-    private string CaTra => MaCaMo ?? string.Empty;
-
     private readonly Dictionary<string, PhieuTraViewModel> _phieuTra = new(StringComparer.OrdinalIgnoreCase)
     {
         ["S-PT-01"] = new(
@@ -33,8 +31,7 @@ public sealed partial class BanHangDemoStore
             {
                 if (!_phieuTra.TryGetValue(maNhap.Trim(), out var timThay)
                     || timThay.XacNhan
-                    || timThay.Ca != CaTra
-                    || timThay.Nguoi != "Lê Linh")
+                    || timThay.Ca != LayCaHienTai()?.MaCa)
                 {
                     return new(ma, "Phiếu trả nháp không tồn tại hoặc không thuộc quyền sửa của bạn.", []);
                 }
@@ -83,6 +80,10 @@ public sealed partial class BanHangDemoStore
     {
         lock (_sync)
         {
+            var danhTinh = Kho.DanhTinh;
+            if (danhTinh is null || !danhTinh.CoQuyen(xacNhan ? "TRA_XAC_NHAN" : "TRA_LAP_PHIEU", "ThuNgan"))
+                return (403, "Bạn không có quyền ghi phiếu trả.", null, 0);
+
             if (q.DongTra == null || q.DongTra.Any(d => d == null) || string.IsNullOrWhiteSpace(q.MaYeuCau))
             {
                 return (400, "Thiếu thông tin phiếu trả.", null, 0);
@@ -95,6 +96,7 @@ public sealed partial class BanHangDemoStore
                 var a = cu.Gui;
                 var trung = string.Equals(a.MaNhap, q.MaNhap, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(a.MaHoaDon?.Trim(), q.MaHoaDon?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(a.MaCa, q.MaCa, StringComparison.OrdinalIgnoreCase)
                     && a.PhienBan == q.PhienBan
                     && a.TienMat == q.TienMat
                     && a.ChuyenKhoan == q.ChuyenKhoan
@@ -105,6 +107,9 @@ public sealed partial class BanHangDemoStore
                     return (400, "Phiếu nháp đã được xóa.", null, 0);
                 }
 
+                if (!_caBans.Any(ca => ca.MaCa == current.Ca && ca.MaNguoiMo == danhTinh.Ma))
+                    return (403, "Yêu cầu thuộc tài khoản khác.", null, 0);
+
                 if (!xacNhan && (current.XacNhan || current.PhienBan != a.PhienBan + 1))
                     return (409, "Phiếu nháp đã thay đổi. Hãy mở phiên bản hiện tại.", cu.Ma, current.PhienBan);
 
@@ -113,10 +118,14 @@ public sealed partial class BanHangDemoStore
                     : (409, "Mã yêu cầu đã dùng cho phiếu trả có nội dung khác.", cu.Ma, current.PhienBan);
             }
 
-            if (!q.CaMo || MaCaMo == null)
+            var ca = LayCaHienTai();
+            if (!q.CaMo || ca is null)
             {
                 return (400, "Cần mở ca để nhận trả hàng.", null, 0);
             }
+
+            if (!string.Equals(q.MaCa, ca.MaCa, StringComparison.OrdinalIgnoreCase))
+                return (400, "Ca bán đã thay đổi. Vui lòng tải lại màn trả hàng.", null, 0);
 
             var goc = TraHoaDon(q.MaHoaDon);
             if (goc.Dong.Length == 0)
@@ -127,8 +136,7 @@ public sealed partial class BanHangDemoStore
             PhieuTraViewModel? nhap = null;
             if (!string.IsNullOrWhiteSpace(q.MaNhap)
                 && (!_phieuTra.TryGetValue(q.MaNhap, out nhap)
-                    || nhap.Ca != CaTra
-                    || nhap.Nguoi != "Lê Linh"
+                    || nhap.Ca != ca.MaCa
                     || !string.Equals(nhap.HoaDon, goc.MaHoaDon, StringComparison.OrdinalIgnoreCase)))
             {
                 return (400, "Phiếu nháp không còn hợp lệ.", null, 0);
@@ -165,17 +173,35 @@ public sealed partial class BanHangDemoStore
                 return (400, "Chọn hàng và phân bổ đủ số tiền hoàn bằng đồng nguyên.", null, 0);
             }
 
-            var ma = string.IsNullOrWhiteSpace(q.MaNhap) ? $"PT-{++_soPhieu:D5}" : q.MaNhap;
+            var ma = nhap?.Ma ?? $"PT-{_soPhieu + 1:D5}";
+            var lucGhi = DateTimeOffset.UtcNow;
+            var now = GioPos.Local(lucGhi);
+            if (xacNhan)
+            {
+                try
+                {
+                    Kho.GhiBienDongQuay("NhapTraHang", ma, lucGhi, lines.Where(dongTra => dongTra.NhapLai > 0)
+                        .Select(dongTra => (goc.Dong[dongTra.Dong].MaHang, dongTra.NhapLai)));
+                }
+                catch (ThaoTacKhoDemoException ex)
+                {
+                    return (400, ex.Message, null, 0);
+                }
+            }
+
+            if (nhap is null)
+                _soPhieu++;
+
             _phieuTra[ma] = new(
                 ma,
                 goc.MaHoaDon!,
-                CaTra,
-                "Lê Linh",
-                nhap?.Ngay ?? DateTime.Now,
+                ca.MaCa,
+                nhap?.Nguoi ?? danhTinh.HoTen,
+                nhap?.Ngay ?? now,
                 xacNhan,
                 lines.ToArray(),
                 q.TienMat,
-                q.ChuyenKhoan, (nhap?.PhienBan ?? 0) + 1, xacNhan ? DateTime.Now : null);
+                q.ChuyenKhoan, (nhap?.PhienBan ?? 0) + 1, xacNhan ? now : null);
 
             lichSu.Add(q.MaYeuCau, (q with { MaHoaDon = goc.MaHoaDon!, DongTra = dong }, ma));
 
@@ -194,7 +220,7 @@ public sealed partial class BanHangDemoStore
     {
         lock (_sync)
         {
-            var vaiTro = string.Equals(loc.VaiTro, "QuanLy", StringComparison.OrdinalIgnoreCase) ? "QuanLy" : "ThuNgan";
+            var vaiTro = Kho.DanhTinh?.VaiTro ?? "";
             var ca = LayDanhSachCaBanTheoVaiTro(vaiTro).Select(c => c.MaCa).ToArray();
 
             PhieuTraViewModel? chon = null;
@@ -227,11 +253,11 @@ public sealed partial class BanHangDemoStore
         }
     }
 
-    public (int Status, string Message) XoaNhap(string? ma, bool caMo, string? vaiTro)
+    public (int Status, string Message) XoaNhap(string? ma, int? phienBan)
     {
         lock (_sync)
         {
-            if (string.Equals(vaiTro, "QuanLy", StringComparison.OrdinalIgnoreCase))
+            if (!Kho.CoQuyen("TRA_LAP_PHIEU", "ThuNgan"))
             {
                 return (403, "Chỉ thu ngân lập phiếu mới được xóa phiếu trả nháp của mình.");
             }
@@ -241,7 +267,8 @@ public sealed partial class BanHangDemoStore
                 return (400, "Thiếu mã phiếu trả nháp cần xóa.");
             }
 
-            if (!caMo)
+            var ca = LayCaHienTai();
+            if (ca is null)
             {
                 return (400, "Chỉ xóa được phiếu trả nháp khi ca bán đang mở.");
             }
@@ -256,10 +283,13 @@ public sealed partial class BanHangDemoStore
                 return (400, "Phiếu trả đã xác nhận là bất biến, không thể xóa.");
             }
 
-            if (p.Ca != CaTra || p.Nguoi != "Lê Linh")
+            if (p.Ca != ca.MaCa)
             {
                 return (403, "Chỉ xóa được phiếu trả nháp thuộc ca đang mở của chính bạn.");
             }
+
+            if (p.PhienBan != phienBan)
+                return (409, "Phiếu nháp vừa thay đổi. Vui lòng xem lại dòng hàng trước khi xóa.");
 
             _phieuTra.Remove(p.Ma);
             return (200, $"Đã xóa phiếu trả nháp {p.Ma}.");

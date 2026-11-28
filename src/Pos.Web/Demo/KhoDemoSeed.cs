@@ -151,6 +151,9 @@ public sealed partial class KhoDemoStore
         [
         new("S-SUA", "S-N-SUA", "Sữa tươi 180 ml", "Hộp", 26000m, true),
         new("S-BANH", "S-N-BANH", "Bánh mì đóng gói", "Gói", 12000m, true),
+        new("S-SUA-1L", "S-N-SUA", "Sữa tươi tiệt trùng 1L", "Hộp", 25000m, true),
+        new("S-NUOC", "S-N-SUA", "Nước ngọt 320 ml", "Lon", 10000m, true),
+        new("S-MI", "S-N-BANH", "Mì gói ăn liền", "Gói", 5000m, true),
         new("S-CU", "S-N-CU", "Mặt hàng đã ngừng bán", "Gói", 5000m, false),
         ];
         foreach (var matHang in matHangs)
@@ -185,9 +188,9 @@ public sealed partial class KhoDemoStore
 
         PhieuKiemDemo[] phieuKiems =
         [
-        new("S-PK-01", "S-TK-KHO", "S-TK-QL", Utc("2026-10-11T04:00:00"), Utc("2026-10-11T04:30:00"), "HoanTat", [new("S-SUA", 136, 134, "Hai hộp hỏng khi kiểm đếm"), new("S-BANH", 50, 50, null)]),
+        new("S-PK-01", "S-TK-KHO", "S-TK-QL", Utc("2026-10-11T04:00:00"), Utc("2026-10-11T04:30:00"), "HoanTat", [new("S-SUA", 134, 132, "Hai hộp hỏng khi kiểm đếm"), new("S-BANH", 50, 50, null)]),
         new("S-PK-02", "S-TK-KHO", null, Utc("2026-11-26T04:00:00"), null, "DangKiem", [new("S-BANH", 32, null, null)]),
-        new("S-PK-03", "S-TK-KHO", null, Utc("2026-11-26T05:00:00"), null, "ChoDuyet", [new("S-SUA", 110, 110, null)]),
+        new("S-PK-03", "S-TK-KHO", null, Utc("2026-11-26T05:00:00"), null, "ChoDuyet", [new("S-SUA", 108, 108, null)]),
         ];
         foreach (var phieuKiem in phieuKiems)
             _phieuKiems.Add(phieuKiem.Ma, phieuKiem);
@@ -228,6 +231,11 @@ public sealed partial class KhoDemoStore
         new("S-BD-032", "S-BANH", "XuatBan", -1, Utc("2026-11-12T03:30:00"), "S-DB-NOV-11-2", "XuatBan:S-DB-NOV-11-2"),
         new("S-BD-033", "S-SUA", "XuatBan", -3, Utc("2026-11-12T03:33:00"), "S-DB-NOV-12-1", "XuatBan:S-DB-NOV-12-1"),
         new("S-BD-034", "S-BANH", "XuatBan", -2, Utc("2026-11-12T03:33:00"), "S-DB-NOV-12-2", "XuatBan:S-DB-NOV-12-2"),
+        // Số dư đầu kỳ cho các mặt hàng riêng của POS demo, ngoài seed SQL.
+        new("S-BD-035", "S-SUA-1L", "TonDauDemo", 40, Utc("2026-09-15T01:00:00"), "POS-DEMO", "TonDauDemo:S-SUA-1L"),
+        new("S-BD-036", "S-NUOC", "TonDauDemo", 60, Utc("2026-09-15T01:00:00"), "POS-DEMO", "TonDauDemo:S-NUOC"),
+        new("S-BD-037", "S-MI", "TonDauDemo", 80, Utc("2026-09-15T01:00:00"), "POS-DEMO", "TonDauDemo:S-MI"),
+        new("S-BD-038", "S-SUA", "XuatBan", -2, Utc("2026-10-11T03:20:00"), "S-HD-1011-01", "XuatBan:S-HD-1011-01:1"),
         ];
         _bienDongs.AddRange(bienDongs);
     }

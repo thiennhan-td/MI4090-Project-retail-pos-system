@@ -66,9 +66,9 @@ public sealed class InventoryLedgerService(
         CancellationToken ct = default)
     {
         await authorization.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.KHO_TRA_SO_HANG, ct);
-        var tu = MocGhiKho.ChuanHoa(tuUtc);
-        var den = MocGhiKho.ChuanHoa(denUtc);
-        if (tu >= den)
+        MocGhiKho.KiemTraUtc(tuUtc);
+        MocGhiKho.KiemTraUtc(denUtc);
+        if (tuUtc >= denUtc)
         {
             throw new BusinessRuleViolationException("Đầu kỳ thẻ kho phải trước cuối kỳ.");
         }
@@ -78,10 +78,10 @@ public sealed class InventoryLedgerService(
             await danhMucRepo.KhoaMatHangAsync(maHang, ct);
             var hang = await danhMucRepo.LayMatHangAsync(maHang, ct)
                 ?? throw new EntityNotFoundException($"Không tìm thấy mặt hàng {maHang}.");
-            var tonDau = await bienDongRepo.LayTonTruocMocAsync(maHang, tu, ct);
-            var tonCuoi = await bienDongRepo.LayTonTruocMocAsync(maHang, den, ct);
+            var tonDau = await bienDongRepo.LayTonTruocMocAsync(maHang, tuUtc, ct);
+            var tonCuoi = await bienDongRepo.LayTonTruocMocAsync(maHang, denUtc, ct);
             var tonHienHanh = await bienDongRepo.LayTonHienHanhAsync(maHang, ct);
-            var bienDongs = await bienDongRepo.LayTrongKyAsync(maHang, tu, den, ct);
+            var bienDongs = await bienDongRepo.LayTrongKyAsync(maHang, tuUtc, denUtc, ct);
             return new TheKhoDto(hang, tonDau, tonCuoi, tonHienHanh, bienDongs);
         }, ct);
     }
@@ -154,8 +154,14 @@ public sealed class InventoryLedgerService(
             return new KetQuaGhiTheKhoDto(0, soDongDaTonTai);
         }
 
+        var xuatBan = bienDongs[0].LoaiSuKien == LoaiBienDongKho.XuatBan;
         foreach (var nhom in theoHang)
         {
+            if (xuatBan && (await danhMucRepo.LayMatHangAsync(nhom.Key, ct))?.TrangThai != TrangThaiChungTu.HoatDong)
+            {
+                throw new BusinessRuleViolationException($"Mặt hàng {nhom.Key} không hoạt động.");
+            }
+
             var thayDoi = nhom.Sum(dong => (long)dong.SoLuongThayDoi);
             var ton = await bienDongRepo.LayTonHienHanhAsync(nhom.Key, ct);
             if (thayDoi < -int.MaxValue || thayDoi + ton > int.MaxValue)
@@ -207,6 +213,10 @@ public sealed class InventoryLedgerService(
             if (!daGhi && !nguon.CoHieuLuc)
             {
                 throw new InvalidStateTransitionException($"Nguồn {bienDong.KhoaSuKien} chưa đủ điều kiện để ghi thẻ kho.");
+            }
+            if (!daGhi && nguon.LucHieuLucUtc != bienDong.ThoiDiemGhi)
+            {
+                throw new BusinessRuleViolationException($"Thời điểm ghi thẻ kho không khớp nguồn {bienDong.KhoaSuKien}.");
             }
         }
     }

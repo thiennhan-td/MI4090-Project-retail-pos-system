@@ -81,6 +81,7 @@ public sealed class StocktakeServiceTests
     {
         var phieu = PhieuChoDuyet();
         _phieuKiem.Setup(repo => repo.KhoaTheoMaAsync(phieu.MaPhieuKiem, default)).ReturnsAsync(phieu);
+        _bienDong.Setup(repo => repo.LayTonTaiMocAsync("MH-A", Moc, default)).ReturnsAsync(10);
         _phieuKiem.Setup(repo => repo.LayMocKiemDangMoMoiNhatAsync("MH-A", default)).ReturnsAsync(Moc.AddMilliseconds(2));
         _ghiBienDong.Setup(ledger => ledger.GhiBienDongNoiBoAsync(It.IsAny<IReadOnlyList<YeuCauBienDongKho>>(), default))
             .ReturnsAsync(new KetQuaGhiTheKhoDto(1, 0));
@@ -115,10 +116,38 @@ public sealed class StocktakeServiceTests
     }
 
     [Fact]
+    public async Task Duyet_TuChoiKhiBanGhiSauLucChupTonNhungCoThoiDiemTruocMocKiem()
+    {
+        var phieu = PhieuChoDuyet();
+        var dong = Assert.Single(phieu.DongKiems);
+        var banGhiMuon = BienDongKho.Tao("BD-1", dong.MaHang, LoaiBienDongKho.XuatBan, -2,
+            Moc.AddMilliseconds(-1), maDongBan: "DB-1");
+        _phieuKiem.Setup(repo => repo.KhoaTheoMaAsync(phieu.MaPhieuKiem, default)).ReturnsAsync(phieu);
+        var daKhoaMatHang = false;
+        _danhMuc.Setup(repo => repo.KhoaMatHangAsync(dong.MaHang, default))
+            .Callback(() => daKhoaMatHang = true).Returns(Task.CompletedTask);
+        _bienDong.Setup(repo => repo.LayTonTaiMocAsync(dong.MaHang, Moc, default)).ReturnsAsync(() =>
+        {
+            Assert.True(daKhoaMatHang);
+            return dong.TonSoTaiMoc + banGhiMuon.SoLuongThayDoi;
+        });
+
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => TaoService().DuyetAsync("TK-QL", phieu.MaPhieuKiem));
+
+        Assert.Equal(TrangThaiChungTu.ChoDuyet, phieu.TrangThai);
+        Assert.Equal(10, dong.TonSoTaiMoc);
+        _phieuKiem.Verify(repo => repo.CapNhatAsync(It.IsAny<PhieuKiem>(), default), Times.Never);
+        _ghiBienDong.VerifyNoOtherCalls();
+        _work.Verify(work => work.RollbackAsync(CancellationToken.None), Times.Once);
+        _work.Verify(work => work.CommitAsync(default), Times.Never);
+    }
+
+    [Fact]
     public async Task Duyet_LoiThieuTonTuTheKhoHoanTacCapNhatPhieu()
     {
         var phieu = PhieuChoDuyet();
         _phieuKiem.Setup(repo => repo.KhoaTheoMaAsync(phieu.MaPhieuKiem, default)).ReturnsAsync(phieu);
+        _bienDong.Setup(repo => repo.LayTonTaiMocAsync("MH-A", Moc, default)).ReturnsAsync(10);
         var loi = new InsufficientStockException("MH-A", 2, 3);
         _ghiBienDong.Setup(ledger => ledger.GhiBienDongNoiBoAsync(It.IsAny<IReadOnlyList<YeuCauBienDongKho>>(), default))
             .ThrowsAsync(loi);

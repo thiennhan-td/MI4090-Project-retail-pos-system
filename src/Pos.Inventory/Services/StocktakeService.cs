@@ -139,6 +139,12 @@ public sealed class StocktakeService(
                     throw new ConcurrencyConflictException($"Mặt hàng {dong.MaHang} đã được điều chỉnh sau khi chụp tồn. Hãy lập phiếu mới.");
                 }
 
+                // Giao dịch ghi sau khi chụp tồn có thể mang thời điểm nghiệp vụ trước mốc kiểm.
+                if (await bienDongRepo.LayTonTaiMocAsync(dong.MaHang, phieu.MocKiem, ct) != dong.TonSoTaiMoc)
+                {
+                    throw new ConcurrencyConflictException($"Tồn sổ tại mốc kiểm của mặt hàng {dong.MaHang} đã thay đổi. Hãy lập phiếu mới.");
+                }
+
                 // Các dòng có chênh lệch được kiểm tra tồn lại trong cùng khóa khi ghi thẻ.
                 if (dong.ChenhLech == 0 && await bienDongRepo.LayTonHienHanhAsync(dong.MaHang, ct) < 0)
                 {

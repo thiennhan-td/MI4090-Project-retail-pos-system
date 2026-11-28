@@ -22,6 +22,8 @@ public sealed class InventoryLedgerServiceTests
         var so = 0;
         _bienDong.SetupGet(repo => repo.CoGiaoDich).Returns(true);
         _bienDong.Setup(repo => repo.SinhMaAsync(default)).ReturnsAsync(() => $"BD-{++so}");
+        _danhMuc.Setup(repo => repo.LayMatHangAsync(It.IsAny<string>(), default))
+            .ReturnsAsync((string ma, CancellationToken _) => new MatHang(ma, "NH-1", ma, "cái", 0));
     }
 
     [Fact]
@@ -51,6 +53,7 @@ public sealed class InventoryLedgerServiceTests
             .ReturnsAsync(BienDongKho.Tao("BD-100", "MH-A", LoaiBienDongKho.XuatBan, -2, Luc, maDongBan: "DB-1"));
 
         Assert.Equal(new KetQuaGhiTheKhoDto(0, 1), await TaoService().GhiNhanXuatBanAsync(yeuCau, default));
+        _danhMuc.Verify(repo => repo.LayMatHangAsync(It.IsAny<string>(), default), Times.Never);
         _bienDong.Verify(repo => repo.LayTonHienHanhAsync(It.IsAny<string>(), default), Times.Never);
         _bienDong.Verify(repo => repo.ThemAsync(It.IsAny<BienDongKho>(), default), Times.Never);
     }
@@ -87,9 +90,40 @@ public sealed class InventoryLedgerServiceTests
     }
 
     [Fact]
+    public async Task XuatBan_GiuCungKyVoiHoaDonKhiThoiDiemGanNuaDemDiaPhuong()
+    {
+        var dauNgayMoiUtc = new DateTime(2026, 11, 28, 17, 0, 0, DateTimeKind.Utc);
+        var yeuCau = new YeuCauXuatBanDto("HD-1", dauNgayMoiUtc.AddTicks(-4_000), [new("DB-1", "MH-A", 2)]);
+        var lucNguonUtc = dauNgayMoiUtc.AddMilliseconds(-1);
+        CaiNguonBan(yeuCau, lucNguonUtc: lucNguonUtc);
+        _bienDong.Setup(repo => repo.LayTonHienHanhAsync("MH-A", default)).ReturnsAsync(2);
+
+        Assert.Equal(new KetQuaGhiTheKhoDto(1, 0), await TaoService().GhiNhanXuatBanAsync(yeuCau, default));
+
+        _bienDong.Verify(repo => repo.ThemAsync(It.Is<BienDongKho>(dong => dong.ThoiDiemGhi == lucNguonUtc), default), Times.Once);
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(() => TaoService().GhiNhanXuatBanAsync(
+            yeuCau with { LucXacNhanUtc = dauNgayMoiUtc }, default));
+    }
+
+    [Fact]
+    public async Task XuatBan_TuChoiMatHangDaNgungSuDungKhiXacNhan()
+    {
+        var yeuCau = new YeuCauXuatBanDto("HD-1", Luc, [new("DB-1", "MH-A", 2)]);
+        CaiNguonBan(yeuCau);
+        var matHang = new MatHang("MH-A", "NH-1", "Mặt hàng A", "cái", 0);
+        matHang.NgungSuDung();
+        _danhMuc.Setup(repo => repo.LayMatHangAsync(matHang.MaHang, default)).ReturnsAsync(matHang);
+        _bienDong.Setup(repo => repo.LayTonHienHanhAsync(matHang.MaHang, default)).ReturnsAsync(5);
+
+        await Assert.ThrowsAsync<BusinessRuleViolationException>(() => TaoService().GhiNhanXuatBanAsync(yeuCau, default));
+
+        _bienDong.Verify(repo => repo.ThemAsync(It.IsAny<BienDongKho>(), default), Times.Never);
+    }
+
+    [Fact]
     public async Task NhapKhoNoiBo_DungNguonVaSoLuongThiGhiTrongGiaoDichCuaChungTu()
     {
-        var nguon = new NguonBienDongKho("DN-1", "MH-A", "PN-1", 5, true);
+        var nguon = new NguonBienDongKho("DN-1", "MH-A", "PN-1", 5, true, Luc);
         _bienDong.Setup(repo => repo.LayNguonAsync(It.IsAny<BienDongKho>(), default)).ReturnsAsync(nguon);
         _bienDong.Setup(repo => repo.LayCacNguonAsync(LoaiBienDongKho.NhapKho, "PN-1", default)).ReturnsAsync([nguon]);
         var yeuCau = new YeuCauBienDongKho("MH-A", LoaiBienDongKho.NhapKho, 5, Luc, "DN-1");
@@ -105,21 +139,22 @@ public sealed class InventoryLedgerServiceTests
     [Fact]
     public async Task TheKho_TraDungSoTonTheoKyVaTonHienHanhTrongMotGiaoDich()
     {
-        var den = Luc.AddDays(1);
+        var tu = Luc.AddTicks(1_234);
+        var den = Luc.AddMilliseconds(1).AddTicks(5_678);
         var hang = new MatHang("MH-A", "NH-1", "Mặt hàng A", "hộp", 0);
-        var dong = BienDongKho.Tao("BD-1", hang.MaHang, LoaiBienDongKho.XuatBan, -3, Luc, maDongBan: "DB-1");
+        var dong = BienDongKho.Tao("BD-1", hang.MaHang, LoaiBienDongKho.XuatBan, -3, Luc.AddMilliseconds(1), maDongBan: "DB-1");
         _bienDong.SetupGet(repo => repo.CoGiaoDich).Returns(false);
         var thuTu = new MockSequence();
         _work.InSequence(thuTu).Setup(work => work.BeginTransactionAsync(default)).Returns(Task.CompletedTask);
         _danhMuc.InSequence(thuTu).Setup(repo => repo.KhoaMatHangAsync(hang.MaHang, default)).Returns(Task.CompletedTask);
-        _bienDong.InSequence(thuTu).Setup(repo => repo.LayTonTruocMocAsync(hang.MaHang, Luc, default)).ReturnsAsync(10);
+        _bienDong.InSequence(thuTu).Setup(repo => repo.LayTonTruocMocAsync(hang.MaHang, tu, default)).ReturnsAsync(10);
         _bienDong.InSequence(thuTu).Setup(repo => repo.LayTonTruocMocAsync(hang.MaHang, den, default)).ReturnsAsync(7);
         _bienDong.InSequence(thuTu).Setup(repo => repo.LayTonHienHanhAsync(hang.MaHang, default)).ReturnsAsync(11);
-        _bienDong.InSequence(thuTu).Setup(repo => repo.LayTrongKyAsync(hang.MaHang, Luc, den, default)).ReturnsAsync([dong]);
+        _bienDong.InSequence(thuTu).Setup(repo => repo.LayTrongKyAsync(hang.MaHang, tu, den, default)).ReturnsAsync([dong]);
         _work.InSequence(thuTu).Setup(work => work.CommitAsync(default)).Returns(Task.CompletedTask);
         _danhMuc.Setup(repo => repo.LayMatHangAsync(hang.MaHang, default)).ReturnsAsync(hang);
 
-        var the = await TaoService().TraTheKhoAsync("TK-KHO", hang.MaHang, Luc, den);
+        var the = await TaoService().TraTheKhoAsync("TK-KHO", hang.MaHang, tu, den);
 
         Assert.Equal(10, the.TonDauKy);
         Assert.Equal(7, the.TonCuoiKy);
@@ -152,8 +187,9 @@ public sealed class InventoryLedgerServiceTests
 
     private InventoryLedgerService TaoService() => new(_bienDong.Object, _danhMuc.Object, _auth.Object, _work.Object);
 
-    private void CaiNguonBan(YeuCauXuatBanDto yeuCau, bool coHieuLuc = true)
+    private void CaiNguonBan(YeuCauXuatBanDto yeuCau, bool coHieuLuc = true, DateTime? lucNguonUtc = null)
         => _bienDong.Setup(repo => repo.LayCacNguonAsync(LoaiBienDongKho.XuatBan, yeuCau.MaHoaDon, default))
             .ReturnsAsync(yeuCau.DongHang.Select(dong =>
-                new NguonBienDongKho(dong.MaDongBan, dong.MaHang, yeuCau.MaHoaDon, -dong.SoLuongBan, coHieuLuc)).ToArray());
+                new NguonBienDongKho(dong.MaDongBan, dong.MaHang, yeuCau.MaHoaDon, -dong.SoLuongBan,
+                    coHieuLuc, lucNguonUtc ?? Luc)).ToArray());
 }

@@ -21,8 +21,8 @@ internal static class InventorySql
         { Value = (object?)value ?? DBNull.Value };
     public static SqlParameter Tien(string name, decimal? value) => new(name, SqlDbType.Decimal)
         { Precision = 19, Scale = 0, Value = (object?)value ?? DBNull.Value };
-    public static SqlParameter Luc(string name, DateTime? value) => new(name, SqlDbType.DateTime2)
-        { Scale = 3, Value = (object?)value ?? DBNull.Value };
+    public static SqlParameter Luc(string name, DateTime? value, byte scale = 3) => new(name, SqlDbType.DateTime2)
+        { Scale = scale, Value = (object?)value ?? DBNull.Value };
     public static SqlParameter Ngay(string name, DateOnly? value) => new(name, SqlDbType.Date)
         { Value = (object?)value?.ToDateTime(TimeOnly.MinValue) ?? DBNull.Value };
     public static SqlParameter So(string name, int? value) => new(name, SqlDbType.Int)

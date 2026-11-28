@@ -43,7 +43,8 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
     {
         var maNguon = bienDong.MaDongBan ?? bienDong.MaDongTra ?? bienDong.MaDongNhap ?? bienDong.MaPhieuKiem;
         return work.DocAsync(factory, $"""
-            SELECT MaNguon, MaHang, MaChungTu, SoLuong, CoHieuLuc FROM ({TruyVanNguon(bienDong.LoaiSuKien)}) AS nguon
+            SELECT MaNguon, MaHang, MaChungTu, SoLuong, CoHieuLuc, LucHieuLuc
+            FROM ({TruyVanNguon(bienDong.LoaiSuKien)}) AS nguon
             WHERE MaNguon = @nguon AND MaHang = @hang;
             """, (command, token) => DocMotAsync(command, AnhXaNguon, token),
             ct, Ma("@nguon", maNguon), Ma("@hang", bienDong.MaHang));
@@ -51,7 +52,8 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
 
     public Task<IReadOnlyList<NguonBienDongKho>> LayCacNguonAsync(string loaiSuKien, string maChungTu, CancellationToken ct)
         => work.DocAsync(factory, $"""
-            SELECT MaNguon, MaHang, MaChungTu, SoLuong, CoHieuLuc FROM ({TruyVanNguon(loaiSuKien)}) AS nguon
+            SELECT MaNguon, MaHang, MaChungTu, SoLuong, CoHieuLuc, LucHieuLuc
+            FROM ({TruyVanNguon(loaiSuKien)}) AS nguon
             WHERE MaChungTu = @chungTu;
             """, (command, token) => DocNhieuAsync(command, AnhXaNguon, token), ct, Ma("@chungTu", maChungTu));
 
@@ -64,7 +66,7 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
 
     public Task<int> LayTonTruocMocAsync(string maHang, DateTime mocUtc, CancellationToken ct)
         => work.DocAsync(factory, $"{TongTon} WHERE maHang = @hang AND thoiDiemGhi < @moc;", DocTonAsync,
-            ct, Ma("@hang", maHang), Luc("@moc", mocUtc));
+            ct, Ma("@hang", maHang), Luc("@moc", mocUtc, 7));
 
     public Task<IReadOnlyList<BienDongKho>> LayTrongKyAsync(string maHang, DateTime tuUtc, DateTime denUtc, CancellationToken ct)
         => work.DocAsync(factory, $"""
@@ -72,7 +74,7 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
             WHERE maHang = @hang AND thoiDiemGhi >= @tu AND thoiDiemGhi < @den
             ORDER BY thoiDiemGhi, maBienDong;
             """, (command, token) => DocNhieuAsync(command, AnhXa, token),
-            ct, Ma("@hang", maHang), Luc("@tu", tuUtc), Luc("@den", denUtc));
+            ct, Ma("@hang", maHang), Luc("@tu", tuUtc, 7), Luc("@den", denUtc, 7));
 
     public Task<DateTime?> LayMocDieuChinhCuoiAsync(string maHang, CancellationToken ct)
         => work.DocAsync<DateTime?>(factory, """
@@ -89,13 +91,15 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
         reader.ChuNull(5), reader.ChuNull(6), reader.ChuNull(7), reader.ChuNull(8));
 
     private static NguonBienDongKho AnhXaNguon(SqlDataReader reader)
-        => new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetInt32(3), reader.GetBoolean(4));
+        => new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetInt32(3),
+            reader.GetBoolean(4), reader.LucNull(5));
 
     private static string TruyVanNguon(string loaiSuKien) => loaiSuKien switch
     {
         LoaiBienDongKho.XuatBan => """
             SELECT d.maDongBan AS MaNguon, d.maHang AS MaHang, d.maHoaDon AS MaChungTu, -d.soLuongBan AS SoLuong,
-                CONVERT(bit, CASE WHEN p.trangThai = 'DaXacNhan' THEN 1 ELSE 0 END) AS CoHieuLuc
+                CONVERT(bit, CASE WHEN p.trangThai = 'DaXacNhan' THEN 1 ELSE 0 END) AS CoHieuLuc,
+                p.lucXacNhan AS LucHieuLuc
             FROM dbo.DongBan AS d JOIN dbo.HoaDon AS p ON p.maHoaDon = d.maHoaDon
             """,
         LoaiBienDongKho.DaoXuatBan => """
@@ -103,19 +107,21 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
                 CONVERT(bit, CASE WHEN p.trangThai = 'DaHuy' AND p.lucXacNhan IS NOT NULL AND EXISTS (
                     SELECT 1 FROM dbo.BienDongKho AS goc WHERE goc.khoaSuKien = CONCAT('XuatBan:', d.maDongBan)
                         AND goc.maHang = d.maHang AND goc.soLuongThayDoi = -d.soLuongBan
-                ) THEN 1 ELSE 0 END) AS CoHieuLuc
+                ) THEN 1 ELSE 0 END) AS CoHieuLuc, p.lucHuy AS LucHieuLuc
             FROM dbo.DongBan AS d JOIN dbo.HoaDon AS p ON p.maHoaDon = d.maHoaDon
             """,
         LoaiBienDongKho.NhapTraHang => """
             SELECT d.maDongTra AS MaNguon, ban.maHang AS MaHang, d.maPhieuTra AS MaChungTu, d.soLuongNhapLai AS SoLuong,
-                CONVERT(bit, CASE WHEN p.trangThai = 'DaXacNhan' THEN 1 ELSE 0 END) AS CoHieuLuc
+                CONVERT(bit, CASE WHEN p.trangThai = 'DaXacNhan' THEN 1 ELSE 0 END) AS CoHieuLuc,
+                p.lucXacNhan AS LucHieuLuc
             FROM dbo.DongTra AS d JOIN dbo.DongBan AS ban ON ban.maDongBan = d.maDongBan
             JOIN dbo.PhieuTra AS p ON p.maPhieuTra = d.maPhieuTra
             WHERE d.soLuongNhapLai > 0
             """,
         LoaiBienDongKho.NhapKho => """
             SELECT d.maDongNhap AS MaNguon, d.maHang AS MaHang, d.maPhieuNhap AS MaChungTu, d.soLuongNhap AS SoLuong,
-                CONVERT(bit, CASE WHEN p.trangThai = 'DaXacNhan' THEN 1 ELSE 0 END) AS CoHieuLuc
+                CONVERT(bit, CASE WHEN p.trangThai = 'DaXacNhan' THEN 1 ELSE 0 END) AS CoHieuLuc,
+                p.lucXacNhan AS LucHieuLuc
             FROM dbo.DongNhap AS d JOIN dbo.PhieuNhap AS p ON p.maPhieuNhap = d.maPhieuNhap
             """,
         LoaiBienDongKho.DaoNhapKho => """
@@ -123,13 +129,14 @@ public sealed class SqlBienDongKhoRepository(SqlUnitOfWork work, SqlConnectionFa
                 CONVERT(bit, CASE WHEN p.trangThai = 'DaHuy' AND p.lucXacNhan IS NOT NULL AND EXISTS (
                     SELECT 1 FROM dbo.BienDongKho AS goc WHERE goc.khoaSuKien = CONCAT('NhapKho:', d.maDongNhap)
                         AND goc.maHang = d.maHang AND goc.soLuongThayDoi = d.soLuongNhap
-                ) THEN 1 ELSE 0 END) AS CoHieuLuc
+                ) THEN 1 ELSE 0 END) AS CoHieuLuc, p.lucHuy AS LucHieuLuc
             FROM dbo.DongNhap AS d JOIN dbo.PhieuNhap AS p ON p.maPhieuNhap = d.maPhieuNhap
             """,
         LoaiBienDongKho.DieuChinhKiemKho => """
             SELECT d.maPhieuKiem AS MaNguon, d.maHang AS MaHang, d.maPhieuKiem AS MaChungTu,
                 d.soLuongDem - d.tonSoTaiMoc AS SoLuong,
-                CONVERT(bit, CASE WHEN p.trangThai = 'HoanTat' THEN 1 ELSE 0 END) AS CoHieuLuc
+                CONVERT(bit, CASE WHEN p.trangThai = 'HoanTat' THEN 1 ELSE 0 END) AS CoHieuLuc,
+                p.lucHoanTat AS LucHieuLuc
             FROM dbo.DongKiem AS d JOIN dbo.PhieuKiem AS p ON p.maPhieuKiem = d.maPhieuKiem
             WHERE d.soLuongDem <> d.tonSoTaiMoc
             """,

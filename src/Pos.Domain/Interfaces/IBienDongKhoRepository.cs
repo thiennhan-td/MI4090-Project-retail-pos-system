@@ -19,4 +19,4 @@ public interface IBienDongKhoRepository
 }
 
 public sealed record NguonBienDongKho(string MaNguon, string MaHang, string MaChungTu, int SoLuongThayDoi,
-    bool CoHieuLuc);
+    bool CoHieuLuc, DateTime? LucHieuLucUtc);

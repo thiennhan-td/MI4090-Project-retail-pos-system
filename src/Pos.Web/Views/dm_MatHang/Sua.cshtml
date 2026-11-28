@@ -1,0 +1,18 @@
+@model MatHangFormViewModel
+@{
+    var ma = ViewData["Ma"] as string;
+    var nhoms = (NhomHangDemo[])ViewData["NhomHangs"]!;
+    ViewData["Title"] = ma is null ? "Thêm mặt hàng" : "Sửa mặt hàng";
+}
+<a class="kho-back" asp-action="Index">← Mặt hàng</a>
+<form asp-action="Sua" asp-route-id="@ma" method="post" class="kho-card kho-stack kho-form">
+    <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
+    <label asp-for="Ten">Tên mặt hàng<input asp-for="Ten" class="pos-input" required /></label>
+    <label asp-for="MaNhom">Nhóm hàng<select asp-for="MaNhom" class="pos-input" required>
+        <option value="">Chọn nhóm đang hoạt động</option>
+        @foreach (var nhom in nhoms) { <option value="@nhom.Ma">@nhom.Ten</option> }
+    </select></label>
+    <label asp-for="DonVi">Đơn vị tính<input asp-for="DonVi" class="pos-input" required /></label>
+    <label asp-for="GiaBan">Giá bán hiện hành (₫)<input asp-for="GiaBan" class="pos-input" type="number" min="0" max="999999999" step="1" required /></label>
+    <button class="pos-btn pos-btn-primary" type="submit">Lưu mặt hàng</button>
+</form>

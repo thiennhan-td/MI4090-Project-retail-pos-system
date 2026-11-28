@@ -1,0 +1,54 @@
+@model XuatNhapTonViewModel
+@{
+    ViewData["Title"] = "Thống kê xuất, nhập, tồn";
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+    var tu = Model.Ky.Tu.ToString("yyyy-MM-dd");
+    var den = Model.Ky.Den.ToString("yyyy-MM-dd");
+}
+<form asp-action="XuatNhapTon" method="get" class="kho-card kho-filters">
+    <partial name="_KhoKy" model="Model.Ky" />
+    <label>Nhóm hàng<select class="pos-input" name="maNhom">
+        <option value="">Tất cả nhóm</option>
+        @foreach (var nhom in Model.NhomHangs)
+        { <option value="@nhom.Ma" selected="@(nhom.Ma == Model.Ky.MaNhom)">@nhom.Ten</option> }
+    </select></label>
+    <button class="pos-btn pos-btn-primary" type="submit">Xem báo cáo</button>
+</form>
+<section class="kho-card">
+    <div class="kho-card-head"><h2>Số lượng theo mặt hàng</h2>
+        @if (ViewData.ModelState.IsValid)
+        { <a class="pos-btn pos-btn-secondary" asp-action="XuatNhapTon" asp-route-tu="@tu" asp-route-den="@den" asp-route-maNhom="@Model.Ky.MaNhom" asp-route-csv="true">Tải CSV</a> }
+    </div>
+    <div class="kho-totals">
+        <div>Tồn đầu<strong>@HienThiKho.So(Model.Dongs.Sum(x => x.TonDau))</strong></div>
+        <div>Nhập trong kỳ<strong>@HienThiKho.So(Model.Dongs.Sum(x => x.Nhap))</strong></div>
+        <div>Xuất trong kỳ<strong>@HienThiKho.So(Model.Dongs.Sum(x => x.Xuat))</strong></div>
+        <div>Tồn cuối<strong>@HienThiKho.So(Model.Dongs.Sum(x => x.TonCuoi))</strong></div>
+    </div>
+    <div class="pos-table-wrap"><table class="pos-table kho-table">
+        <thead><tr><th>Mã hàng</th><th>Mặt hàng</th><th>Nhóm</th><th>Đơn vị</th><th class="kho-num">Tồn đầu</th>
+            <th class="kho-num">Nhập mua ròng</th><th class="kho-num">Xuất bán ròng</th>
+            <th class="kho-num">Trả nhập lại</th><th class="kho-num">Điều chỉnh kiểm kê</th>
+            <th class="kho-num">Tổng nhập</th><th class="kho-num">Tổng xuất</th><th class="kho-num">Tồn cuối</th></tr></thead>
+        <tbody>
+        @foreach (var dong in Model.Dongs)
+        {
+            <tr>
+                <td>
+                    @if (user?.CoQuyen("KHO_TRA_SO_HANG") == true)
+                    { <a asp-controller="KiemKho" asp-action="TheKho" asp-route-maHang="@dong.Hang.Ma" asp-route-tu="@tu" asp-route-den="@den">@dong.Hang.Ma</a> }
+                    else { @dong.Hang.Ma }
+                </td>
+                <td>@dong.Hang.Ten</td><td>@dong.TenNhom</td><td>@dong.Hang.DonVi</td>
+                <td class="kho-num">@HienThiKho.So(dong.TonDau)</td>
+                <td class="kho-num">@HienThiKho.So(dong.NhapMuaRong)</td>
+                <td class="kho-num">@HienThiKho.So(dong.XuatBanRong)</td>
+                <td class="kho-num">@HienThiKho.So(dong.TraNhapLai)</td>
+                <td class="kho-num">@HienThiKho.So(dong.DieuChinhKiemKe)</td>
+                <td class="kho-num">@HienThiKho.So(dong.Nhap)</td><td class="kho-num">@HienThiKho.So(dong.Xuat)</td><td class="kho-num"><strong>@HienThiKho.So(dong.TonCuoi)</strong></td>
+            </tr>
+        }
+        </tbody>
+    </table></div>
+    @if (Model.Dongs.Count == 0) { <p class="kho-empty">Không có dữ liệu phù hợp.</p> }
+</section>

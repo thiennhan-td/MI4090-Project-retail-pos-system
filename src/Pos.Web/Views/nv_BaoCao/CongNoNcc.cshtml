@@ -1,0 +1,48 @@
+@model CongNoNccViewModel
+@{
+    ViewData["Title"] = "Nhập hàng và công nợ NCC";
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+    var tu = Model.Ky.Tu.ToString("yyyy-MM-dd");
+    var den = Model.Ky.Den.ToString("yyyy-MM-dd");
+}
+<form asp-action="CongNoNcc" method="get" class="kho-card kho-filters">
+    <partial name="_KhoKy" model="Model.Ky" />
+    <label>Nhà cung cấp<select class="pos-input" name="maNcc">
+        <option value="">Tất cả nhà cung cấp</option>
+        @foreach (var ncc in Model.NhaCungCaps)
+        { <option value="@ncc.Ma" selected="@(ncc.Ma == Model.Ky.MaNcc)">@ncc.Ten</option> }
+    </select></label>
+    <button class="pos-btn pos-btn-primary" type="submit">Xem báo cáo</button>
+</form>
+<section class="kho-card">
+    <div class="kho-card-head"><h2>Dư nợ theo nhà cung cấp</h2>
+        @if (ViewData.ModelState.IsValid)
+        { <a class="pos-btn pos-btn-secondary" asp-action="CongNoNcc" asp-route-tu="@tu" asp-route-den="@den" asp-route-maNcc="@Model.Ky.MaNcc" asp-route-csv="true">Tải CSV</a> }
+    </div>
+    <div class="kho-totals">
+        <div>Dư đầu<strong>@HienThiKho.Tien(Model.Dongs.Sum(x => x.Dau))</strong></div>
+        <div>Nhập trong kỳ<strong>@HienThiKho.Tien(Model.Dongs.Sum(x => x.Nhap))</strong></div>
+        <div>Đảo nhập<strong>@HienThiKho.Tien(Model.Dongs.Sum(x => x.Dao))</strong></div>
+        <div>Đã trả<strong>@HienThiKho.Tien(Model.Dongs.Sum(x => x.Tra))</strong></div>
+        <div>Dư cuối<strong>@HienThiKho.Tien(Model.Dongs.Sum(x => x.Cuoi))</strong></div>
+    </div>
+    <div class="pos-table-wrap"><table class="pos-table kho-table">
+        <thead><tr><th>Mã NCC</th><th>Nhà cung cấp</th><th class="kho-num">Dư đầu</th><th class="kho-num">Nhập</th><th class="kho-num">Đảo nhập</th><th class="kho-num">Đã trả</th><th class="kho-num">Dư cuối</th></tr></thead>
+        <tbody>
+        @foreach (var dong in Model.Dongs)
+        {
+            <tr>
+                <td>
+                    @if (user?.CoQuyen("NHAP_TRA_CUU") == true)
+                    { <a asp-controller="NhapHang" asp-action="Index" asp-route-maNcc="@dong.Ncc.Ma">@dong.Ncc.Ma</a> }
+                    else { @dong.Ncc.Ma }
+                </td>
+                <td>@dong.Ncc.Ten</td><td class="kho-num">@HienThiKho.Tien(dong.Dau)</td><td class="kho-num">@HienThiKho.Tien(dong.Nhap)</td>
+                <td class="kho-num">@HienThiKho.Tien(dong.Dao)</td><td class="kho-num">@HienThiKho.Tien(dong.Tra)</td>
+                <td class="kho-num"><strong>@HienThiKho.Tien(dong.Cuoi)</strong></td>
+            </tr>
+        }
+        </tbody>
+    </table></div>
+    @if (Model.Dongs.Count == 0) { <p class="kho-empty">Không có dữ liệu phù hợp.</p> }
+</section>

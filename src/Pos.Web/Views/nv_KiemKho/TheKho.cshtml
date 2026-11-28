@@ -1,0 +1,44 @@
+@model TheKhoViewModel
+@{
+    ViewData["Title"] = "Thẻ kho";
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+}
+<form asp-action="TheKho" method="get" class="kho-card kho-filters">
+    <label>Mặt hàng<select class="pos-input" name="maHang">
+        @foreach (var hang in Model.MatHangs)
+        { <option value="@hang.Ma" selected="@(hang.Ma == Model.Ky.MaHang)">@hang.Ma · @hang.Ten</option> }
+    </select></label>
+    <partial name="_KhoKy" model="Model.Ky" />
+    <button type="submit" class="pos-btn pos-btn-primary">Xem thẻ kho</button>
+</form>
+@if (Model.The is TheKhoDemo the)
+{
+    <section class="kho-card">
+        <div class="kho-card-head"><h2>@the.Hang.Ten</h2><span class="kho-badge">@the.Hang.Ma · @the.Hang.DonVi</span></div>
+        <div class="kho-totals">
+            <div>Tồn đầu kỳ<strong>@HienThiKho.So(the.TonDau)</strong></div>
+            <div>Biến động ròng<strong>@HienThiKho.So(the.TonCuoi - the.TonDau)</strong></div>
+            <div>Tồn cuối kỳ<strong>@HienThiKho.So(the.TonCuoi)</strong></div>
+        </div>
+        <div class="pos-table-wrap"><table class="pos-table kho-table">
+            <thead><tr><th>Thời điểm</th><th>Loại biến động</th><th>Chứng từ</th><th class="kho-num">Thay đổi</th><th class="kho-num">Tồn sau</th></tr></thead>
+            <tbody>
+            @foreach (var dong in the.Dongs)
+            {
+                var bd = dong.BienDong;
+                <tr><td>@KhoDemoStore.HienThiNgayGio(bd.LucGhi)</td><td>@HienThiKho.Nhan(bd.Loai)</td>
+                    <td>
+                        @if ((bd.Loai is "NhapKho" or "DaoNhapKho") && dong.MaChungTu is not null && user?.CoQuyen("NHAP_TRA_CUU") == true)
+                        { <a asp-controller="NhapHang" asp-action="ChiTiet" asp-route-id="@dong.MaChungTu">@dong.MaChungTu</a> }
+                        else if (bd.Loai == "DieuChinhKiemKho" && user?.CoQuyen("KHO_XEM_XET_KIEM") == true)
+                        { <a asp-controller="KiemKho" asp-action="ChiTiet" asp-route-id="@bd.Nguon">@bd.Nguon</a> }
+                        else { @(dong.MaChungTu ?? bd.Nguon) }
+                    </td>
+                    <td class="kho-num @(bd.SoLuong < 0 ? "kho-negative" : "kho-positive")">@(bd.SoLuong > 0 ? "+" : "")@HienThiKho.So(bd.SoLuong)</td>
+                    <td class="kho-num">@HienThiKho.So(dong.TonSau)</td></tr>
+            }
+            </tbody>
+        </table></div>
+        @if (the.Dongs.Count == 0) { <p class="kho-empty">Không phát sinh biến động trong kỳ.</p> }
+    </section>
+}

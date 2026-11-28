@@ -1,6 +1,10 @@
-﻿@{
+@inject KhoDemoSessionProvider KhoSessions
+@{
+    var khoUser = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo ?? KhoSessions.DanhTinhHienTai(Context);
     var pageTitle = ViewData["Title"] as string ?? "Retail Core POS";
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var isKho = currentController is "HeThong" or "NhomHang" or "MatHang" or "NhaCungCap"
+        or "NhapHang" or "KiemKho" or "BaoCao";
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isHome = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase)
         && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
@@ -16,6 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@pageTitle · Retail Core POS</title>
     <link rel="stylesheet" href="~/css/pos-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pos-kho.css" asp-append-version="true" />
 </head>
 <body>
     <div class="pos-shell">
@@ -50,18 +55,9 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f1"></use></svg>
                         <span>F1 · Quản trị hệ thống</span>
                     </h2>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Đăng nhập hệ thống POS</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Quản lý tài khoản nhân sự</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Cấu hình phân quyền vai trò</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    <partial name="_KhoNav" model='(("HeThong", "DangNhap", "Đăng nhập hệ thống POS", currentController == "HeThong" && (currentAction == "DangNhap"), true))' />
+                    <partial name="_KhoNav" model='(("HeThong", "TaiKhoan", "Quản lý tài khoản nhân sự", currentController == "HeThong" && (currentAction == "TaiKhoan" || currentAction == "SuaTaiKhoan"), khoUser is null || khoUser.CoQuyen("HT_QL_TAI_KHOAN")))' />
+                    <partial name="_KhoNav" model='(("HeThong", "PhanQuyen", "Cấu hình phân quyền vai trò", currentController == "HeThong" && (currentAction == "PhanQuyen"), khoUser is null || khoUser.CoQuyen("HT_PHAN_QUYEN")))' />
                 </section>
 
                 <section class="pos-nav-group" aria-label="F2 Quản lý danh mục">
@@ -69,10 +65,9 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f2"></use></svg>
                         <span>F2 · Quản lý danh mục</span>
                     </h2>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Nhóm hàng, Mặt hàng &amp; NCC</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    <partial name="_KhoNav" model='(("NhomHang", "Index", "Nhóm hàng", currentController == "NhomHang" && (currentAction == "Index" || currentAction == "Sua"), khoUser is null || khoUser.CoQuyen("DM_NHOM_XEM")))' />
+                    <partial name="_KhoNav" model='(("MatHang", "Index", "Mặt hàng", currentController == "MatHang" && (currentAction == "Index" || currentAction == "Sua"), khoUser is null || khoUser.CoQuyen("DM_HANG_XEM")))' />
+                    <partial name="_KhoNav" model='(("NhaCungCap", "Index", "Nhà cung cấp", currentController == "NhaCungCap" && (currentAction == "Index" || currentAction == "Sua"), khoUser is null || khoUser.CoQuyen("DM_NCC_XEM")))' />
                 </section>
 
                 <section class="pos-nav-group" aria-label="F3 Bán hàng và Thu tiền">
@@ -108,14 +103,8 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f5"></use></svg>
                         <span>F5 · Nhập hàng &amp; Trả tiền</span>
                     </h2>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Lập &amp; Xác nhận phiếu nhập kho</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Sổ phiếu nhập &amp; Trả tiền NCC</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    <partial name="_KhoNav" model='(("NhapHang", "Lap", "Lập phiếu nhập kho", currentController == "NhapHang" && (currentAction == "Lap"), khoUser is null || khoUser.CoQuyen("NHAP_LAP_NHAP")))' />
+                    <partial name="_KhoNav" model='(("NhapHang", "Index", "Sổ phiếu nhập và trả tiền NCC", currentController == "NhapHang" && (currentAction == "Index" || currentAction == "ChiTiet"), khoUser is null || khoUser.CoQuyen("NHAP_TRA_CUU")))' />
                 </section>
 
                 <section class="pos-nav-group" aria-label="F6 Kiểm soát tồn kho">
@@ -123,14 +112,8 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f6"></use></svg>
                         <span>F6 · Kiểm soát tồn kho</span>
                     </h2>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Sổ chi tiết hàng hóa (Thẻ kho)</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Phiếu kiểm kê &amp; Cân chỉnh tồn</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    <partial name="_KhoNav" model='(("KiemKho", "TheKho", "Sổ chi tiết hàng hóa (Thẻ kho)", currentController == "KiemKho" && (currentAction == "TheKho"), khoUser is null || khoUser.CoQuyen("KHO_TRA_SO_HANG")))' />
+                    <partial name="_KhoNav" model='(("KiemKho", "Index", "Phiếu kiểm kê và cân chỉnh tồn", currentController == "KiemKho" && (currentAction == "Index" || currentAction is "ChiTiet" or "Lap"), khoUser is null || khoUser.CoQuyen("KHO_XEM_XET_KIEM")))' />
                 </section>
 
                 <section class="pos-nav-group" aria-label="F7 Quản lý ca và Sổ quỹ">
@@ -157,14 +140,8 @@
                         <span>Báo cáo cuối ngày &amp; Bán trả</span>
                         <span class="pos-nav-tag">Sắp có</span>
                     </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Thống kê Xuất – Nhập – Tồn</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Lệch ca &amp; Công nợ NCC</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    <partial name="_KhoNav" model='(("BaoCao", "XuatNhapTon", "Thống kê xuất, nhập, tồn", currentController == "BaoCao" && (currentAction == "XuatNhapTon"), khoUser is null || khoUser.CoQuyen("BC_XUAT_NHAP_TON")))' />
+                    <partial name="_KhoNav" model='(("BaoCao", "CongNoNcc", "Nhập hàng và công nợ NCC", currentController == "BaoCao" && (currentAction == "CongNoNcc"), khoUser is null || khoUser.CoQuyen("BC_NHAP_CONG_NO")))' />
                 </section>
             </nav>
         </aside>
@@ -172,7 +149,7 @@
         <div class="pos-backdrop" id="pos-backdrop" aria-hidden="true"></div>
 
         <div class="pos-main">
-            <header class="pos-header">
+            <header class="pos-header @(isKho ? "kho-header" : null)">
                 <div class="pos-header-left">
                     <button type="button" class="pos-menu-btn" id="pos-menu-toggle" aria-controls="pos-sidebar" aria-expanded="false" aria-label="Mở thanh điều hướng">
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-menu"></use></svg>
@@ -184,11 +161,23 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-store"></use></svg>
                         <span>1 cửa hàng · 1 kho</span>
                     </span>
-                    <span class="pos-pill pos-pill-teal">Khung nền POS</span>
+                    @if (khoUser is null)
+                    {
+                        <a class="pos-pill pos-pill-teal" asp-controller="HeThong" asp-action="DangNhap">Đăng nhập demo</a>
+                    }
+                    else
+                    {
+                        <span class="pos-pill pos-pill-teal">Demo · @khoUser.HoTen · @KhoDemoStore.VaiTros[khoUser.VaiTro]</span>
+                        <form asp-controller="HeThong" asp-action="DangXuat" method="post">
+                            <button class="pos-btn pos-btn-ghost" type="submit">Đăng xuất</button>
+                        </form>
+                    }
                 </div>
             </header>
 
             <main class="pos-content" id="main-content">
+                @if (TempData["KhoSuccess"] is string msg)
+                { <p class="kho-feedback" role="status">@msg</p> }
                 @RenderBody()
             </main>
         </div>

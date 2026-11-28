@@ -1,0 +1,26 @@
+@model TaiKhoanKhoDemo[]
+@{
+    ViewData["Title"] = "Tài khoản nhân sự";
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+}
+<div class="kho-toolbar">
+    <p>Quản lý thông tin, vai trò và trạng thái tài khoản demo.</p>
+    @if (user?.CoQuyen("HT_PHAN_QUYEN") == true)
+    { <a class="pos-btn pos-btn-primary" asp-action="SuaTaiKhoan">Tạo tài khoản</a> }
+</div>
+<form asp-action="TaiKhoan" method="get" class="kho-card kho-filters">
+    <label>Tìm nhân viên<input class="pos-input" name="tuKhoa" type="search" value="@ViewData["TuKhoa"]" placeholder="Họ tên hoặc tên đăng nhập" /></label>
+    <button class="pos-btn pos-btn-secondary" type="submit">Tìm kiếm</button>
+</form>
+<div class="kho-card">
+    <div class="pos-table-wrap"><table class="pos-table kho-table">
+        <thead><tr><th>Họ tên</th><th>Tên đăng nhập</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody>@foreach (var account in Model)
+        {
+            <tr><td>@account.HoTen</td><td>@account.TenDangNhap</td><td>@KhoDemoStore.VaiTros[account.VaiTro]</td>
+                <td><span class="@(account.HoatDong ? "kho-badge kho-badge-ok" : "kho-badge")">@(account.HoatDong ? "Hoạt động" : "Bị khóa")</span></td>
+                <td><a asp-action="SuaTaiKhoan" asp-route-id="@account.Ma">Chỉnh sửa</a></td></tr>
+        }</tbody>
+    </table></div>
+    @if (Model.Length == 0) { <p class="kho-empty">Không tìm thấy tài khoản.</p> }
+</div>

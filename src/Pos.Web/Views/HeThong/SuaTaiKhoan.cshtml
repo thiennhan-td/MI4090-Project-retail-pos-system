@@ -1,0 +1,32 @@
+@model TaiKhoanFormViewModel
+@{
+    var ma = ViewData["Ma"] as string;
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+    ViewData["Title"] = ma is null ? "Tạo tài khoản" : "Chỉnh sửa tài khoản";
+}
+<a class="kho-back" asp-action="TaiKhoan">← Tài khoản nhân sự</a>
+<form asp-action="SuaTaiKhoan" asp-route-id="@ma" method="post" class="kho-card kho-stack kho-form">
+    <div class="kho-validation" asp-validation-summary="All" role="alert"></div>
+    <label asp-for="HoTen">Họ tên<input class="pos-input" asp-for="HoTen" required /></label>
+    <label asp-for="TenDangNhap">Tên đăng nhập<input class="pos-input" asp-for="TenDangNhap" required /></label>
+    @if (user?.CoQuyen("HT_PHAN_QUYEN") == true)
+    {
+        <label asp-for="VaiTro">Vai trò<select class="pos-input" asp-for="VaiTro" required>
+            <option value="">Chọn vai trò</option>
+            @foreach (var vaiTro in KhoDemoStore.VaiTros) { <option value="@vaiTro.Key">@vaiTro.Value</option> }
+        </select></label>
+    }
+    else
+    {
+        var vaiTro = (string)ViewData["VaiTroHienTai"]!;
+        <input asp-for="VaiTro" type="hidden" />
+        <p>Vai trò <strong>@KhoDemoStore.VaiTros[vaiTro]</strong></p>
+    }
+    <label asp-for="MatKhau">@(ma is null ? "Mật khẩu" : "Mật khẩu mới")
+        <input class="pos-input" asp-for="MatKhau" autocomplete="new-password" />
+    </label>
+    <p class="kho-muted">@(ma is null ? $"Để trống để dùng mật khẩu mẫu {KhoDemoStore.MatKhauMau}." : "Để trống để giữ mật khẩu hiện tại.")</p>
+    <label class="kho-check"><input asp-for="HoatDong" /> Cho phép đăng nhập</label>
+    <div class="kho-actions"><a class="pos-btn pos-btn-secondary" asp-action="TaiKhoan">Quay lại</a>
+        <button class="pos-btn pos-btn-primary" type="submit">Lưu tài khoản</button></div>
+</form>

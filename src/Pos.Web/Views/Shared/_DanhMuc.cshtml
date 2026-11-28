@@ -1,0 +1,70 @@
+@model DanhMucViewModel
+@{ ViewData["Title"] = Model.TieuDe; }
+<nav class="kho-tabs" aria-label="Danh mục">
+    @{
+        var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+        var tabs = new[] { ("NhomHang", "Nhóm hàng", "DM_NHOM_XEM"), ("MatHang", "Mặt hàng", "DM_HANG_XEM"), ("NhaCungCap", "Nhà cung cấp", "DM_NCC_XEM") };
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    }
+    @foreach (var tab in tabs.Where(x => user?.CoQuyen(x.Item3) == true))
+    {
+        <a asp-controller="@tab.Item1" asp-action="Index" class="pos-btn @(tab.Item1 == controller ? "pos-btn-primary" : "pos-btn-secondary")"
+           aria-current="@(tab.Item1 == controller ? "page" : null)">@tab.Item2</a>
+    }
+</nav>
+<form asp-action="Index" method="get" class="kho-card kho-filters">
+    <label>Tìm theo mã hoặc tên<input class="pos-input" name="tuKhoa" type="search" value="@Model.TuKhoa" /></label>
+    @if (Model.CoNhom)
+    {
+        <label>Nhóm hàng<select class="pos-input" name="maNhom">
+            <option value="">Tất cả nhóm</option>
+            @foreach (var nhom in Model.NhomHangs) { <option value="@nhom.Ma" selected="@(nhom.Ma == Model.MaNhom)">@nhom.Ten</option> }
+        </select></label>
+    }
+    @if (Model.CoTrangThai)
+    {
+        <label>Trạng thái<select class="pos-input" name="trangThai">
+            <option value="">Tất cả trạng thái</option>
+            <option value="HoatDong" selected="@(Model.TrangThai == "HoatDong")">Hoạt động</option>
+            <option value="NgungSuDung" selected="@(Model.TrangThai == "NgungSuDung")">Ngừng sử dụng</option>
+        </select></label>
+    }
+    <button class="pos-btn pos-btn-secondary" type="submit">Lọc danh mục</button>
+</form>
+<div class="kho-card">
+    <div class="kho-card-head"><h2>@Model.TieuDe <span class="kho-badge">@Model.Dongs.Count</span></h2>
+        @if (Model.DuocSua) { <a asp-action="Sua" class="pos-btn pos-btn-primary">Thêm mới</a> }
+    </div>
+    <div class="pos-table-wrap"><table class="pos-table kho-table">
+        <thead><tr><th>Mã</th><th>Tên</th>
+            @if (Model.CoNhom) { <th>Nhóm hàng</th><th>Đơn vị</th><th class="kho-num">Giá bán</th> }
+            @if (Model.CoLienHe) { <th>Thông tin liên hệ</th> }
+            @if (Model.CoTrangThai) { <th>Trạng thái</th> }
+            @if (Model.DuocSua) { <th>Thao tác</th> }
+        </tr></thead>
+        <tbody>
+        @foreach (var dong in Model.Dongs)
+        {
+            <tr><td>@dong.Ma</td><td>@dong.Ten</td>
+                @if (Model.CoNhom) { <td>@dong.Nhom</td><td>@dong.DonVi</td><td class="kho-num">@HienThiKho.Tien(dong.GiaBan ?? 0)</td> }
+                @if (Model.CoLienHe) { <td>@(dong.LienHe ?? "—")</td> }
+                @if (Model.CoTrangThai)
+                { <td><span class="@(dong.HoatDong == true ? "kho-badge kho-badge-ok" : "kho-badge")">@(dong.HoatDong == true ? "Hoạt động" : "Ngừng sử dụng")</span></td> }
+                @if (Model.DuocSua)
+                {
+                    <td><div class="kho-actions">
+                        <a asp-action="Sua" asp-route-id="@dong.Ma">Chỉnh sửa</a>
+                        @if (dong.HoatDong == true)
+                        {
+                            <form asp-action="Ngung" asp-route-id="@dong.Ma" method="post">
+                                <button class="pos-btn pos-btn-danger" type="submit">Ngừng dùng</button>
+                            </form>
+                        }
+                    </div></td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table></div>
+    @if (Model.Dongs.Count == 0) { <p class="kho-empty">Không có dữ liệu phù hợp.</p> }
+</div>

@@ -1,0 +1,12 @@
+@model (string Controller, string Action, string Ten, bool Active, bool Enabled)
+@if (Model.Enabled)
+{
+    <a asp-controller="@Model.Controller" asp-action="@Model.Action"
+       aria-current="@(Model.Active ? "page" : null)" class="pos-nav-item @(Model.Active ? "is-active" : "")">
+        <span>@Model.Ten</span>
+    </a>
+}
+else
+{
+    <span class="pos-nav-item is-disabled" aria-disabled="true"><span>@Model.Ten</span></span>
+}

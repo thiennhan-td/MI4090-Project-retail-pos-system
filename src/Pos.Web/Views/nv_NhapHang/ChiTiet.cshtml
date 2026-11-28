@@ -1,0 +1,111 @@
+@model ChiTietNhapViewModel
+@{
+    var phieu = Model.Dong.Phieu;
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+    var nhap = phieu.TrangThai == KhoDemoStore.Nhap;
+    var canCancel = (nhap && user?.CoQuyen("NHAP_HUY_NHAP") == true) ||
+        (Model.CoTheHuy && user?.CoQuyen("NHAP_HUY_XAC_NHAN", KhoDemoStore.QuanLy) == true);
+    var canPay = phieu.TrangThai == KhoDemoStore.DaXacNhan && Model.DuNoCoTheTra > 0 &&
+        user?.CoQuyen("NCC_GHI_TRA_TIEN", KhoDemoStore.QuanLy) == true;
+    ViewData["Title"] = "Chi tiết phiếu nhập";
+}
+<div class="kho-toolbar">
+    <a asp-action="Index" class="kho-back">← Sổ phiếu nhập</a>
+    <div class="kho-actions">
+        @if (nhap && user?.CoQuyen("NHAP_LAP_NHAP") == true)
+        { <a asp-action="Lap" asp-route-id="@phieu.Ma" class="pos-btn pos-btn-secondary">Sửa phiếu nháp</a> }
+        @if (nhap && user?.CoQuyen("NHAP_XAC_NHAN", KhoDemoStore.NhanVienKho) == true)
+        {
+            <form asp-action="XacNhan" asp-route-id="@phieu.Ma" method="post">
+                <input type="hidden" name="PhienBan" value="@phieu.PhienBan" />
+                <button class="pos-btn pos-btn-primary" type="submit">Xác nhận nhập kho</button>
+            </form>
+        }
+    </div>
+</div>
+<div class="kho-grid">
+    <section class="kho-card">
+        <div class="kho-card-head"><h2>@phieu.Ma</h2><span class="@HienThiKho.Mau(phieu.TrangThai)">@HienThiKho.Nhan(phieu.TrangThai)</span></div>
+        <dl class="kho-meta">
+            <div><dt>Nhà cung cấp</dt><dd>@Model.Dong.TenNcc</dd></div>
+            <div><dt>Ngày lập</dt><dd>@KhoDemoStore.HienThiNgayGio(phieu.LucLap)</dd></div>
+            <div><dt>Hạn thanh toán</dt><dd>@(phieu.HanThanhToan?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+            @if (phieu.LucXacNhan is DateTimeOffset xacNhan) { <div><dt>Ngày xác nhận</dt><dd>@KhoDemoStore.HienThiNgayGio(xacNhan)</dd></div> }
+            @if (phieu.LucHuy is DateTimeOffset huy) { <div><dt>Ngày hủy</dt><dd>@KhoDemoStore.HienThiNgayGio(huy)</dd></div> }
+            @if (phieu.LyDoHuy is string lyDo) { <div><dt>Lý do hủy</dt><dd>@lyDo</dd></div> }
+        </dl>
+        <div class="pos-table-wrap">
+            <table class="pos-table kho-table">
+                <thead><tr><th>Mã hàng</th><th>Mặt hàng</th><th class="kho-num">Số lượng</th><th class="kho-num">Đơn giá</th><th class="kho-num">Thành tiền</th></tr></thead>
+                <tbody>@foreach (var dong in phieu.Dongs)
+                    {
+                        <tr><td>@dong.MaHang</td><td>@Model.TenHangs[dong.MaHang]</td><td class="kho-num">@HienThiKho.So(dong.SoLuong)</td>
+                            <td class="kho-num">@HienThiKho.Tien(dong.DonGia)</td><td class="kho-num">@HienThiKho.Tien(dong.ThanhTien)</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <aside class="kho-stack">
+        <div class="kho-card kho-summary">
+            <p>Tổng giá trị phiếu<strong class="kho-num">@HienThiKho.Tien(phieu.TongTien)</strong></p>
+            @if (Model.Dong.DaTra is decimal daTra && Model.Dong.DuNo is decimal duNo)
+            {
+                <p>Đã trả<strong class="kho-num">@HienThiKho.Tien(daTra)</strong></p>
+                <p>Dư nợ<strong class="kho-num">@HienThiKho.Tien(duNo)</strong></p>
+            }
+        </div>
+        @if (canPay)
+        {
+            <form asp-action="TraTien" asp-route-id="@phieu.Ma" method="post" class="kho-card kho-stack" data-kho-payment>
+                <h2>Ghi khoản trả NCC</h2>
+                <input type="hidden" name="KhoaYeuCau" value="@Model.KhoaYeuCau" />
+                <label>Số tiền (₫)<input class="pos-input" name="SoTien" type="number" min="1" step="1" max="@Model.DuNoCoTheTra?.ToString(System.Globalization.CultureInfo.InvariantCulture)" required /></label>
+                <label>Phương thức<select class="pos-input" name="PhuongThuc" required>
+                    <option value="ChuyenKhoan">Chuyển khoản</option><option value="TienMat">Tiền mặt</option>
+                </select></label>
+                <label>Nguồn chi<select class="pos-input" name="Nguon" required data-kho-source>
+                    <option value="QuyCuaHang">Quỹ cửa hàng</option><option value="KetCa">Két ca</option>
+                </select></label>
+                <label>Ca đang mở<select class="pos-input" name="MaCa" data-kho-shift>
+                    <option value="">Chọn khi chi từ két ca</option>
+                    @foreach (var ca in Model.CaDangMo) { <option value="@ca.Ma">@ca.Ma</option> }
+                </select></label>
+                <button type="submit" class="pos-btn pos-btn-primary">Ghi khoản trả</button>
+            </form>
+        }
+        @if (canCancel)
+        {
+            <form asp-action="Huy" asp-route-id="@phieu.Ma" method="post" class="kho-card kho-stack">
+                <h2>Hủy phiếu nhập</h2>
+                @if (!nhap) { <p>Hủy phiếu sẽ đảo số lượng đã nhập và khoản nợ phát sinh.</p> }
+                <label>Lý do hủy<textarea class="pos-input" name="LyDo" maxlength="500" rows="2" required></textarea></label>
+                <button type="submit" class="pos-btn pos-btn-danger">Hủy phiếu</button>
+            </form>
+        }
+    </aside>
+</div>
+@if (Model.Dong.DaTra is not null)
+{
+    <section class="kho-card">
+        <div class="kho-card-head">
+            <h2>Lịch sử trả nhà cung cấp</h2>
+            @if (user?.CoQuyen("BC_NHAP_CONG_NO") == true)
+            { <a asp-controller="BaoCao" asp-action="CongNoNcc" asp-route-maNcc="@phieu.MaNcc">Xem báo cáo công nợ</a> }
+        </div>
+        @if (Model.LichSuTra.Count == 0) { <p class="kho-empty">Chưa có khoản trả.</p> }
+        else
+        {
+            <div class="pos-table-wrap"><table class="pos-table kho-table">
+                <thead><tr><th>Mã khoản trả</th><th>Thời điểm</th><th>Phương thức</th><th>Nguồn chi</th><th>Ca chi</th><th class="kho-num">Số tiền</th></tr></thead>
+                <tbody>@foreach (var tra in Model.LichSuTra)
+                    {
+                        <tr><td>@tra.Ma</td><td>@KhoDemoStore.HienThiNgayGio(tra.LucTra)</td><td>@HienThiKho.Nhan(tra.PhuongThuc)</td>
+                            <td>@HienThiKho.Nhan(tra.Nguon)</td><td>@(tra.MaCa ?? "—")</td><td class="kho-num">@HienThiKho.Tien(tra.SoTien)</td></tr>
+                    }
+                </tbody>
+            </table></div>
+        }
+    </section>
+}
+@section Scripts { <script src="~/js/pos-kho.js" asp-append-version="true"></script> }

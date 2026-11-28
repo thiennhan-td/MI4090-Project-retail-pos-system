@@ -1,0 +1,44 @@
+@model DangNhapKhoViewModel
+@{
+    Layout = null;
+    var demoAccounts = new[] { (Ten: "quanly", VaiTro: "Quản lý"), (Ten: "kho", VaiTro: "Nhân viên kho"), (Ten: "thungan1", VaiTro: "Thu ngân") };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Đăng nhập hệ thống POS · Retail Core POS</title>
+    <link rel="stylesheet" href="~/css/pos-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pos-kho.css" asp-append-version="true" />
+</head>
+<body class="kho-login">
+<main class="kho-login-box">
+    <section class="kho-card kho-stack">
+        <div class="kho-login-brand">
+            <span class="pos-brand-mark"><svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-brand"></use></svg></span>
+            <strong>Retail Core POS</strong><span class="kho-badge kho-badge-wait">Demo</span>
+        </div>
+        <h1>Đăng nhập hệ thống POS</h1>
+        <form asp-action="DangNhap" method="post" class="kho-stack">
+            <input asp-for="TroVe" type="hidden" />
+            <div class="kho-validation" asp-validation-summary="All" role="alert"></div>
+            <label asp-for="TenDangNhap">Tên đăng nhập<input asp-for="TenDangNhap" class="pos-input" autocomplete="username" required autofocus /></label>
+            <label asp-for="MatKhau">Mật khẩu<input asp-for="MatKhau" class="pos-input" autocomplete="current-password" required /></label>
+            <button class="pos-btn pos-btn-primary" type="submit">Đăng nhập</button>
+        </form>
+    </section>
+    <section class="kho-card kho-stack">
+        <h2>Tài khoản mẫu</h2>
+        <dl class="kho-credentials">
+        @foreach (var account in demoAccounts)
+        {
+            <div><dt>@account.VaiTro</dt><dd><code>@account.Ten</code></dd></div>
+        }
+        </dl>
+        <p>Mật khẩu mẫu <code>@KhoDemoStore.MatKhauMau</code></p>
+        <a asp-controller="Home" asp-action="Index" class="kho-back">← Trang chủ</a>
+    </section>
+</main>
+</body>
+</html>

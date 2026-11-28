@@ -1,0 +1,79 @@
+@model ChiTietKiemViewModel
+@{
+    var phieu = Model.Phieu;
+    var user = ViewData["KhoDanhTinh"] as DanhTinhKhoDemo;
+    var duocDem = phieu.TrangThai == KhoDemoStore.DangKiem && user?.CoQuyen("KHO_LAP_KIEM", KhoDemoStore.NhanVienKho) == true;
+    var gui = user?.CoQuyen("KHO_GIAI_TRINH_KIEM", KhoDemoStore.NhanVienKho) == true;
+    var duyet = phieu.TrangThai == KhoDemoStore.ChoDuyet && user?.CoQuyen("KHO_DUYET_DIEU_CHINH", KhoDemoStore.QuanLy) == true;
+    var huy = user?.CoQuyen("KHO_HUY_KIEM") == true && (phieu.TrangThai == KhoDemoStore.DangKiem ||
+        (phieu.TrangThai == KhoDemoStore.ChoDuyet && user.VaiTro == KhoDemoStore.QuanLy));
+    ViewData["Title"] = "Chi tiết phiếu kiểm kê";
+}
+<div class="kho-toolbar">
+    <a asp-action="Index" class="kho-back">← Danh sách phiếu kiểm</a>
+    <div class="kho-actions">
+        @if (duyet)
+        {
+            <form asp-action="Duyet" asp-route-id="@phieu.Ma" method="post">
+                <button type="submit" class="pos-btn pos-btn-primary">Duyệt và điều chỉnh tồn</button>
+            </form>
+        }
+        @if (huy)
+        {
+            <form asp-action="Huy" asp-route-id="@phieu.Ma" method="post">
+                <button type="submit" class="pos-btn pos-btn-danger">Hủy phiếu kiểm</button>
+            </form>
+        }
+    </div>
+</div>
+<section class="kho-card">
+    <div class="kho-card-head"><h2>@phieu.Ma</h2><span class="@HienThiKho.Mau(phieu.TrangThai)">@HienThiKho.Nhan(phieu.TrangThai)</span></div>
+    <dl class="kho-meta">
+        <div><dt>Mốc chốt tồn sổ</dt><dd>@KhoDemoStore.HienThiNgayGio(phieu.MocKiem)</dd></div>
+        <div><dt>Người lập</dt><dd>@phieu.NguoiLap</dd></div>
+        @if (phieu.NguoiDuyet is string nguoi) { <div><dt>Người duyệt</dt><dd>@nguoi</dd></div> }
+        @if (phieu.LucHoanTat is DateTimeOffset luc) { <div><dt>Hoàn tất</dt><dd>@KhoDemoStore.HienThiNgayGio(luc)</dd></div> }
+    </dl>
+</section>
+<form asp-action="GhiDem" asp-route-id="@phieu.Ma" method="post" class="kho-card kho-stack">
+    <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
+    <div class="kho-card-head"><h2>Số thực đếm</h2>
+        @if (duocDem) { <p>Giải trình các dòng có chênh lệch trước khi gửi duyệt.</p> }
+    </div>
+    <div class="pos-table-wrap"><table class="pos-table kho-table">
+        <thead><tr><th>Mặt hàng</th><th class="kho-num">Tồn sổ tại mốc</th><th class="kho-num">Số đếm</th><th class="kho-num">Chênh lệch</th><th>Giải trình</th></tr></thead>
+        <tbody>
+        @for (var i = 0; i < phieu.Dongs.Count; i++)
+        {
+            var dong = phieu.Dongs[i];
+            <tr><td><strong>@Model.TenHangs[dong.MaHang]</strong><br /><small>@dong.MaHang</small></td>
+                <td class="kho-num">@HienThiKho.So(dong.TonSo)</td>
+                @if (duocDem)
+                {
+                    <td class="kho-num">
+                        <input type="hidden" name="Dongs[@i].MaHang" value="@dong.MaHang" />
+                        @Html.TextBox($"Dongs[{i}].SoLuong", dong.SoLuongDem, new { @class = "pos-input", type = "number", min = "0", max = int.MaxValue, aria_label = $"Số đếm {dong.MaHang}" })
+                    </td>
+                    <td class="kho-num">@(dong.ChenhLech is int lech ? HienThiKho.So(lech) : "—")</td>
+                    @if (gui)
+                    { <td>@Html.TextArea($"Dongs[{i}].GiaiTrinh", dong.GiaiTrinh, 2, 22, new { @class = "pos-input", maxlength = "500", aria_label = $"Giải trình {dong.MaHang}" })</td> }
+                    else
+                    { <td>@(dong.GiaiTrinh ?? "—")</td> }
+                }
+                else
+                {
+                    <td class="kho-num">@(dong.SoLuongDem is int dem ? HienThiKho.So(dem) : "—")</td>
+                    <td class="kho-num">@(dong.ChenhLech is int lech ? HienThiKho.So(lech) : "—")</td><td>@(dong.GiaiTrinh ?? "—")</td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table></div>
+    @if (duocDem)
+    {
+        <div class="kho-actions">
+            <button class="pos-btn pos-btn-secondary" type="submit" name="GuiDuyet" value="false">Lưu số đếm</button>
+            @if (gui) { <button class="pos-btn pos-btn-primary" type="submit" name="GuiDuyet" value="true">Lưu và gửi duyệt</button> }
+        </div>
+    }
+</form>

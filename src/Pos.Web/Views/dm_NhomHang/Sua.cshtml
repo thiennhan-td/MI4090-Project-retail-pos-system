@@ -1,0 +1,11 @@
+@model NhomHangFormViewModel
+@{
+    var ma = ViewData["Ma"] as string;
+    ViewData["Title"] = ma is null ? "Thêm nhóm hàng" : "Sửa nhóm hàng";
+}
+<a class="kho-back" asp-action="Index">← Nhóm hàng</a>
+<form asp-action="Sua" asp-route-id="@ma" method="post" class="kho-card kho-stack kho-form">
+    <div asp-validation-summary="All" class="kho-validation" role="alert"></div>
+    <label asp-for="Ten">Tên nhóm hàng<input asp-for="Ten" class="pos-input" required /></label>
+    <button class="pos-btn pos-btn-primary" type="submit">Lưu nhóm hàng</button>
+</form>

@@ -6,6 +6,7 @@ public interface IQuanLyDanhMucRepository : IDanhMucRepository
 {
     Task<NhomHang?> KhoaNhomHangAsync(string maNhom, CancellationToken ct);
     Task<bool> CoMatHangDangHoatDongAsync(string maNhom, CancellationToken ct);
+    Task<bool> DonViDaDuocSuDungAsync(string maHang, CancellationToken ct);
     Task<IReadOnlyList<NhaCungCap>> LayNhaCungCapAsync(CancellationToken ct);
     Task<string> SinhMaNhomAsync(CancellationToken ct);
     Task<string> SinhMaHangAsync(CancellationToken ct);

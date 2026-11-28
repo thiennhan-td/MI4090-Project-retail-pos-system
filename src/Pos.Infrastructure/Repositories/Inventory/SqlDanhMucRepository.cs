@@ -69,6 +69,25 @@ public sealed class SqlDanhMucRepository(SqlUnitOfWork work, SqlConnectionFactor
         return await command.ExecuteScalarAsync(ct) is not null;
     }
 
+    public async Task<bool> DonViDaDuocSuDungAsync(string maHang, CancellationToken ct)
+    {
+        await using var command = work.Lenh("""
+            SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.BienDongKho WHERE maHang = @ma)
+                OR EXISTS (
+                    SELECT 1 FROM dbo.DongNhap AS d
+                    JOIN dbo.PhieuNhap AS p ON p.maPhieuNhap = d.maPhieuNhap
+                    WHERE d.maHang = @ma AND p.trangThai = 'Nhap'
+                )
+                OR EXISTS (
+                    SELECT 1 FROM dbo.DongKiem AS d
+                    JOIN dbo.PhieuKiem AS p ON p.maPhieuKiem = d.maPhieuKiem
+                    WHERE d.maHang = @ma AND d.soLuongDem IS NOT NULL AND p.trangThai <> 'DaHuy'
+                )
+                THEN 1 ELSE 0 END AS bit);
+            """, Ma("@ma", maHang));
+        return (bool)(await command.ExecuteScalarAsync(ct))!;
+    }
+
     public Task<string> SinhMaNhomAsync(CancellationToken ct)
         => work.SinhMa("SELECT CONCAT('NH-', NEXT VALUE FOR dbo.Seq_NhomHang);", ct);
 

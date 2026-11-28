@@ -800,6 +800,15 @@ a.pos-nav-item.is-active {
     margin-top: 1rem;
 }
 
+.pos-sales-grid[hidden],
+.pos-sales-grid [hidden] {
+    display: none;
+}
+
+.pos-sales-grid .pos-alert {
+    margin-top: 1rem;
+}
+
 .pos-success-banner {
     margin-top: 1rem;
     padding: 0.9rem 1rem;

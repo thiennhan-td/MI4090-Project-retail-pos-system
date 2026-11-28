@@ -207,11 +207,20 @@
                         · Ca @hd.MaCa · Thu ngân @hd.TenNguoiLap
                     </p>
                 </div>
-                <a class="pos-btn pos-btn-secondary"
-                   asp-controller="BanHang" asp-action="InHoaDon"
-                   asp-route-maHoaDon="@hd.MaHoaDon" asp-route-vaiTro="@Model.VaiTroDemo">
-                    In lại hóa đơn
-                </a>
+                <div class="pos-success-links">
+                    @if (Model.CoTheSuaNhap)
+                    {
+                        <a class="pos-btn pos-btn-primary" asp-controller="BanHang" asp-action="Index" asp-route-maNhap="@hd.MaHoaDon">Sửa hóa đơn nháp</a>
+                    }
+                    @if (hd.LucXacNhan.HasValue)
+                    {
+                        <a class="pos-btn pos-btn-secondary"
+                           asp-controller="BanHang" asp-action="InHoaDon"
+                           asp-route-maHoaDon="@hd.MaHoaDon" asp-route-vaiTro="@Model.VaiTroDemo">
+                            In lại hóa đơn
+                        </a>
+                    }
+                </div>
             </div>
 
             <div class="pos-table-wrap">
@@ -251,7 +260,7 @@
                 {
                     <div class="pos-detail-row">
                         <span class="pos-muted">Khoản thanh toán</span>
-                        <span class="pos-muted">Chưa ghi nhận (hóa đơn nháp)</span>
+                        <span class="pos-muted">Chưa ghi nhận thanh toán</span>
                     </div>
                 }
                 else
@@ -279,7 +288,11 @@
 
             @if (hd.TrangThai == "DaHuy")
             {
-                <div class="pos-cancel-history">
+                <div class="pos-cancel-history" id="huy-hoa-don">
+                    @if (Model.ThongBaoLoiHuy is not null)
+                    {
+                        <p class="pos-field-error" role="alert">@Model.ThongBaoLoiHuy</p>
+                    }
                     <strong>Thông tin hủy chứng từ</strong>
                     <p class="pos-muted" style="margin-top: 0.25rem;">
                         Người hủy: <strong>@hd.TenNguoiHuy</strong> · Thời điểm: @hd.LucHuy?.ToString("dd/MM/yyyy HH:mm")
@@ -293,9 +306,9 @@
             }
             else
             {
-                <div class="pos-cancel-box">
+                <div class="pos-cancel-box" id="huy-hoa-don">
                     <div class="pos-pane-head" style="margin-bottom: 0.5rem;">
-                        <strong>Hủy hóa đơn</strong>
+                        <strong>@(hd.TrangThai == "Nhap" ? "Hủy hóa đơn nháp" : "Hủy hóa đơn")</strong>
                         @if (laQuanLy && hd.TrangThai == "DaXacNhan" && coTienMat)
                         {
                             <a class="pos-link-btn"
@@ -308,6 +321,11 @@
                         }
                     </div>
 
+                    @if (Model.ThongBaoLoiHuy is not null)
+                    {
+                        <p class="pos-field-error" role="alert">@Model.ThongBaoLoiHuy</p>
+                    }
+
                     @if (!duocHuy)
                     {
                         <p class="pos-field-error" style="margin: 0;">@lyDoChanHuy</p>
@@ -317,10 +335,11 @@
                         <form method="post" asp-controller="BanHang" asp-action="HuyHoaDon" class="pos-cancel-form">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="MaHoaDon" value="@hd.MaHoaDon" />
+                            <input type="hidden" name="PhienBan" value="@hd.PhienBan" />
                             <input type="hidden" name="VaiTroDemo" value="@Model.VaiTroDemo" />
                             <input type="hidden" name="CoCaDaoMo" value="@(Model.CoCaDaoMo ? "true" : "false")" />
                             <label for="cancel-reason">Lý do hủy <span style="color: var(--pos-error);">*</span></label>
-                            <input id="cancel-reason" name="LyDoHuy" class="pos-input" required maxlength="500"
+                            <input id="cancel-reason" name="LyDoHuy" value="@Model.LyDoHuyNhap" class="pos-input" required maxlength="500"
                                    placeholder="Nhập lý do hủy hóa đơn (bắt buộc)..." />
                             @if (hd.TrangThai == "DaXacNhan" && coTienMat)
                             {

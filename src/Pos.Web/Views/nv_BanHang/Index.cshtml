@@ -4,6 +4,8 @@
     ViewData["Title"] = "Màn hình Bán hàng POS";
     var vi = CultureInfo.GetCultureInfo("vi-VN");
     string Money(decimal v) => $"{v.ToString("#,##0", vi)} đ";
+    var hoaDonNhap = Model.HoaDonNhap;
+    var traCuuNhapUrl = hoaDonNhap is null ? null : Url.Action("TraCuu", "BanHang", new { chon = hoaDonNhap.MaHoaDon });
 }
 
 <section class="pos-f3-toolbar">
@@ -23,9 +25,39 @@
     </div>
 </section>
 
+@if (Model.ThongBaoLoi is not null)
+{
+    <div id="pos-draft-unavailable">
+        <div class="pos-alert pos-alert-error" role="alert">@Model.ThongBaoLoi</div>
+        <div class="pos-success-links">
+            @if (Model.TraCuuUrl is not null)
+            {
+                <a class="pos-btn pos-btn-secondary" id="pos-unavailable-lookup" href="@Model.TraCuuUrl">Xem hóa đơn trong tra cứu</a>
+            }
+            <a class="pos-btn pos-btn-primary" asp-controller="BanHang" asp-action="Index">Lập hóa đơn mới</a>
+        </div>
+    </div>
+}
+@if (Model.ThongBaoLoi is null || Model.TraCuuUrl is not null)
+{
 <div class="pos-sales-grid" id="pos-sales-app"
+     hidden="@(Model.ThongBaoLoi is not null)"
      data-confirm-url="@Url.Action("XacNhanBan", "BanHang")"
+     data-save-url="@Url.Action("LuuNhap", "BanHang")"
+     data-new-url="@Url.Action("Index", "BanHang")"
+     data-current-shift="@Model.MaCaHienTai"
      data-request-id="@Model.MaYeuCauMacDinh">
+    @Html.AntiForgeryToken()
+    @if (hoaDonNhap is not null)
+    {
+        <script type="application/json" id="pos-saved-draft">@Json.Serialize(new
+        {
+            hoaDonNhap.MaHoaDon,
+            hoaDonNhap.PhienBan,
+            hoaDonNhap.ThanhToanNhap,
+            DongBans = hoaDonNhap.DongBans.Select(d => new { d.MaHang, d.SoLuongBan })
+        })</script>
+    }
 
     <!-- CỘT TRÁI: TÌM KIẾM & DANH MỤC MẶT HÀNG -->
     <section class="pos-card pos-catalog-pane" aria-label="Danh mục mặt hàng">
@@ -70,9 +102,15 @@
         <div class="pos-cart-header">
             <div>
                 <h2 class="pos-h2" style="margin-bottom: 0.15rem;">Hóa đơn hiện tại</h2>
-                <span class="pos-muted" id="pos-draft-status" style="font-size: 0.82rem;">Nháp · Chưa xác nhận</span>
+                <span class="pos-muted" id="pos-draft-status" role="status" style="font-size: 0.82rem;">
+                    @(hoaDonNhap is null ? "Hóa đơn mới" : $"Đã lưu nháp · {hoaDonNhap.MaHoaDon}")
+                </span>
             </div>
-            <button type="button" class="pos-btn pos-btn-ghost" id="pos-btn-clear-cart">Làm mới hóa đơn</button>
+            <div class="pos-success-links">
+                <a class="pos-btn pos-btn-ghost" id="pos-link-cancel-draft" href="@(traCuuNhapUrl + "#huy-hoa-don")"
+                   hidden="@(hoaDonNhap is null)">Hủy hóa đơn nháp</a>
+                <button type="button" class="pos-btn pos-btn-ghost" id="pos-btn-new-invoice">Lập hóa đơn mới</button>
+            </div>
         </div>
 
         <div class="pos-cart-list" id="pos-cart-list" aria-live="polite">
@@ -146,13 +184,18 @@
             <p class="pos-field-error" id="pos-payment-error" role="alert" hidden></p>
         </div>
 
-        <div class="pos-confirm-actions">
+        <div class="pos-confirm-actions pos-success-links">
+            <button type="button" class="pos-btn pos-btn-secondary pos-btn-lg" id="pos-btn-save-draft">Lưu nháp</button>
             <button type="button" class="pos-btn pos-btn-primary pos-btn-lg" id="pos-btn-confirm">Xác nhận bán hàng</button>
         </div>
+        <p class="pos-field-error" id="pos-action-error" role="alert" hidden></p>
 
         <div class="pos-alert pos-alert-error" id="pos-conflict-result" hidden role="alert">
-            <strong>Mã yêu cầu đã dùng cho hóa đơn <span class="pos-num" id="pos-conflict-code"></span>.</strong>
-            <a asp-controller="BanHang" asp-action="TraCuu" id="pos-conflict-lookup">Tra cứu hóa đơn đã ghi</a>
+            <p id="pos-conflict-message"></p>
+            <div class="pos-success-links">
+                <a id="pos-conflict-edit" hidden>Mở phiên bản nháp hiện tại</a>
+                <a asp-controller="BanHang" asp-action="TraCuu" id="pos-conflict-lookup">Tra cứu hóa đơn</a>
+            </div>
         </div>
 
         <div class="pos-success-banner" id="pos-confirm-result" hidden role="status">
@@ -163,11 +206,11 @@
             <div class="pos-success-links">
                 <a class="pos-btn pos-btn-secondary" id="pos-link-lookup" href="#">Mở tra cứu hóa đơn</a>
                 <a class="pos-btn pos-btn-primary" id="pos-link-print" href="#">In hóa đơn</a>
-                <button type="button" class="pos-btn pos-btn-ghost" id="pos-btn-new-invoice">Lập hóa đơn mới</button>
             </div>
         </div>
     </section>
 </div>
+}
 
 @section Scripts {
     <script src="~/js/pos-sales.js" asp-append-version="true"></script>

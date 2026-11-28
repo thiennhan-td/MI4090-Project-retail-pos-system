@@ -5,11 +5,24 @@
     }
 
     const confirmUrl = app.dataset.confirmUrl;
+    const saveUrl = app.dataset.saveUrl;
+    const requestToken = app.querySelector('input[name="__RequestVerificationToken"]').value;
+    const savedDraftElement = document.getElementById("pos-saved-draft");
+    let savedDraft = savedDraftElement ? JSON.parse(savedDraftElement.textContent) : null;
+    const recoveryCode = app.hidden ? new URLSearchParams(window.location.search).get("maNhap")?.trim() : null;
+    let pendingRequest = readPendingRequest(savedDraft?.maHoaDon ?? recoveryCode);
+    if (app.hidden) {
+        if (!pendingRequest) {
+            return;
+        }
+        document.getElementById("pos-draft-unavailable").hidden = true;
+        app.hidden = false;
+    }
+    let savedState = null;
     let currentRequestId = app.dataset.requestId;
     let isSubmitting = false;
     let isConfirmed = false;
-    let isPendingRetry = false;
-    let pendingPayload = null;
+    let hasConflict = false;
     let activeCategory = "all";
     let paymentMode = "TienMat";
     let lastShiftOpenState = true;
@@ -41,18 +54,21 @@
 
     const cashGivenError = document.getElementById("pos-cash-given-error");
     const paymentError = document.getElementById("pos-payment-error");
+    const actionError = document.getElementById("pos-action-error");
 
     const fillCashBtn = document.getElementById("pos-fill-cash-remaining");
     const fillTransferBtn = document.getElementById("pos-fill-transfer-remaining");
     const confirmBtn = document.getElementById("pos-btn-confirm");
-    const clearCartBtn = document.getElementById("pos-btn-clear-cart");
+    const saveBtn = document.getElementById("pos-btn-save-draft");
     const newInvoiceBtn = document.getElementById("pos-btn-new-invoice");
+    const cancelDraftLink = document.getElementById("pos-link-cancel-draft");
     const shiftToggle = document.getElementById("pos-shift-open-toggle");
     const shiftBadge = document.getElementById("pos-shift-badge");
 
     const confirmResult = document.getElementById("pos-confirm-result");
     const conflictResult = document.getElementById("pos-conflict-result");
-    const conflictCodeEl = document.getElementById("pos-conflict-code");
+    const conflictMessage = document.getElementById("pos-conflict-message");
+    const conflictEditLink = document.getElementById("pos-conflict-edit");
     const conflictLookupLink = document.getElementById("pos-conflict-lookup");
     const confirmedCodeEl = document.getElementById("pos-confirmed-code");
     const confirmedDetailEl = document.getElementById("pos-confirmed-detail");
@@ -65,16 +81,19 @@
     }
 
     function isLocked() {
-        return isSubmitting || isConfirmed || isPendingRetry;
+        return isSubmitting || isConfirmed || hasConflict || pendingRequest !== null;
     }
 
     function parseMoneyInput(input) {
+        if (input.validity.badInput) {
+            return { valid: false, empty: false, value: 0 };
+        }
         const raw = (input.value || "").trim();
         if (raw === "") {
             return { valid: true, empty: true, value: 0 };
         }
         const num = Number(raw);
-        if (!Number.isFinite(num) || !Number.isInteger(num) || num < 0) {
+        if (!Number.isSafeInteger(num) || num < 0) {
             return { valid: false, empty: false, value: 0 };
         }
         return { valid: true, empty: false, value: num };
@@ -107,6 +126,37 @@
         setError(cartError, "");
         setError(cashGivenError, "");
         setError(paymentError, "");
+        setError(actionError, "");
+    }
+
+    function getEditorState() {
+        const inputs = paymentMode === "HonHop" ? [cashAllocInput, cashGivenInput, transferInput]
+            : paymentMode === "TienMat" ? [cashGivenInput] : [];
+        return JSON.stringify([
+            paymentMode, inputs.map((input) => [input.value, input.validity.badInput]),
+            Array.from(cart.values(), (line) => [line.code, line.rawQty, line.invalid])
+        ]);
+    }
+
+    function hasUnsavedChanges() {
+        return !isConfirmed && savedState !== null && getEditorState() !== savedState;
+    }
+
+    function updateDraftStatus() {
+        if (isSubmitting) {
+            draftStatus.textContent = pendingRequest.confirm ? "Đang xác nhận hóa đơn…" : "Đang lưu hóa đơn nháp…";
+        } else if (pendingRequest) {
+            draftStatus.textContent = "Chờ thử lại · Giỏ hàng đang được khóa";
+        } else if (isConfirmed) {
+            draftStatus.textContent = `Đã xác nhận · ${confirmedCodeEl.textContent}`;
+        } else if (hasConflict) {
+            draftStatus.textContent = "Hóa đơn đã thay đổi · Mở phiên bản hiện tại để tiếp tục";
+        } else if (savedDraft) {
+            const status = hasUnsavedChanges() ? "Có thay đổi chưa lưu" : "Đã lưu nháp";
+            draftStatus.textContent = `${status} · ${savedDraft.maHoaDon}`;
+        } else {
+            draftStatus.textContent = hasUnsavedChanges() ? "Bản nháp chưa lưu" : "Hóa đơn mới";
+        }
     }
 
     function syncControlLocks() {
@@ -132,11 +182,19 @@
         fillTransferBtn.disabled = locked;
         shiftToggle.disabled = locked;
 
-        // Trong lúc đang gửi hoặc mất phản hồi chưa rõ kết quả: khóa cả nút xóa giỏ và nút tạo hóa đơn mới.
-        // Khi đã xác nhận xong: mở lại 2 nút này để thu ngân lập giao dịch mới.
-        const blockReset = isSubmitting || isPendingRetry;
-        clearCartBtn.disabled = blockReset;
-        newInvoiceBtn.disabled = blockReset;
+        const blockWrite = isSubmitting || isConfirmed || hasConflict;
+        const saving = pendingRequest?.confirm === false;
+        const confirming = pendingRequest?.confirm === true;
+        newInvoiceBtn.disabled = isSubmitting || pendingRequest !== null;
+        saveBtn.disabled = blockWrite || confirming;
+        confirmBtn.disabled = blockWrite || saving;
+        saveBtn.textContent = saving ? (isSubmitting ? "Đang lưu…" : "Thử lưu lại") : "Lưu nháp";
+        confirmBtn.textContent = confirming ? (isSubmitting ? "Đang xác nhận…" : "Thử lại") : "Xác nhận bán hàng";
+        if (isConfirmed) {
+            confirmBtn.textContent = `Đã xác nhận (${confirmedCodeEl.textContent})`;
+        }
+        cancelDraftLink.hidden = !savedDraft || locked;
+        updateDraftStatus();
     }
 
     function filterProducts() {
@@ -220,9 +278,10 @@
         } else {
             setError(cashGivenError, "");
         }
+        updateDraftStatus();
     }
 
-    function applyModeUI() {
+    function applyModeUI(suggestCashGiven = true) {
         for (const btn of modeButtons) {
             const active = btn.dataset.mode === paymentMode;
             btn.classList.toggle("is-active", active);
@@ -237,7 +296,7 @@
         const due = getGrandTotal();
         if (paymentMode === "ChuyenKhoan") {
             transferInput.value = due > 0 ? String(due) : "";
-        } else if (paymentMode === "TienMat") {
+        } else if (paymentMode === "TienMat" && suggestCashGiven) {
             if (due > 0 && !cashGivenInput.value) {
                 cashGivenInput.value = String(due);
             }
@@ -400,31 +459,67 @@
             updateLineQuantity(code, existing.qty + 1, true);
             return;
         }
-        cart.set(code, {
-            code,
-            name: btn.dataset.tenHang,
-            unit: btn.dataset.dvt,
-            price: Number(btn.dataset.gia),
-            stock: Number(btn.dataset.ton),
-            qty: 1,
-            rawQty: "1",
-            invalid: false
-        });
+        setCartLine(btn, 1);
         setError(cartError, "");
         renderCart();
     }
 
+    function setCartLine(btn, quantity) {
+        cart.set(btn.dataset.maHang, {
+            code: btn.dataset.maHang,
+            name: btn.dataset.tenHang,
+            unit: btn.dataset.dvt,
+            price: Number(btn.dataset.gia),
+            stock: Number(btn.dataset.ton),
+            qty: quantity,
+            rawQty: String(quantity),
+            invalid: false
+        });
+    }
+
+    function newRequestId() {
+        return window.crypto?.randomUUID?.().replaceAll("-", "")
+            ?? String(Date.now()) + Math.random().toString(16).slice(2);
+    }
+
+    function pendingStorageKey(draftCode) {
+        return "retail-pos:f3:pending:" + (draftCode?.toUpperCase() ?? "new");
+    }
+
+    function readPendingRequest(draftCode) {
+        try {
+            const request = JSON.parse(window.sessionStorage.getItem(pendingStorageKey(draftCode)));
+            return typeof request?.confirm === "boolean" && Array.isArray(request.payload?.dongBans) ? request : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function rememberPendingRequest(request, keep) {
+        try {
+            const key = pendingStorageKey(request.payload.maNhap);
+            if (keep) {
+                window.sessionStorage.setItem(key, JSON.stringify(request));
+            } else {
+                window.sessionStorage.removeItem(key);
+            }
+        } catch {
+            // Keep the current tab's retry available when storage is disabled.
+        }
+    }
+
     function resetInvoice() {
-        if (isSubmitting || isPendingRetry) {
+        if (isSubmitting || pendingRequest) {
             return;
         }
+        if (hasUnsavedChanges() && !window.confirm("Bỏ các thay đổi chưa lưu và lập hóa đơn mới?")) {
+            return;
+        }
+
         isConfirmed = false;
-        isSubmitting = false;
-        isPendingRetry = false;
-        pendingPayload = null;
-        currentRequestId = (window.crypto && window.crypto.randomUUID)
-            ? window.crypto.randomUUID().replaceAll("-", "")
-            : String(Date.now()) + Math.random().toString(16).slice(2);
+        hasConflict = false;
+        savedDraft = null;
+        currentRequestId = newRequestId();
         cart.clear();
         cashAllocInput.value = "";
         cashGivenInput.value = "";
@@ -432,157 +527,159 @@
         paymentMode = "TienMat";
         confirmResult.hidden = true;
         conflictResult.hidden = true;
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = "Xác nhận bán hàng";
-        draftStatus.textContent = "Nháp · Chưa xác nhận";
-        clearAllErrors();
-        applyModeUI();
+        window.history.replaceState(null, "", app.dataset.newUrl);
+        applyModeUI(false);
+        savedState = getEditorState();
         renderCart();
         filterProducts();
-        syncControlLocks();
     }
 
-    async function handleConfirm() {
-        if (isSubmitting || isConfirmed) {
+    function createPayload(confirm) {
+        if (!shiftToggle.checked) {
+            setError(actionError, "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi ghi hóa đơn.");
+            return null;
+        }
+        if (cart.size === 0) {
+            setError(cartError, "Giỏ hàng đang trống. Vui lòng chọn ít nhất một mặt hàng.");
+            return null;
+        }
+
+        const lines = [];
+        for (const line of cart.values()) {
+            if (line.invalid || !Number.isInteger(line.qty) || line.qty <= 0) {
+                setError(cartError, `Số lượng của ${line.name} không hợp lệ (cần số nguyên dương).`);
+                return null;
+            }
+            if (line.qty > line.stock) {
+                setError(cartError, `Số lượng của ${line.name} vượt tồn mẫu hiện có (${line.stock} ${line.unit}).`);
+                return null;
+            }
+            lines.push({ maHang: line.code, soLuong: line.qty });
+        }
+
+        const payment = getPaymentNumbers();
+        if (!payment.cashAllocParsed.valid || !payment.transfer.valid || !payment.cashGiven.valid) {
+            setError(paymentError, "Số tiền thanh toán phải là số nguyên VND không âm.");
+            return null;
+        }
+        if (confirm) {
+            const allocated = payment.cashAlloc + payment.transfer.value;
+            if (allocated !== payment.due) {
+                setError(paymentError, `Tổng phân bổ (${formatMoney(allocated)}) phải bằng đúng giá trị hóa đơn (${formatMoney(payment.due)}).`);
+                return null;
+            }
+            if (payment.cashAlloc > 0 && (payment.cashGiven.empty || payment.cashGiven.value < payment.cashAlloc)) {
+                setError(cashGivenError, `Tiền mặt khách đưa phải lớn hơn hoặc bằng tiền mặt phân bổ (${formatMoney(payment.cashAlloc)}).`);
+                return null;
+            }
+        }
+
+        return {
+            maYeuCau: currentRequestId,
+            maNhap: savedDraft?.maHoaDon ?? null,
+            phienBan: savedDraft?.phienBan ?? null,
+            cheDoThanhToan: paymentMode,
+            tienMatPhanBo: payment.cashAllocParsed.empty ? null : payment.cashAlloc,
+            tienKhachDua: payment.cashGiven.empty || (confirm && payment.cashAlloc === 0)
+                ? null : payment.cashGiven.value,
+            tienChuyenKhoan: payment.transfer.empty ? null : payment.transfer.value,
+            caDangMo: shiftToggle.checked,
+            dongBans: lines
+        };
+    }
+
+    function showConflict(data) {
+        hasConflict = true;
+        conflictMessage.textContent = data.message || "Hóa đơn đã thay đổi. Vui lòng xem bản hiện tại.";
+        conflictEditLink.hidden = !data.suaUrl;
+        if (data.suaUrl) {
+            conflictEditLink.href = data.suaUrl;
+        }
+        conflictLookupLink.href = data.traCuuUrl;
+        conflictResult.hidden = false;
+    }
+
+    function showConfirmed(data) {
+        isConfirmed = true;
+        confirmedCodeEl.textContent = data.maHoaDon;
+        confirmedDetailEl.textContent =
+            `Tổng thu: ${formatMoney(data.tongTien)} (Tiền mặt: ${formatMoney(data.tienMatPhanBo)}, Chuyển khoản: ${formatMoney(data.tienChuyenKhoan)}) · Tiền thừa: ${formatMoney(data.tienThua)}`;
+        lookupLink.href = data.traCuuUrl;
+        printLink.href = data.inUrl;
+        confirmResult.hidden = false;
+    }
+
+    function setSavedDraft(data) {
+        savedDraft = { maHoaDon: data.maHoaDon, phienBan: data.phienBan };
+        savedState = getEditorState();
+        currentRequestId = newRequestId();
+        cancelDraftLink.href = data.traCuuUrl + "#huy-hoa-don";
+        window.history.replaceState(null, "", data.suaUrl);
+    }
+
+    function showRetryMessage() {
+        const action = pendingRequest.confirm ? "Thử lại" : "Thử lưu lại";
+        setError(actionError, `Chưa nhận được kết quả từ máy chủ. Bấm “${action}” để gửi lại đúng giao dịch này.`);
+    }
+
+    async function writeInvoice(confirm) {
+        if (isSubmitting || isConfirmed || hasConflict || (pendingRequest && pendingRequest.confirm !== confirm)) {
             return;
         }
 
         clearAllErrors();
-
-        let payload = null;
-        if (isPendingRetry && pendingPayload) {
-            // Thử lại sau khi mất phản hồi: gửi lại đúng bản chụp payload và đúng maYeuCau ban đầu.
-            payload = pendingPayload;
-        } else {
-            if (!shiftToggle.checked) {
-                setError(paymentError, "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi xác nhận bán hàng.");
+        if (!pendingRequest) {
+            const payload = createPayload(confirm);
+            if (!payload) {
                 return;
             }
-
-            if (cart.size === 0) {
-                setError(cartError, "Giỏ hàng đang trống. Vui lòng chọn ít nhất một mặt hàng.");
-                return;
-            }
-
-            const lines = [];
-            for (const line of cart.values()) {
-                if (line.invalid || !Number.isInteger(line.qty) || line.qty <= 0) {
-                    setError(cartError, `Số lượng của ${line.name} không hợp lệ (cần số nguyên dương).`);
-                    return;
-                }
-                if (line.qty > line.stock) {
-                    setError(cartError, `Số lượng của ${line.name} vượt tồn mẫu hiện có (${line.stock} ${line.unit}).`);
-                    return;
-                }
-                lines.push({ maHang: line.code, soLuong: line.qty });
-            }
-
-            const p = getPaymentNumbers();
-            if (!p.cashAllocParsed.valid || !p.transfer.valid || !p.cashGiven.valid) {
-                setError(paymentError, "Số tiền thanh toán phải là số nguyên VND không âm.");
-                return;
-            }
-
-            const allocated = p.cashAlloc + p.transfer.value;
-            if (allocated !== p.due) {
-                setError(paymentError, `Tổng phân bổ (${formatMoney(allocated)}) phải bằng đúng giá trị hóa đơn (${formatMoney(p.due)}).`);
-                return;
-            }
-
-            if (p.cashAlloc > 0 && (p.cashGiven.empty || p.cashGiven.value < p.cashAlloc)) {
-                setError(cashGivenError, `Tiền mặt khách đưa phải lớn hơn hoặc bằng tiền mặt phân bổ (${formatMoney(p.cashAlloc)}).`);
-                return;
-            }
-
-            payload = {
-                maYeuCau: currentRequestId,
-                cheDoThanhToan: paymentMode,
-                tienMatPhanBo: p.cashAlloc,
-                tienKhachDua: p.cashAlloc > 0 ? p.cashGiven.value : null,
-                tienChuyenKhoan: p.transfer.value,
-                caDangMo: shiftToggle.checked,
-                dongBans: lines
-            };
-            pendingPayload = payload;
+            pendingRequest = { confirm, payload };
+            rememberPendingRequest(pendingRequest, true);
         }
 
-        // Khóa toàn bộ giỏ hàng, thanh toán, chuyển ca và nút làm mới ngay khi bắt đầu gửi.
         isSubmitting = true;
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = "Đang xác nhận...";
-        draftStatus.textContent = "Đang gửi yêu cầu xác nhận...";
         syncControlLocks();
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 15000);
 
         try {
-            const res = await fetch(confirmUrl, {
+            const res = await fetch(confirm ? confirmUrl : saveUrl, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                headers: { "Content-Type": "application/json", RequestVerificationToken: requestToken },
+                body: JSON.stringify(pendingRequest.payload),
+                signal: controller.signal
             });
-
             if (res.status >= 500) {
                 throw new Error("Server error " + res.status);
             }
 
-            const data = await res.json();
-            if (res.status === 409 || data.conflict) {
-                isSubmitting = false;
-                isPendingRetry = false;
-                pendingPayload = null;
-                conflictCodeEl.textContent = data.maHoaDonDaGhi;
-                conflictLookupLink.href = data.traCuuUrl;
-                conflictResult.hidden = false;
-                draftStatus.textContent = "Xung đột yêu cầu · Vui lòng tra cứu hóa đơn đã ghi";
-                confirmBtn.disabled = true;
-                confirmBtn.textContent = "Xung đột mã yêu cầu";
-                syncControlLocks();
-                return;
-            }
-
-            if (!res.ok || !data.ok) {
-                // Lỗi kiểm tra hợp lệ (400): máy chủ xác định chưa ghi hóa đơn -> mở lại để thu ngân sửa.
-                isSubmitting = false;
-                isPendingRetry = false;
-                pendingPayload = null;
-                const msg = data.message || "Không thể xác nhận hóa đơn.";
-                if (data.field === "cart") {
-                    setError(cartError, msg);
-                } else if (data.field === "cash-given") {
-                    setError(cashGivenError, msg);
-                } else {
-                    setError(paymentError, msg);
+            const data = res.headers.get("content-type")?.includes("json") ? await res.json().catch(() => null) : null;
+            if (res.status === 409 && data?.traCuuUrl) {
+                showConflict(data);
+            } else if (!res.ok || !data?.ok) {
+                if (res.ok) {
+                    throw new Error("Missing invoice response");
                 }
-                draftStatus.textContent = "Nháp · Chưa xác nhận";
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = "Xác nhận bán hàng";
-                syncControlLocks();
-                return;
+                const errors = { cart: cartError, "cash-given": cashGivenError, payment: paymentError };
+                const message = data?.message || "Không thể ghi hóa đơn. Vui lòng kiểm tra dữ liệu hoặc mở lại màn bán hàng.";
+                if (recoveryCode) {
+                    showConflict({ message, traCuuUrl: document.getElementById("pos-unavailable-lookup").href });
+                } else {
+                    setError(errors[data?.field] || actionError, message);
+                }
+            } else if (confirm) {
+                showConfirmed(data);
+            } else {
+                setSavedDraft(data);
             }
 
-            isConfirmed = true;
-            isSubmitting = false;
-            isPendingRetry = false;
-            pendingPayload = null;
-            draftStatus.textContent = "Đã xác nhận · " + data.maHoaDon;
-            confirmedCodeEl.textContent = data.maHoaDon;
-            confirmedDetailEl.textContent =
-                `Tổng thu: ${formatMoney(data.tongTien)} (Tiền mặt: ${formatMoney(data.tienMatPhanBo)}, Chuyển khoản: ${formatMoney(data.tienChuyenKhoan)}) · Tiền thừa: ${formatMoney(data.tienThua)}`;
-            lookupLink.href = data.traCuuUrl;
-            printLink.href = data.inUrl;
-            printLink.hidden = false;
-            confirmResult.hidden = false;
-            confirmBtn.textContent = "Đã xác nhận (" + data.maHoaDon + ")";
-            renderCart();
-            filterProducts();
-            syncControlLocks();
+            rememberPendingRequest(pendingRequest, false);
+            pendingRequest = null;
         } catch {
-            // Mất phản hồi hoặc lỗi không rõ máy chủ đã ghi chưa: giữ bản chụp & khóa giỏ, chỉ mở nút "Thử lại".
+            showRetryMessage();
+        } finally {
+            window.clearTimeout(timeout);
             isSubmitting = false;
-            isPendingRetry = true;
-            setError(paymentError, "Mất phản hồi từ máy chủ, chưa rõ hóa đơn đã được ghi hay chưa. Bấm \"Thử lại\" để kiểm tra và xác nhận lại đúng giao dịch này.");
-            draftStatus.textContent = "Chờ thử lại · Giỏ đang được khóa";
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = "Thử lại";
             syncControlLocks();
         }
     }
@@ -687,21 +784,55 @@
         }
         lastShiftOpenState = shiftToggle.checked;
         if (shiftToggle.checked) {
-            shiftBadge.textContent = "Ca đang mở · S-CA-1126";
+            shiftBadge.textContent = "Ca đang mở · " + app.dataset.currentShift;
             shiftBadge.classList.add("pos-pill-teal");
             setError(paymentError, "");
+            setError(actionError, "");
         } else {
             shiftBadge.textContent = "Ca đã đóng (giả lập)";
             shiftBadge.classList.remove("pos-pill-teal");
         }
     });
 
-    confirmBtn.addEventListener("click", handleConfirm);
-    clearCartBtn.addEventListener("click", resetInvoice);
+    confirmBtn.addEventListener("click", () => writeInvoice(true));
+    saveBtn.addEventListener("click", () => writeInvoice(false));
     newInvoiceBtn.addEventListener("click", resetInvoice);
 
-    applyModeUI();
+    window.addEventListener("beforeunload", (event) => {
+        if (hasUnsavedChanges() || pendingRequest) {
+            event.preventDefault();
+            event.returnValue = true;
+        }
+    });
+
+    function restoreInvoice(lines, payment) {
+        cart.clear();
+        for (const line of lines) {
+            const product = productButtons.find((button) => button.dataset.maHang === line.maHang);
+            if (product) {
+                setCartLine(product, line.soLuong ?? line.soLuongBan);
+            }
+        }
+        if (payment) {
+            paymentMode = payment.cheDoThanhToan;
+            cashGivenInput.value = payment.tienKhachDua ?? "";
+            cashAllocInput.value = paymentMode === "HonHop" ? payment.tienMatPhanBo ?? "" : "";
+            transferInput.value = paymentMode === "HonHop" ? payment.tienChuyenKhoan ?? "" : "";
+        }
+    }
+
+    if (savedDraft) {
+        restoreInvoice(savedDraft.dongBans, savedDraft.thanhToanNhap);
+    }
+    applyModeUI(false);
+    savedState = getEditorState();
+    if (pendingRequest) {
+        const { payload } = pendingRequest;
+        currentRequestId = payload.maYeuCau;
+        restoreInvoice(payload.dongBans, payload);
+        applyModeUI(false);
+        showRetryMessage();
+    }
     renderCart();
     filterProducts();
-    syncControlLocks();
 })();

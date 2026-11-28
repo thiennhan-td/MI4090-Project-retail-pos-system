@@ -81,12 +81,14 @@ public sealed class AuthServiceTests
         var work = new Mock<IUnitOfWork>();
         repository.Setup(x => x.KhoaVaiTroAsync("QuanLy", default)).ReturnsAsync(new VaiTro("QuanLy", "Quản lý"));
         repository.Setup(x => x.LayTheoMaAsync("TK-1", default)).ReturnsAsync(TaoTaiKhoan());
+        repository.Setup(x => x.TimTaiKhoanAsync(null, default)).ReturnsAsync([TaoTaiKhoan()]);
         repository.Setup(x => x.DemQuanLyKhacDangHoatDongAsync("TK-1", default)).ReturnsAsync(0);
         var service = new TaiKhoanService(repository.Object, work.Object, Mock.Of<IAuthorizationService>(),
             Mock.Of<IMatKhauHasher>());
+        var daDoc = Assert.Single(await service.TimAsync("TK-1", null, default));
 
         await Assert.ThrowsAsync<BusinessRuleViolationException>(() =>
-            service.LuuAsync("TK-1", new("TK-1", "Quản lý", "admin", "QuanLy", null, false), default));
+            service.LuuAsync("TK-1", new("TK-1", "Quản lý", "admin", "QuanLy", null, false, daDoc.PhienBan), default));
 
         repository.Verify(x => x.CapNhatAsync(It.IsAny<TaiKhoan>(), default), Times.Never);
         work.Verify(x => x.RollbackAsync(CancellationToken.None), Times.Once);
@@ -102,6 +104,7 @@ public sealed class AuthServiceTests
         var hasher = new Mock<IMatKhauHasher>();
         repository.Setup(x => x.KhoaVaiTroAsync("QuanLy", default)).ReturnsAsync(new VaiTro("QuanLy", "Quản lý"));
         repository.Setup(x => x.LayTheoMaAsync("TK-1", default)).ReturnsAsync(TaoTaiKhoan());
+        repository.Setup(x => x.TimTaiKhoanAsync(null, default)).ReturnsAsync([TaoTaiKhoan()]);
         repository.Setup(x => x.LayQuyenVaiTroAsync("QuanLy", default))
             .ReturnsAsync(new HashSet<string> { MaQuyenPos.HT_QL_TAI_KHOAN, MaQuyenPos.HT_PHAN_QUYEN });
         authorization.Setup(x => x.LayTapQuyenAsync("TK-2", default))
@@ -110,12 +113,39 @@ public sealed class AuthServiceTests
             .ThrowsAsync(new UnauthorizedActionException(MaQuyenPos.HT_PHAN_QUYEN));
         hasher.Setup(x => x.Bam("mat-khau-moi")).Returns("da-bam-moi");
         var service = new TaiKhoanService(repository.Object, work.Object, authorization.Object, hasher.Object);
+        var daDoc = Assert.Single(await service.TimAsync("TK-2", null, default));
 
         await Assert.ThrowsAsync<UnauthorizedActionException>(() => service.LuuAsync("TK-2",
-            new("TK-1", "Quản lý", "admin", "QuanLy", "mat-khau-moi", true), default));
+            new("TK-1", "Quản lý", "admin", "QuanLy", "mat-khau-moi", true, daDoc.PhienBan), default));
 
         repository.Verify(x => x.CapNhatAsync(It.IsAny<TaiKhoan>(), default), Times.Never);
         work.Verify(x => x.RollbackAsync(CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task LuuTaiKhoan_PhienBanCuKhongTheMoLaiTaiKhoanBiKhoa()
+    {
+        var taiKhoan = TaoTaiKhoan();
+        var repository = new Mock<IQuanTriTaiKhoanRepository>();
+        var work = new Mock<IUnitOfWork>();
+        repository.Setup(x => x.KhoaVaiTroAsync("QuanLy", default)).ReturnsAsync(new VaiTro("QuanLy", "Quản lý"));
+        repository.Setup(x => x.TimTaiKhoanAsync(null, default)).ReturnsAsync([taiKhoan]);
+        repository.Setup(x => x.LayTheoMaAsync("TK-1", default)).ReturnsAsync(taiKhoan);
+        var service = new TaiKhoanService(repository.Object, work.Object, Mock.Of<IAuthorizationService>(),
+            Mock.Of<IMatKhauHasher>());
+        var daDoc = Assert.Single(await service.TimAsync("TK-2", null, default));
+        taiKhoan.Khoa();
+
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => service.LuuAsync("TK-2",
+            new(daDoc.MaTaiKhoan, "Họ tên mới", daDoc.TenDangNhap, daDoc.MaVaiTro, null, daDoc.HoatDong,
+                daDoc.PhienBan), default));
+
+        var hienTai = Assert.Single(await service.TimAsync("TK-2", null, default));
+        Assert.False(hienTai.HoatDong);
+        Assert.NotEqual(daDoc.PhienBan, hienTai.PhienBan);
+        repository.Verify(x => x.CapNhatAsync(It.IsAny<TaiKhoan>(), default), Times.Never);
+        work.Verify(x => x.RollbackAsync(CancellationToken.None), Times.Once);
+        work.Verify(x => x.CommitAsync(default), Times.Never);
     }
 
     [Fact]

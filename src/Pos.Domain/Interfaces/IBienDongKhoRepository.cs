@@ -16,7 +16,10 @@ public interface IBienDongKhoRepository
     Task<int> LayTonTruocMocAsync(string maHang, DateTime mocUtc, CancellationToken ct);
     Task<IReadOnlyList<BienDongKho>> LayTrongKyAsync(string maHang, DateTime tuUtc, DateTime denUtc, CancellationToken ct);
     Task<DateTime?> LayMocDieuChinhCuoiAsync(string maHang, CancellationToken ct);
+    Task<MocGhiBienDongKho> LayMocGhiAsync(string maHang, CancellationToken ct);
 }
+
+public readonly record struct MocGhiBienDongKho(DateTime? LucGhiCuoi, DateTime? LucDemDuocBaoVe, DateTime? MocKiemDangMoMoiNhat);
 
 public sealed record NguonBienDongKho(string MaNguon, string MaHang, string MaChungTu, int SoLuongThayDoi,
     bool CoHieuLuc, DateTime? LucHieuLucUtc);

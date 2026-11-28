@@ -15,7 +15,7 @@ public sealed class StocktakeService(
     IDanhMucRepository danhMucRepo,
     IBienDongKhoRepository bienDongRepo,
     IGhiBienDongKhoNoiBo ghiBienDong,
-    ITaiKhoanRepository taiKhoanRepo,
+    IQuanTriTaiKhoanRepository taiKhoanRepo,
     IAuthorizationService authorization,
     IUnitOfWork work,
     TimeProvider? clock = null)
@@ -46,6 +46,12 @@ public sealed class StocktakeService(
                     throw new BusinessRuleViolationException($"Mặt hàng {maHang} không hoạt động.");
                 }
 
+                var moc = await bienDongRepo.LayMocGhiAsync(maHang, ct);
+                if (moc.LucGhiCuoi is DateTime lucGhiCuoi && lucGhiCuoi > mocKiem)
+                {
+                    mocKiem = lucGhiCuoi;
+                }
+
                 // Mốc mới sắp sau mọi điều chỉnh đã thấy, kể cả điều chỉnh cùng mili giây.
                 if (await bienDongRepo.LayMocDieuChinhCuoiAsync(maHang, ct) is DateTime dieuChinh && dieuChinh >= mocKiem)
                 {
@@ -64,14 +70,11 @@ public sealed class StocktakeService(
         }, ct);
     }
 
-    public async Task<PhieuKiem> GhiDemAsync(string maTaiKhoan, string maPhieuKiem, IReadOnlyList<SoLuongDemDto> soDems,
-        CancellationToken ct = default)
+    public async Task<PhieuKiem> GhiDemAsync(string maTaiKhoan, string maPhieuKiem, string phienBan,
+        IReadOnlyList<SoLuongDemDto> soDems, CancellationToken ct = default)
     {
-        await KiemTraVaiTroAsync(maTaiKhoan, MaQuyenPos.KHO_LAP_KIEM, NhanVienKho, ct);
-        if (soDems.Any(dong => dong.GiaiTrinh is not null))
-        {
-            await authorization.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.KHO_GIAI_TRINH_KIEM, ct);
-        }
+        var quyenGiaiTrinh = soDems.Any(dong => dong.GiaiTrinh is not null) ? MaQuyenPos.KHO_GIAI_TRINH_KIEM : null;
+        await KiemTraVaiTroAsync(maTaiKhoan, MaQuyenPos.KHO_LAP_KIEM, NhanVienKho, ct, quyenGiaiTrinh);
         if (soDems.Select(dong => dong.MaHang).Distinct(StringComparer.Ordinal).Count() != soDems.Count)
         {
             throw new BusinessRuleViolationException("Mỗi mặt hàng chỉ được ghi một lần trong yêu cầu.");
@@ -81,38 +84,80 @@ public sealed class StocktakeService(
         {
             var phieu = await KhoaPhieuKiemAsync(maPhieuKiem, ct);
             KiemTraNguoiLap(phieu, maTaiKhoan, MaQuyenPos.KHO_LAP_KIEM);
+            KiemTraPhienBan(phieu, phienBan);
             if (phieu.TrangThai != TrangThaiChungTu.DangKiem)
             {
                 throw new InvalidStateTransitionException("Chỉ ghi số đếm trên phiếu đang kiểm.");
             }
 
             var theoHang = phieu.DongKiems.ToDictionary(dong => dong.MaHang, StringComparer.Ordinal);
-            foreach (var dem in soDems)
+            var theoMaHang = soDems.OrderBy(dem => dem.MaHang, StringComparer.Ordinal).ToArray();
+            foreach (var dem in theoMaHang)
             {
-                if (!theoHang.TryGetValue(dem.MaHang, out var dong))
+                if (!theoHang.ContainsKey(dem.MaHang))
                 {
                     throw new EntityNotFoundException($"Mặt hàng {dem.MaHang} không có trong phiếu kiểm.");
                 }
+            }
+            await KhoaMatHangAsync(theoMaHang.Select(dem => dem.MaHang), ct);
+
+            var lucDem = LayLucUtc();
+            foreach (var dem in theoMaHang.Where(dem => dem.SoLuongDem.HasValue))
+            {
+                var dong = theoHang[dem.MaHang];
+                if (dem.SoLuongDem == dong.SoLuongDem && dong.LucDem.HasValue)
+                {
+                    continue;
+                }
+                if (lucDem < phieu.MocKiem || lucDem < dong.LucDem)
+                {
+                    throw new ConcurrencyConflictException(
+                        "Thời điểm hiện tại trước mốc kiểm hoặc mốc đếm đã lưu. Hãy thử ghi số đếm lại.");
+                }
+
+                // Thẻ đã commit có thể mang mốc tương lai nếu thời gian hệ thống thay đổi.
+                var moc = await bienDongRepo.LayMocGhiAsync(dong.MaHang, ct);
+                if (moc.LucGhiCuoi > phieu.MocKiem
+                    || await bienDongRepo.LayTonTaiMocAsync(dong.MaHang, phieu.MocKiem, ct) != dong.TonSoTaiMoc)
+                {
+                    throw new ConcurrencyConflictException(
+                        $"Mặt hàng {dong.MaHang} đã phát sinh biến động sau khi chụp tồn. Hãy lập phiếu mới và đếm lại.");
+                }
+            }
+            foreach (var dem in theoMaHang)
+            {
+                var dong = theoHang[dem.MaHang];
                 var giaiTrinh = dem.GiaiTrinh is null ? dong.GiaiTrinh
                     : string.IsNullOrWhiteSpace(dem.GiaiTrinh) ? null : dem.GiaiTrinh.Trim();
-                phieu.GhiSoLuongDem(dem.MaHang, dem.SoLuongDem, giaiTrinh);
+                var mocDem = dem.SoLuongDem == dong.SoLuongDem ? dong.LucDem : null;
+                if (dem.SoLuongDem.HasValue)
+                {
+                    mocDem ??= lucDem;
+                }
+                phieu.GhiSoLuongDem(dem.MaHang, dem.SoLuongDem, mocDem, giaiTrinh);
             }
-            foreach (var dong in phieu.DongKiems.Where(dong =>
-                dong.SoLuongDem != theoHang[dong.MaHang].SoLuongDem || dong.GiaiTrinh != theoHang[dong.MaHang].GiaiTrinh))
+            foreach (var dong in phieu.DongKiems)
             {
-                await phieuKiemRepo.CapNhatDemAsync(dong, ct);
+                var cu = theoHang[dong.MaHang];
+                if (dong.SoLuongDem != cu.SoLuongDem || dong.GiaiTrinh != cu.GiaiTrinh || dong.LucDem != cu.LucDem)
+                {
+                    await phieuKiemRepo.CapNhatDemAsync(dong, ct);
+                }
             }
             return phieu;
         }, ct);
     }
 
-    public async Task<PhieuKiem> GuiDuyetAsync(string maTaiKhoan, string maPhieuKiem, CancellationToken ct = default)
+    public async Task<PhieuKiem> GuiDuyetAsync(string maTaiKhoan, string maPhieuKiem, string phienBan,
+        CancellationToken ct = default)
     {
         await KiemTraVaiTroAsync(maTaiKhoan, MaQuyenPos.KHO_GIAI_TRINH_KIEM, NhanVienKho, ct);
         return await InventoryTransaction.ChayAsync(work, async () =>
         {
             var phieu = await KhoaPhieuKiemAsync(maPhieuKiem, ct);
             KiemTraNguoiLap(phieu, maTaiKhoan, MaQuyenPos.KHO_GIAI_TRINH_KIEM);
+            KiemTraPhienBan(phieu, phienBan);
+            await KhoaMatHangAsync(phieu.DongKiems.Select(dong => dong.MaHang).Order(StringComparer.Ordinal), ct);
             phieu.GuiDuyet();
             await phieuKiemRepo.CapNhatAsync(phieu, ct);
             return phieu;
@@ -125,13 +170,11 @@ public sealed class StocktakeService(
         return await InventoryTransaction.ChayAsync(work, async () =>
         {
             var phieu = await KhoaPhieuKiemAsync(maPhieuKiem, ct);
-            if (phieu.TrangThai != TrangThaiChungTu.ChoDuyet)
-            {
-                throw new InvalidStateTransitionException("Chỉ duyệt phiếu kiểm đang chờ duyệt.");
-            }
+            phieu.KiemTraCoTheDuyet();
             await KhoaMatHangAsync(phieu.DongKiems.Select(dong => dong.MaHang).Order(StringComparer.Ordinal), ct);
 
-            var mocGanNhat = phieu.MocKiem;
+            var lucDuyet = LayLucUtc();
+            var mocGanNhat = phieu.DongKiems.Max(dong => dong.LucDem) ?? phieu.MocKiem;
             foreach (var dong in phieu.DongKiems)
             {
                 if (await bienDongRepo.LayMocDieuChinhCuoiAsync(dong.MaHang, ct) is DateTime luc && luc >= phieu.MocKiem)
@@ -150,16 +193,31 @@ public sealed class StocktakeService(
                 {
                     throw new BusinessRuleViolationException($"Tồn hiện hành của mặt hàng {dong.MaHang} đang âm.");
                 }
-                if (dong.ChenhLech != 0 && await phieuKiemRepo.LayMocKiemDangMoMoiNhatAsync(dong.MaHang, ct)
-                    is DateTime moc && moc > mocGanNhat)
+                if (dong.ChenhLech != 0)
                 {
-                    mocGanNhat = moc;
+                    var moc = await bienDongRepo.LayMocGhiAsync(dong.MaHang, ct);
+                    if (moc.LucGhiCuoi > lucDuyet)
+                    {
+                        throw new ConcurrencyConflictException(
+                            $"Thẻ kho mới nhất của mặt hàng {dong.MaHang} sau thời điểm hiện tại. Hãy thử duyệt lại.");
+                    }
+                    if (moc.LucDemDuocBaoVe is DateTime lucDemDuocBaoVe && lucDemDuocBaoVe > mocGanNhat)
+                    {
+                        mocGanNhat = lucDemDuocBaoVe;
+                    }
+                    if (moc.MocKiemDangMoMoiNhat is DateTime mocKiemDangMo && mocKiemDangMo > mocGanNhat)
+                    {
+                        mocGanNhat = mocKiemDangMo;
+                    }
                 }
             }
 
-            // Mốc duyệt phải sau mọi ảnh chụp đang mở của các mặt hàng được điều chỉnh.
-            var lucDuyet = LayLucUtc();
-            if (lucDuyet <= mocGanNhat)
+            // Điều chỉnh nằm sau các mốc kiểm được bảo vệ, kể cả mốc đếm của chính phiếu.
+            if (lucDuyet < mocGanNhat)
+            {
+                throw new ConcurrencyConflictException("Thời điểm hiện tại trước mốc kiểm được bảo vệ. Hãy thử duyệt lại.");
+            }
+            if (lucDuyet == mocGanNhat)
             {
                 lucDuyet = mocGanNhat.AddMilliseconds(1);
             }
@@ -178,8 +236,7 @@ public sealed class StocktakeService(
 
     public async Task<PhieuKiem> HuyAsync(string maTaiKhoan, string maPhieuKiem, CancellationToken ct = default)
     {
-        await authorization.KiemTraQuyenAsync(maTaiKhoan, MaQuyenPos.KHO_HUY_KIEM, ct);
-        var vaiTro = (await taiKhoanRepo.LayTheoMaAsync(maTaiKhoan, ct))?.MaVaiTro;
+        var vaiTro = await KiemTraVaiTroAsync(maTaiKhoan, MaQuyenPos.KHO_HUY_KIEM, null, ct);
         return await InventoryTransaction.ChayAsync(work, async () =>
         {
             var phieu = await KhoaPhieuKiemAsync(maPhieuKiem, ct);
@@ -192,6 +249,7 @@ public sealed class StocktakeService(
                 KiemTraNguoiLap(phieu, maTaiKhoan, MaQuyenPos.KHO_HUY_KIEM);
             }
 
+            await KhoaMatHangAsync(phieu.DongKiems.Select(dong => dong.MaHang).Order(StringComparer.Ordinal), ct);
             phieu.Huy();
             await phieuKiemRepo.CapNhatAsync(phieu, ct);
             return phieu;
@@ -225,13 +283,26 @@ public sealed class StocktakeService(
         => await phieuKiemRepo.KhoaTheoMaAsync(maPhieuKiem, ct)
             ?? throw new EntityNotFoundException($"Không tìm thấy phiếu kiểm {maPhieuKiem}.");
 
-    private async Task KiemTraVaiTroAsync(string maTaiKhoan, string maQuyen, string vaiTro, CancellationToken ct)
+    private async Task<string> KiemTraVaiTroAsync(string maTaiKhoan, string maQuyen, string? vaiTro,
+        CancellationToken ct, string? quyenBoSung = null)
     {
         await authorization.KiemTraQuyenAsync(maTaiKhoan, maQuyen, ct);
-        if ((await taiKhoanRepo.LayTheoMaAsync(maTaiKhoan, ct))?.MaVaiTro != vaiTro)
+        if (quyenBoSung is not null)
+        {
+            await authorization.KiemTraQuyenAsync(maTaiKhoan, quyenBoSung, ct);
+        }
+
+        var hoSo = await taiKhoanRepo.LayHoSoDangNhapAsync(maTaiKhoan, ct);
+        if (hoSo?.TaiKhoan is not { TrangThai: TrangThaiChungTu.HoatDong } taiKhoan
+            || (vaiTro is not null && taiKhoan.MaVaiTro != vaiTro) || !hoSo.Quyen.Contains(maQuyen))
         {
             throw new UnauthorizedActionException(maQuyen);
         }
+        if (quyenBoSung is not null && !hoSo.Quyen.Contains(quyenBoSung))
+        {
+            throw new UnauthorizedActionException(quyenBoSung);
+        }
+        return taiKhoan.MaVaiTro;
     }
 
     private static void KiemTraNguoiLap(PhieuKiem phieu, string maTaiKhoan, string maQuyen)
@@ -239,6 +310,14 @@ public sealed class StocktakeService(
         if (phieu.MaNguoiLap != maTaiKhoan)
         {
             throw new UnauthorizedActionException(maQuyen);
+        }
+    }
+
+    private static void KiemTraPhienBan(PhieuKiem phieu, string phienBan)
+    {
+        if (!string.Equals(phienBan, phieu.PhienBan, StringComparison.Ordinal))
+        {
+            throw new ConcurrencyConflictException("Phiếu kiểm đã thay đổi. Hãy tải lại phiếu.");
         }
     }
 }

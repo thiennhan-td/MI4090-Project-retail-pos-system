@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Pos.Contracts;
 using Pos.Domain.Constants;
 using Pos.Domain.Entities;
@@ -7,10 +8,10 @@ using Pos.Domain.Interfaces;
 namespace Pos.Inventory.Services;
 
 public sealed record TaiKhoanPosDto(string MaTaiKhoan, string HoTen, string TenDangNhap,
-    string MaVaiTro, bool HoatDong);
+    string MaVaiTro, bool HoatDong, string PhienBan);
 
 public sealed record LuuTaiKhoanDto(string? MaTaiKhoan, string HoTen, string TenDangNhap,
-    string MaVaiTro, string? MatKhau, bool HoatDong);
+    string MaVaiTro, string? MatKhau, bool HoatDong, string? PhienBan = null);
 
 public sealed record PhanQuyenPosDto(IReadOnlyList<VaiTro> VaiTro, IReadOnlyList<Quyen> DanhSachQuyen,
     IReadOnlySet<string> QuyenDaGan);
@@ -55,6 +56,11 @@ public sealed class TaiKhoanService(IQuanTriTaiKhoanRepository repository, IUnit
             if (cu is not null && cu.MaTaiKhoan != yeuCau.MaTaiKhoan)
             {
                 throw new EntityNotFoundException("Không tìm thấy tài khoản.");
+            }
+
+            if (cu is not null && yeuCau.PhienBan != TaoPhienBan(cu))
+            {
+                throw new ConcurrencyConflictException("Tài khoản đã thay đổi. Hãy tải lại tài khoản.");
             }
 
             if (cu is null || cu.MaVaiTro != yeuCau.MaVaiTro)
@@ -153,6 +159,20 @@ public sealed class TaiKhoanService(IQuanTriTaiKhoanRepository repository, IUnit
         }
     }
 
+    private static string TaoPhienBan(TaiKhoan taiKhoan)
+    {
+        using var duLieu = new MemoryStream();
+        using var ghi = new BinaryWriter(duLieu);
+        ghi.Write(taiKhoan.MaTaiKhoan);
+        ghi.Write(taiKhoan.MaVaiTro);
+        ghi.Write(taiKhoan.HoTen);
+        ghi.Write(taiKhoan.TenDangNhap);
+        ghi.Write(taiKhoan.TrangThai);
+        ghi.Write(taiKhoan.MatKhauBam);
+        ghi.Flush();
+        return Convert.ToHexString(SHA256.HashData(duLieu.GetBuffer().AsSpan(0, checked((int)duLieu.Length))));
+    }
+
     private static TaiKhoanPosDto Dto(TaiKhoan entity) => new(entity.MaTaiKhoan, entity.HoTen,
-        entity.TenDangNhap, entity.MaVaiTro, entity.TrangThai == TrangThaiChungTu.HoatDong);
+        entity.TenDangNhap, entity.MaVaiTro, entity.TrangThai == TrangThaiChungTu.HoatDong, TaoPhienBan(entity));
 }

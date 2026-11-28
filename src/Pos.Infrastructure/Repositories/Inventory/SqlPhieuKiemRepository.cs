@@ -10,7 +10,7 @@ namespace Pos.Infrastructure.Repositories.Inventory;
 public sealed class SqlPhieuKiemRepository(SqlUnitOfWork work, SqlConnectionFactory factory) : IPhieuKiemRepository
 {
     private const string CotPhieu = "p.maPhieuKiem, p.maNguoiLap, p.mocKiem, p.trangThai, p.maNguoiDuyet, p.lucHoanTat";
-    private const string CotDong = "d.maHang, d.tonSoTaiMoc, d.soLuongDem, d.giaiTrinh";
+    private const string CotDong = "d.maHang, d.tonSoTaiMoc, d.soLuongDem, d.giaiTrinh, d.lucDem";
 
     public Task<string> SinhMaAsync(CancellationToken ct)
         => work.SinhMa("SELECT CONCAT('PK-', NEXT VALUE FOR dbo.Seq_PhieuKiem);", ct);
@@ -33,11 +33,11 @@ public sealed class SqlPhieuKiemRepository(SqlUnitOfWork work, SqlConnectionFact
             return null;
         }
 
-        await using var lenhKhoaDongs = work.Lenh($"""
-            SELECT {CotDong} FROM dbo.DongKiem AS d WITH (UPDLOCK)
+        await using var lenhDocDongs = work.Lenh($"""
+            SELECT {CotDong} FROM dbo.DongKiem AS d
             WHERE d.maPhieuKiem = @ma ORDER BY d.maHang;
             """, Ma("@ma", ma));
-        var dongs = await DocNhieuAsync(lenhKhoaDongs, reader => AnhXaDong(reader, dauPhieu.Ma, 0), ct);
+        var dongs = await DocNhieuAsync(lenhDocDongs, reader => AnhXaDong(reader, dauPhieu.Ma, 0), ct);
         return dauPhieu.KhoiPhuc(dongs);
     }
 
@@ -47,13 +47,6 @@ public sealed class SqlPhieuKiemRepository(SqlUnitOfWork work, SqlConnectionFact
             FROM dbo.PhieuKiem AS p WITH (HOLDLOCK) LEFT JOIN dbo.DongKiem AS d ON d.maPhieuKiem = p.maPhieuKiem
             ORDER BY p.mocKiem DESC, p.maPhieuKiem DESC, d.maHang;
             """, DocPhieuAsync, ct);
-
-    public Task<DateTime?> LayMocKiemDangMoMoiNhatAsync(string maHang, CancellationToken ct)
-        => work.DocAsync<DateTime?>(factory, """
-            SELECT MAX(p.mocKiem) FROM dbo.DongKiem AS d JOIN dbo.PhieuKiem AS p ON p.maPhieuKiem = d.maPhieuKiem
-            WHERE d.maHang = @hang AND p.trangThai IN ('DangKiem', 'ChoDuyet');
-            """, async (command, token) => await command.ExecuteScalarAsync(token) is DateTime luc
-                ? DateTime.SpecifyKind(luc, DateTimeKind.Utc) : null, ct, Ma("@hang", maHang));
 
     public async Task ThemAsync(PhieuKiem entity, CancellationToken ct)
     {
@@ -65,10 +58,10 @@ public sealed class SqlPhieuKiemRepository(SqlUnitOfWork work, SqlConnectionFact
         foreach (var dong in entity.DongKiems)
         {
             await work.Ghi("""
-                INSERT INTO dbo.DongKiem (maPhieuKiem, maHang, tonSoTaiMoc, soLuongDem, giaiTrinh)
-                VALUES (@ma, @hang, @ton, @dem, @giaiTrinh);
+                INSERT INTO dbo.DongKiem (maPhieuKiem, maHang, tonSoTaiMoc, soLuongDem, giaiTrinh, lucDem)
+                VALUES (@ma, @hang, @ton, @dem, @giaiTrinh, @lucDem);
                 """, ct, Ma("@ma", dong.MaPhieuKiem), Ma("@hang", dong.MaHang), So("@ton", dong.TonSoTaiMoc),
-                So("@dem", dong.SoLuongDem), Chu("@giaiTrinh", dong.GiaiTrinh, 500));
+                So("@dem", dong.SoLuongDem), Chu("@giaiTrinh", dong.GiaiTrinh, 500), Luc("@lucDem", dong.LucDem));
         }
     }
 
@@ -84,11 +77,11 @@ public sealed class SqlPhieuKiemRepository(SqlUnitOfWork work, SqlConnectionFact
 
     public Task CapNhatDemAsync(DongKiem dong, CancellationToken ct)
         => work.SuaMot("""
-            UPDATE d SET soLuongDem = @dem, giaiTrinh = @giaiTrinh
+            UPDATE d SET soLuongDem = @dem, giaiTrinh = @giaiTrinh, lucDem = @lucDem
             FROM dbo.DongKiem AS d JOIN dbo.PhieuKiem AS p ON p.maPhieuKiem = d.maPhieuKiem
             WHERE d.maPhieuKiem = @ma AND d.maHang = @hang AND p.trangThai = 'DangKiem';
             """, ct, Ma("@ma", dong.MaPhieuKiem), Ma("@hang", dong.MaHang),
-            So("@dem", dong.SoLuongDem), Chu("@giaiTrinh", dong.GiaiTrinh, 500));
+            So("@dem", dong.SoLuongDem), Chu("@giaiTrinh", dong.GiaiTrinh, 500), Luc("@lucDem", dong.LucDem));
 
     private static async Task<IReadOnlyList<PhieuKiem>> DocPhieuAsync(SqlCommand command, CancellationToken ct)
     {
@@ -126,7 +119,7 @@ public sealed class SqlPhieuKiemRepository(SqlUnitOfWork work, SqlConnectionFact
 
     private static DongKiem AnhXaDong(SqlDataReader reader, string ma, int i)
         => new(ma, reader.GetString(i), reader.GetInt32(i + 1),
-            reader.IsDBNull(i + 2) ? null : reader.GetInt32(i + 2), reader.ChuNull(i + 3));
+            reader.IsDBNull(i + 2) ? null : reader.GetInt32(i + 2), reader.ChuNull(i + 3), reader.LucNull(i + 4));
 
     private static SqlParameter TrangThai(string value) => new("@trangThai", SqlDbType.VarChar, 24) { Value = value };
 

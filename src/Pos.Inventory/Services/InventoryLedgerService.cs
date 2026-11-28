@@ -157,6 +157,24 @@ public sealed class InventoryLedgerService(
         var xuatBan = bienDongs[0].LoaiSuKien == LoaiBienDongKho.XuatBan;
         foreach (var nhom in theoHang)
         {
+            var moc = await bienDongRepo.LayMocGhiAsync(nhom.Key, ct);
+            var lucSomNhat = nhom.Min(dong => dong.ThoiDiemGhi);
+            if (lucSomNhat <= moc.LucDemDuocBaoVe)
+            {
+                throw new ConcurrencyConflictException(
+                    $"Thời điểm biến động của mặt hàng {nhom.Key} trùng hoặc trước mốc đếm đã ghi nhận. Hãy thử lại toàn bộ giao dịch.");
+            }
+            if (lucSomNhat <= moc.MocKiemDangMoMoiNhat)
+            {
+                throw new ConcurrencyConflictException(
+                    $"Thời điểm biến động của mặt hàng {nhom.Key} trùng hoặc trước mốc chụp tồn trên phiếu kiểm đang mở. Hãy thử lại toàn bộ giao dịch.");
+            }
+            if (lucSomNhat < moc.LucGhiCuoi)
+            {
+                throw new ConcurrencyConflictException(
+                    $"Thời điểm biến động của mặt hàng {nhom.Key} trước thẻ kho mới nhất. Hãy thử lại toàn bộ giao dịch.");
+            }
+
             if (xuatBan && (await danhMucRepo.LayMatHangAsync(nhom.Key, ct))?.TrangThai != TrangThaiChungTu.HoatDong)
             {
                 throw new BusinessRuleViolationException($"Mặt hàng {nhom.Key} không hoạt động.");

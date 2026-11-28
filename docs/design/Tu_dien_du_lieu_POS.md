@@ -396,7 +396,7 @@ Một lần kiểm theo mốc tồn sổ. F6.2–F6.4
 
 Kết quả kiểm từng mặt hàng. F6, F8.3
 
-`DongKiem(maPhieuKiem, maHang, tonSoTaiMoc, soLuongDem, giaiTrinh)`
+`DongKiem(maPhieuKiem, maHang, tonSoTaiMoc, soLuongDem, giaiTrinh, lucDem)`
 
 **PK** (maPhieuKiem, maHang) · **UNIQUE** —
 
@@ -409,6 +409,7 @@ Kết quả kiểm từng mặt hàng. F6, F8.3
 | tonSoTaiMoc | Số lượng theo thẻ kho tại mốc kiểm | int | Không | Ứng dụng truyền | CHECK | ≥ 0 |
 | soLuongDem | Số đơn vị đếm thực tế | int | Có | NULL | CHECK | ≥ 0 |
 | giaiTrinh | Lý do chênh lệch kiểm kê | nvarchar(500) | Có | NULL | — | — |
+| lucDem | Mốc ghi nhận số đếm theo giờ máy chủ, dưới khóa mặt hàng | datetime2(3) | Có | Service (UTC) | CHECK | Chỉ có giá trị khi đã đếm. NULL với dòng chưa đếm hoặc dữ liệu cũ. |
 
 #### BienDongKho
 
@@ -459,10 +460,12 @@ SQL kiểm tính nhất quán các cột của cùng bản ghi bằng CHECK có 
 | QT08 · Danh mục | NhomHang, MatHang, DongBan | FK chặn xóa đang tham chiếu, UNIQUE tên theo từng danh mục, CHECK giá không âm. | Chỉ chọn nhóm/hàng đang hoạt động; lưu giá tại DongBan khi bán. Giữ giá đó khi đổi giá niêm yết, trả hàng hoặc in lại. |
 | QT09 · Nhập và trả NCC | PhieuNhap, DongNhap, TraNhaCungCap | Transaction ghi thẻ nhập đồng thời với xác nhận phiếu. Với mọi lần ghi trả hoặc hủy, khóa đầu phiếu bằng UPDLOCK, HOLDLOCK rồi tính lại tổng từ dòng nhập và khoản trả trong hai tập riêng. | Nhân viên kho xác nhận phiếu nháp có hàng. Chỉ Quản lý ghi khoản trả dương trên phiếu đã xác nhận, tối đa bằng dư nợ. Nguồn KetCa yêu cầu TienMat và maCaChi đang mở; nguồn QuyCuaHang để maCaChi NULL. Ghi và kiểm ca trong cùng transaction. |
 | QT10 · Hủy nhập | PhieuNhap, TraNhaCungCap, BienDongKho | Khóa phiếu và hàng, ghi các dòng đảo và dấu hủy nguyên tử. | Quản lý chỉ đảo phiếu đã xác nhận khi chưa trả tiền và đảo nhập không gây âm tồn. Hủy nháp không tạo thẻ. |
-| QT11 · Kiểm kho | PhieuKiem, DongKiem, BienDongKho | PK ghép giới hạn một dòng mỗi hàng/phiếu; kiểm số đếm ≥ 0 khi có; khóa hàng khi điều chỉnh. | Nhân viên kho đếm đủ, giải trình dòng lệch rồi gửi duyệt. Quản lý duyệt từ ChoDuyet; ghi thẻ bằng thực đếm − tồn sổ tại mốc nếu khác 0, kiểm tồn hiện hành sau điều chỉnh. |
+| QT11 · Kiểm kho | PhieuKiem, DongKiem, BienDongKho | PK ghép giới hạn một dòng mỗi hàng/phiếu. Khi sửa phiếu, khóa đầu phiếu trước rồi khóa các mặt hàng theo thứ tự mã. | Tồn sổ tại mốc giữ nguyên. Phiếu có biến động giữa chụp tồn và đếm phải được lập lại và đếm lại. Nhân viên kho gửi đủ số đếm có mốc, kèm giải trình dòng lệch. Quản lý duyệt từ ChoDuyet, ghi chênh lệch thực đếm − tồn sổ tại mốc và kiểm tồn hiện hành sau điều chỉnh. |
 | QT12 · Thẻ kho và báo cáo | BienDongKho, các đầu phiếu và dòng giao dịch | CHECK đúng một trong bốn mã nguồn tùy chọn khác NULL, FK ghép (maPhieuKiem, maHang) → DongKiem. UNIQUE(khoaSuKien); tài khoản ứng dụng chỉ đọc/thêm thẻ. | Kiểm đúng mặt hàng qua dòng nguồn. Khóa sự kiện xác định bằng loại + mã dòng, riêng kiểm kho gồm cả mã phiếu và mã hàng. Đảo bằng dòng mới. Tổng hợp chi tiết và thanh toán riêng trước khi ghép để tránh nhân số tiền. |
 
 **Nguồn và dấu của thẻ.** XuatBan (−) và DaoXuatBan (+) trỏ DongBan; NhapTraHang (+) trỏ DongTra; NhapKho (+) và DaoNhapKho (−) trỏ DongNhap; DieuChinhKiemKho (±) trỏ DongKiem. CHECK trên BienDongKho kiểm loại, dấu và cột nguồn cùng hàng. Khi maPhieuKiem là NULL, FK ghép không buộc phải có DongKiem, nhưng maHang vẫn bắt buộc trỏ MatHang. Chỉ mục (maHang, thoiDiemGhi, maBienDong) hỗ trợ thẻ theo hàng/kỳ; chỉ mục DongTra(maDongBan) phục vụ cộng lượng trả và TraNhaCungCap(maPhieuNhap) phục vụ đối chiếu dư nợ.
+
+**Mốc thẻ kho và kiểm kê.** Trong giao dịch giữ khóa mặt hàng, service kiểm thẻ mới theo UTC với độ chính xác mili giây. Thẻ mới phải bằng hoặc sau thẻ mới nhất, sau mốc chụp tồn của phiếu đang kiểm hoặc chờ duyệt và sau mốc đếm được bảo vệ của mặt hàng. Mốc đếm được bảo vệ lấy từ các dòng đã đếm trên phiếu đang kiểm, chờ duyệt hoặc hoàn tất. Phiếu hoàn tất cũ dùng `mocKiem` cho dòng thiếu `lucDem`. Các biến động sau mốc đếm vẫn được ghi và duyệt kiểm kê chỉ áp dụng chênh lệch của số đếm đã gửi. Bổ sung giải trình với cùng số lượng giữ nguyên mốc đếm. Ghi số đếm và gửi duyệt đối chiếu phiên bản nội dung dưới khóa đầu phiếu.
 
 **Ví dụ truy vết.** Một DongBan ghi soLuongBan = 5 và donGiaThucBan = 25.000 đ. Khi xác nhận bán, thẻ XuatBan ghi −5. Khách trả 3 hộp, trong đó 2 hộp đủ điều kiện bán lại. DongTra trỏ đúng maDongBan và lưu (soLuongTra, soLuongNhapLai) = (3, 2). Khi xác nhận, tổng KhoanHoan là 75.000 đ; chỉ phần hoàn mặt giảm két của maCaNhan. Thẻ NhapTraHang ghi +2. Nếu chưa có lần trả khác, còn được trả 5 − 3 = 2 hộp; tác động tồn ròng của cả hai lần là −3 hộp.
 
@@ -626,6 +629,7 @@ erDiagram
         int tonSoTaiMoc "NOT NULL"
         int soLuongDem "NULL"
         nvarchar giaiTrinh "NULL"
+        datetime2 lucDem "NULL"
     }
     BienDongKho {
         varchar maBienDong PK "NOT NULL"
@@ -686,6 +690,6 @@ erDiagram
 - **Nhập hàng và danh mục (6)** · NhaCungCap, PhieuNhap, DongNhap, TraNhaCungCap, NhomHang, MatHang
 - **Kiểm kê và thẻ kho (3)** · PhieuKiem, DongKiem, BienDongKho
 
-Tổng cộng **21 bảng, 123 cột và 38 ràng buộc FK** (FK ghép tính một lần). QuyenVaiTro và DongKiem dùng PK ghép.
+Tổng cộng **21 bảng, 124 cột và 38 ràng buộc FK** (FK ghép tính một lần). QuyenVaiTro và DongKiem dùng PK ghép.
 
 Các độ dài, SEQUENCE, UTC, quy tắc collation, tiền nguyên VND và số lượng nguyên là lựa chọn vật lý đề xuất. Trước khi khóa DDL, nhóm cần duyệt các lựa chọn này, đặc biệt phạm vi hai phương thức TienMat/ChuyenKhoan, hai nguồn quỹ KetCa/QuyCuaHang và tính duy nhất tên danh mục trong từng bảng. Nếu cần đơn vị cân lẻ hoặc phương thức thứ ba, phải đồng bộ miền giá trị, validation và UI.

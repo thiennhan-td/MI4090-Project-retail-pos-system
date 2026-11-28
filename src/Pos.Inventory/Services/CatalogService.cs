@@ -78,16 +78,23 @@ public sealed class CatalogService(IQuanLyDanhMucRepository repository, IUnitOfW
                 throw new BusinessRuleViolationException("Chọn một nhóm hàng đang hoạt động.");
             }
 
+            var donViTinh = yeuCau.DonViTinh.Trim();
             if (yeuCau.MaHang is null)
             {
                 var moi = new MatHang(await repository.SinhMaHangAsync(ct), nhom.MaNhom,
-                    yeuCau.TenHang.Trim(), yeuCau.DonViTinh.Trim(), yeuCau.GiaBanHienHanh);
+                    yeuCau.TenHang.Trim(), donViTinh, yeuCau.GiaBanHienHanh);
                 await repository.ThemHangAsync(moi, ct);
                 return moi;
             }
 
             var hang = await KhoaHangAsync(yeuCau.MaHang, ct);
-            hang.CapNhatDanhMuc(nhom.MaNhom, yeuCau.TenHang.Trim(), yeuCau.DonViTinh.Trim(), yeuCau.GiaBanHienHanh);
+            if (hang.DonViTinh.Trim() != donViTinh && await repository.DonViDaDuocSuDungAsync(hang.MaHang, ct))
+            {
+                throw new BusinessRuleViolationException("Không thể đổi đơn vị tính khi mặt hàng đã phát sinh biến động kho, "
+                    + "có trên phiếu nhập nháp hoặc đã được đếm trên phiếu kiểm chưa hủy.");
+            }
+
+            hang.CapNhatDanhMuc(nhom.MaNhom, yeuCau.TenHang.Trim(), donViTinh, yeuCau.GiaBanHienHanh);
             await repository.CapNhatHangAsync(hang, ct);
             return hang;
         }, ct);

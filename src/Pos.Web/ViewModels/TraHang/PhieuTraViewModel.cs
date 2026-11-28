@@ -9,7 +9,8 @@ public record YeuCauTraViewModel(
     bool CaMo,
     DongChonViewModel[] DongTra,
     decimal TienMat,
-    decimal ChuyenKhoan);
+    decimal ChuyenKhoan,
+    int PhienBan = 0);
 
 public record DongGocViewModel(
     int Dong,
@@ -42,7 +43,8 @@ public record PhieuTraViewModel(
     bool XacNhan,
     DongTraViewModel[] Dong,
     decimal TienMat,
-    decimal ChuyenKhoan);
+    decimal ChuyenKhoan,
+    int PhienBan = 0);
 
 public record LocTraViewModel(
     string? Ma,

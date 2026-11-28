@@ -16,6 +16,10 @@
     </div>
 </section>
 
+@if ((ViewData["FilterError"] ?? TempData["F4Error"]) is string error)
+{
+    <p class="pos-alert pos-alert-error" role="alert">@error</p>
+}
 @if (!string.IsNullOrWhiteSpace(successMsg))
 {
     <div class="pos-alert pos-alert-success" role="status">@successMsg</div>
@@ -202,6 +206,12 @@
 
                 <form asp-action="Xoa" method="post" style="display: inline;">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" name="loc.Ma" value="@loc.Ma" />
+                    <input type="hidden" name="loc.HoaDon" value="@loc.HoaDon" />
+                    <input type="hidden" name="loc.Ca" value="@loc.Ca" />
+                    <input type="hidden" name="loc.TrangThai" value="@loc.TrangThai" />
+                    <input type="hidden" name="loc.TuNgay" value="@loc.TuNgay?.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="loc.DenNgay" value="@loc.DenNgay?.ToString("yyyy-MM-dd")" />
                     <input type="hidden" name="ma" value="@ph.Ma" />
                     <input type="hidden" name="caMo" value="@(loc.CaMo ? "true" : "false")" />
                     <input type="hidden" name="vaiTro" value="@(loc.VaiTro ?? "ThuNgan")" />

@@ -29,7 +29,7 @@
 </section>
 
 <section class="pos-card" style="margin-bottom: 1rem;">
-    <form method="get" class="pos-filter-grid" id="return-search-form">
+    <form method="get" class="pos-filter-grid" id="return-search-form" data-session="@ViewData["PhienTra"]">
         <div class="pos-field">
             <label for="search-invoice">Hóa đơn gốc</label>
             <input id="search-invoice" class="pos-input" name="maHoaDon" value="@Model.MaHoaDon" required placeholder="Nhập mã hóa đơn đã xác nhận (VD: S-HD-01)" />
@@ -50,6 +50,7 @@
     <section class="pos-card">
         <form id="return-form"
               data-invoice="@Model.MaHoaDon"
+              data-version="@(nhap?.PhienBan ?? 0)"
               data-draft="@(nhap?.Ma ?? string.Empty)"
               data-save="@Url.Action("Ghi")"
               data-lookup="@Url.Action("TraCuu")">
@@ -84,8 +85,8 @@
                             {
                                 var con = d.DaMua - d.DaTra;
                                 dongNhapMap.TryGetValue(d.Dong, out var dongCu);
-                                var slInit = dongCu != null ? Math.Min(dongCu.SoLuong, con) : 0;
-                                var nhapLaiInit = dongCu != null ? Math.Min(dongCu.NhapLai, slInit) : 0;
+                                var slInit = dongCu?.SoLuong ?? 0;
+                                var nhapLaiInit = dongCu?.NhapLai ?? 0;
                                 <tr data-line="@d.Dong" data-price="@d.Gia.ToString("0")">
                                     <td class="pos-num">@d.MaHang</td>
                                     <td>@d.TenHang</td>
@@ -95,10 +96,11 @@
                                     <td class="pos-num-col pos-num">@d.DaTra</td>
                                     <td class="pos-num-col pos-num"><strong>@con</strong></td>
                                     <td class="pos-num-col">
-                                        <input aria-label="SL trả @d.MaHang" class="pos-input pos-input-num qty" type="number" min="0" max="@con" step="1" inputmode="numeric" value="@slInit" disabled="@(con == 0)" />
+                                        @if (slInit > con) { <small class="pos-field-error">Lượng đã lưu vượt mức còn trả. Hãy điều chỉnh.</small> }
+                                        <input aria-label="SL trả @d.MaHang" class="pos-input pos-input-num qty" type="number" min="0" max="@con" step="1" inputmode="numeric" value="@slInit" disabled="@(con == 0 && slInit == 0)" />
                                     </td>
                                     <td class="pos-num-col">
-                                        <input aria-label="SL nhập lại @d.MaHang" class="pos-input pos-input-num stock" type="number" min="0" max="@slInit" step="1" inputmode="numeric" value="@nhapLaiInit" disabled="@(con == 0)" />
+                                        <input aria-label="SL nhập lại @d.MaHang" class="pos-input pos-input-num stock" type="number" min="0" max="@slInit" step="1" inputmode="numeric" value="@nhapLaiInit" disabled="@(con == 0 && slInit == 0)" />
                                     </td>
                                     <td class="pos-num-col pos-num subtotal">@((slInit * d.Gia).ToString("N0", vi)) đ</td>
                                 </tr>
@@ -127,11 +129,11 @@
                     </div>
                     <div class="pos-field">
                         <label for="cash">Tiền mặt (đ)</label>
-                        <input id="cash" class="pos-input pos-input-num" type="number" min="0" step="1000" inputmode="numeric" value="@(nhap?.TienMat.ToString("0") ?? "0")" />
+                        <input id="cash" class="pos-input pos-input-num" type="number" min="0" step="1" inputmode="numeric" value="@(nhap?.TienMat.ToString("0") ?? "0")" />
                     </div>
                     <div class="pos-field">
                         <label for="bank">Chuyển khoản (đ)</label>
-                        <input id="bank" class="pos-input pos-input-num" type="number" min="0" step="1000" inputmode="numeric" value="@(nhap?.ChuyenKhoan.ToString("0") ?? "0")" />
+                        <input id="bank" class="pos-input pos-input-num" type="number" min="0" step="1" inputmode="numeric" value="@(nhap?.ChuyenKhoan.ToString("0") ?? "0")" />
                     </div>
                 </div>
 
@@ -142,7 +144,7 @@
             </fieldset>
 
             <div class="pos-alert pos-alert-error" id="return-conflict" hidden role="alert">
-                <strong>Mã yêu cầu đã dùng cho phiếu trả <span class="pos-num" id="return-conflict-code"></span> với nội dung khác.</strong>
+                <strong><span id="conflict-message"></span> · Phiếu <span class="pos-num" id="return-conflict-code"></span></strong>
                 <a id="return-conflict-lookup" asp-controller="TraHang" asp-action="TraCuu">Tra cứu phiếu trả đã ghi</a>
             </div>
 

@@ -11,6 +11,7 @@ public sealed class TraHangController(BanHangDemoSessionProvider phien) : Contro
     [HttpGet]
     public IActionResult Index(string? maHoaDon, string? maNhap)
     {
+        ViewData["PhienTra"] = HttpContext.Session.Id;
         return View("~/Views/nv_TraHang/Index.cshtml", Kho.TraHoaDon(maHoaDon, maNhap));
     }
 
@@ -31,6 +32,7 @@ public sealed class TraHangController(BanHangDemoSessionProvider phien) : Contro
         {
             message = r.Message,
             ma = r.Ma,
+            phienBan = r.PhienBan,
             conflict = r.Status == StatusCodes.Status409Conflict,
             traCuuUrl = lookupUrl
         });
@@ -39,6 +41,12 @@ public sealed class TraHangController(BanHangDemoSessionProvider phien) : Contro
     [HttpGet]
     public IActionResult TraCuu([FromQuery] LocTraViewModel loc)
     {
+        if (!ModelState.IsValid || loc.TuNgay > loc.DenNgay)
+        {
+            ViewData["FilterError"] = "Vui lòng kiểm tra ngày lọc và thứ tự từ ngày đến ngày.";
+            Response.StatusCode = 400;
+            return View("~/Views/nv_TraHang/TraCuu.cshtml", new TraCuuTraViewModel(loc, [], null, []));
+        }
         var r = Kho.TimPhieuTra(loc);
         return r.Model == null
             ? StatusCode(r.Status)
@@ -46,19 +54,15 @@ public sealed class TraHangController(BanHangDemoSessionProvider phien) : Contro
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public IActionResult Xoa(string ma, bool caMo, string? vaiTro)
+    public IActionResult Xoa(string ma, bool caMo, string? vaiTro, [Bind(Prefix = "loc")] LocTraViewModel loc)
     {
         var (status, message) = Kho.XoaNhap(ma, caMo, vaiTro);
-        if (status != StatusCodes.Status200OK)
-        {
-            return StatusCode(status, message);
-        }
-
-        TempData["F4Success"] = message;
+        TempData[status == 200 ? "F4Success" : "F4Error"] = message;
         return RedirectToAction(nameof(TraCuu), new
         {
-            vaiTro = string.Equals(vaiTro, "QuanLy", StringComparison.OrdinalIgnoreCase) ? "QuanLy" : "ThuNgan",
-            caMo = caMo ? "true" : "false"
+            loc.Ma, loc.HoaDon, tuNgay = loc.TuNgay?.ToString("yyyy-MM-dd"),
+            denNgay = loc.DenNgay?.ToString("yyyy-MM-dd"), loc.Ca, loc.TrangThai,
+            vaiTro, caMo = caMo ? "true" : "false"
         });
     }
 }

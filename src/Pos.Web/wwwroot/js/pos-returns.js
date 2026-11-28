@@ -1,5 +1,15 @@
 (() => {
     const form = document.querySelector("#return-form");
+    const searchForm = document.querySelector("#return-search-form");
+    const key = "pos-return:" + searchForm.dataset.session;
+    const saved = sessionStorage.getItem(key);
+    const restored = saved ? JSON.parse(saved) : null;
+    if (restored && (!form || form.dataset.invoice !== JSON.parse(restored.body).maHoaDon)) {
+        const url = new URL(location.pathname, location.origin);
+        url.searchParams.set("maHoaDon", JSON.parse(restored.body).maHoaDon);
+        if (url.href !== location.href) location.replace(url);
+        return;
+    }
     if (!form) {
         return;
     }
@@ -19,7 +29,7 @@
     const receiptLink = get("receipt");
 
     const money = n => Math.round(n || 0).toLocaleString("vi-VN") + " đ";
-    let pending = null;
+    let pending = restored;
     let draft = form.dataset.draft || null;
     let busy = false;
 
@@ -29,6 +39,8 @@
             const qtyInput = row.querySelector(".qty");
             const stockInput = row.querySelector(".stock");
             const qty = qtyInput.valueAsNumber || 0;
+            if (!qty) stockInput.value = "0";
+            stockInput.disabled = !qty;
             stockInput.max = String(Math.max(0, qty));
             const amount = Math.max(0, qty) * Number(row.dataset.price);
             row.querySelector(".subtotal").textContent = money(amount);
@@ -70,8 +82,9 @@
         feedback.textContent = text;
     }
 
-    function showConflict(code, lookupUrl) {
+    function showConflict(code, lookupUrl, message) {
         feedback.hidden = true;
+        get("conflict-message").textContent = message || "Phiếu trả đã thay đổi.";
         conflictCode.textContent = code || "";
         if (lookupUrl) {
             conflictLookup.href = lookupUrl;
@@ -91,6 +104,7 @@
         try {
             const response = await fetch(form.dataset.save + "?xacNhan=" + pending.confirm, {
                 method: "POST",
+                signal: AbortSignal.timeout(20000),
                 headers: {
                     "Content-Type": "application/json",
                     RequestVerificationToken: form.elements.__RequestVerificationToken.value
@@ -102,13 +116,14 @@
                 throw new Error("Server error");
             }
 
-            const data = await response.json();
+            const data = response.ok ? await response.json() : await response.json().catch(() => ({}));
             const isConfirm = pending.confirm;
             const done = isConfirm && response.ok;
+            sessionStorage.removeItem(key);
             pending = null;
 
             if (response.status === 409 || data.conflict) {
-                showConflict(data.ma, data.traCuuUrl || (form.dataset.lookup + "?chon=" + encodeURIComponent(data.ma || "")));
+                showConflict(data.ma, data.traCuuUrl || (form.dataset.lookup + "?chon=" + encodeURIComponent(data.ma || "")), data.message);
                 lock(false);
                 field.disabled = true;
                 return;
@@ -121,6 +136,12 @@
                 receiptLink.hidden = false;
                 if (response.ok) {
                     draft = isConfirm ? null : data.ma;
+                    if (draft) {
+                        const url = new URL(location.href);
+                        url.searchParams.set("maNhap", draft);
+                        location.replace(url);
+                        return;
+                    }
                 }
             }
 
@@ -190,6 +211,7 @@
                 maHoaDon: form.dataset.invoice,
                 maYeuCau: requestId,
                 maNhap: draft || null,
+                phienBan: Number(form.dataset.version),
                 caMo: get("shift").checked,
                 dongTra: lines,
                 tienMat: Number(cash.value) || 0,
@@ -197,9 +219,24 @@
             })
         };
 
+        sessionStorage.setItem(key, JSON.stringify(pending));
         send();
     });
 
     retryBtn.addEventListener("click", send);
     update(null);
+    if (pending) {
+        const snapshot = JSON.parse(pending.body);
+        for (const row of rows) {
+            const line = snapshot.dongTra.find(d => d.dong === Number(row.dataset.line));
+            row.querySelector(".qty").value = line?.soLuong ?? 0;
+            row.querySelector(".stock").value = line?.nhapLai ?? 0;
+        }
+        mode.value = snapshot.tienMat && snapshot.chuyenKhoan ? "mixed" : snapshot.tienMat ? "cash" : "bank";
+        cash.value = snapshot.tienMat;
+        update(null);
+        lock(true);
+        showMessage("Giao dịch đang chờ kết quả. Hãy thử lại để đối chiếu phiếu đã gửi.", true);
+        retryBtn.hidden = false;
+    }
 })();

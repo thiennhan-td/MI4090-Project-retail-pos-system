@@ -79,13 +79,13 @@ public sealed partial class BanHangDemoStore
         }
     }
 
-    public (int Status, string Message, string? Ma) GhiTra(YeuCauTraViewModel q, bool xacNhan)
+    public (int Status, string Message, string? Ma, int PhienBan) GhiTra(YeuCauTraViewModel q, bool xacNhan)
     {
         lock (_sync)
         {
             if (q.DongTra == null || q.DongTra.Any(d => d == null) || string.IsNullOrWhiteSpace(q.MaYeuCau))
             {
-                return (400, "Thiếu thông tin phiếu trả.", null);
+                return (400, "Thiếu thông tin phiếu trả.", null, 0);
             }
 
             var dong = q.DongTra.OrderBy(d => d.Dong).ToArray();
@@ -95,53 +95,60 @@ public sealed partial class BanHangDemoStore
                 var a = cu.Gui;
                 var trung = string.Equals(a.MaNhap, q.MaNhap, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(a.MaHoaDon?.Trim(), q.MaHoaDon?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && a.PhienBan == q.PhienBan
                     && a.TienMat == q.TienMat
                     && a.ChuyenKhoan == q.ChuyenKhoan
                     && a.DongTra.SequenceEqual(dong);
 
-                if (!_phieuTra.ContainsKey(cu.Ma))
+                if (!_phieuTra.TryGetValue(cu.Ma, out var current))
                 {
-                    return (400, "Phiếu nháp đã được xóa.", null);
+                    return (400, "Phiếu nháp đã được xóa.", null, 0);
                 }
 
+                if (!xacNhan && (current.XacNhan || current.PhienBan != a.PhienBan + 1))
+                    return (409, "Phiếu nháp đã thay đổi. Hãy mở phiên bản hiện tại.", cu.Ma, current.PhienBan);
+
                 return trung
-                    ? (200, xacNhan ? "Đã xác nhận phiếu trả." : "Đã lưu nháp.", cu.Ma)
-                    : (409, "Mã yêu cầu đã dùng cho phiếu trả có nội dung khác.", cu.Ma);
+                    ? (200, xacNhan ? "Đã xác nhận phiếu trả." : "Đã lưu nháp.", cu.Ma, current.PhienBan)
+                    : (409, "Mã yêu cầu đã dùng cho phiếu trả có nội dung khác.", cu.Ma, current.PhienBan);
             }
 
             if (!q.CaMo)
             {
-                return (400, "Cần mở ca để nhận trả hàng.", null);
+                return (400, "Cần mở ca để nhận trả hàng.", null, 0);
             }
 
             var goc = TraHoaDon(q.MaHoaDon);
             if (goc.Dong.Length == 0)
             {
-                return (400, goc.Loi ?? "Thiếu hóa đơn gốc.", null);
+                return (400, goc.Loi ?? "Thiếu hóa đơn gốc.", null, 0);
             }
 
+            PhieuTraViewModel? nhap = null;
             if (!string.IsNullOrWhiteSpace(q.MaNhap)
-                && (!_phieuTra.TryGetValue(q.MaNhap, out var nhap)
-                    || nhap.XacNhan
+                && (!_phieuTra.TryGetValue(q.MaNhap, out nhap)
                     || nhap.Ca != CaTra
                     || nhap.Nguoi != "Lê Linh"
                     || !string.Equals(nhap.HoaDon, goc.MaHoaDon, StringComparison.OrdinalIgnoreCase)))
             {
-                return (400, "Phiếu nháp không còn hợp lệ.", null);
+                return (400, "Phiếu nháp không còn hợp lệ.", null, 0);
             }
+
+            if (nhap != null && (nhap.XacNhan || nhap.PhienBan != q.PhienBan))
+                return (409, "Phiếu đã được cập nhật ở tab khác. Hãy xem phiếu hiện tại.", nhap.Ma, nhap.PhienBan);
 
             var lines = new List<DongTraViewModel>();
             foreach (var d in dong)
             {
                 if (d.Dong < 0 || d.Dong >= goc.Dong.Length || lines.Any(l => l.Dong == d.Dong))
                 {
-                    return (400, "Dòng hàng không hợp lệ.", null);
+                    return (400, "Dòng hàng không hợp lệ.", null, 0);
                 }
 
                 var g = goc.Dong[d.Dong];
                 if (d.SoLuong <= 0 || d.SoLuong > g.DaMua - g.DaTra || d.NhapLai < 0 || d.NhapLai > d.SoLuong)
                 {
-                    return (400, "Kiểm tra số lượng trả và số lượng nhập lại.", null);
+                    return (400, "Kiểm tra số lượng trả và số lượng nhập lại.", null, 0);
                 }
 
                 lines.Add(new(d.Dong, g.TenHang, g.Gia, d.SoLuong, d.NhapLai));
@@ -155,7 +162,7 @@ public sealed partial class BanHangDemoStore
                 || q.TienMat != decimal.Truncate(q.TienMat)
                 || q.ChuyenKhoan != tong - q.TienMat)
             {
-                return (400, "Chọn hàng và phân bổ đủ số tiền hoàn bằng đồng nguyên.", null);
+                return (400, "Chọn hàng và phân bổ đủ số tiền hoàn bằng đồng nguyên.", null, 0);
             }
 
             var ma = string.IsNullOrWhiteSpace(q.MaNhap) ? $"PT-{++_soPhieu:D5}" : q.MaNhap;
@@ -164,11 +171,11 @@ public sealed partial class BanHangDemoStore
                 goc.MaHoaDon!,
                 CaTra,
                 "Lê Linh",
-                DateTime.Now,
+                nhap?.Ngay ?? DateTime.Now,
                 xacNhan,
                 lines.ToArray(),
                 q.TienMat,
-                q.ChuyenKhoan);
+                q.ChuyenKhoan, (nhap?.PhienBan ?? 0) + 1);
 
             lichSu.Add(q.MaYeuCau, (q with { MaHoaDon = goc.MaHoaDon!, DongTra = dong }, ma));
 
@@ -179,7 +186,7 @@ public sealed partial class BanHangDemoStore
                 hd.MaPhieuTraLienQuan = ma;
             }
 
-            return (200, xacNhan ? "Đã xác nhận phiếu trả." : "Đã lưu nháp.", ma);
+            return (200, xacNhan ? "Đã xác nhận phiếu trả." : "Đã lưu nháp.", ma, _phieuTra[ma].PhienBan);
         }
     }
 

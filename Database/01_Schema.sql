@@ -394,11 +394,13 @@ BEGIN TRY
         tonSoTaiMoc int NOT NULL,
         soLuongDem int NULL,
         giaiTrinh nvarchar(500) NULL,
+        lucDem datetime2(3) NULL,
         CONSTRAINT PK_DongKiem PRIMARY KEY (maPhieuKiem, maHang),
         CONSTRAINT FK_DongKiem_maPhieuKiem FOREIGN KEY (maPhieuKiem)
             REFERENCES dbo.PhieuKiem (maPhieuKiem) ON DELETE NO ACTION ON UPDATE NO ACTION,
         CONSTRAINT FK_DongKiem_maHang FOREIGN KEY (maHang)
             REFERENCES dbo.MatHang (maHang) ON DELETE NO ACTION ON UPDATE NO ACTION,
+        CONSTRAINT CK_DongKiem_LucDem CHECK (lucDem IS NULL OR soLuongDem IS NOT NULL),
         CONSTRAINT CK_DongKiem_Luong CHECK (
             tonSoTaiMoc >= 0 AND (soLuongDem IS NULL OR soLuongDem >= 0)
         )
@@ -465,6 +467,7 @@ BEGIN TRY
     CREATE INDEX IX_DongNhap_PhieuNhap ON dbo.DongNhap (maPhieuNhap);
     CREATE INDEX IX_TraNhaCungCap_PhieuNhap ON dbo.TraNhaCungCap (maPhieuNhap, lucTra);
     CREATE INDEX IX_TraNhaCungCap_CaChi ON dbo.TraNhaCungCap (maCaChi, lucTra);
+    CREATE INDEX IX_DongKiem_Hang ON dbo.DongKiem (maHang, maPhieuKiem) INCLUDE (lucDem);
     CREATE INDEX IX_BienDongKho_Hang_ThoiDiem ON dbo.BienDongKho (maHang, thoiDiemGhi, maBienDong)
         INCLUDE (soLuongThayDoi, loaiSuKien);
 

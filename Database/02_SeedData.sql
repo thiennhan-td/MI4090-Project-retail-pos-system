@@ -304,12 +304,12 @@ BEGIN TRY
         ('S-PK-02', 'S-TK-KHO', NULL, '2026-11-26T04:00:00', NULL, 'DangKiem'),
         ('S-PK-03', 'S-TK-KHO', NULL, '2026-11-26T05:00:00', NULL, 'ChoDuyet');
 
-    INSERT INTO dbo.DongKiem (maPhieuKiem, maHang, tonSoTaiMoc, soLuongDem, giaiTrinh)
+    INSERT INTO dbo.DongKiem (maPhieuKiem, maHang, tonSoTaiMoc, soLuongDem, giaiTrinh, lucDem)
     VALUES
-        ('S-PK-01', 'S-SUA', 136, 134, N'Hai hộp hỏng khi kiểm đếm'),
-        ('S-PK-01', 'S-BANH', 50, 50, NULL),
-        ('S-PK-02', 'S-BANH', 32, NULL, NULL),
-        ('S-PK-03', 'S-SUA', 110, 110, NULL);
+        ('S-PK-01', 'S-SUA', 136, 134, N'Hai hộp hỏng khi kiểm đếm', '2026-10-11T04:15:00'),
+        ('S-PK-01', 'S-BANH', 50, 50, NULL, '2026-10-11T04:15:00'),
+        ('S-PK-02', 'S-BANH', 32, NULL, NULL, NULL),
+        ('S-PK-03', 'S-SUA', 110, 110, NULL, '2026-11-26T05:15:00');
 
     INSERT INTO dbo.BienDongKho (maBienDong, maHang, maDongBan, maDongTra, maDongNhap, maPhieuKiem, loaiSuKien, soLuongThayDoi, thoiDiemGhi, khoaSuKien)
     VALUES

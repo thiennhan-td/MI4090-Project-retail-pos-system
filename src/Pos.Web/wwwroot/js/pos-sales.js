@@ -592,6 +592,7 @@
                 ? null : payment.cashGiven.value,
             tienChuyenKhoan: payment.transfer.empty ? null : payment.transfer.value,
             caDangMo: shiftToggle.checked,
+            maCa: app.dataset.currentShift,
             dongBans: lines
         };
     }

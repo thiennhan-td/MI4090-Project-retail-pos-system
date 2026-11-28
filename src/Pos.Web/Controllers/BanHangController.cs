@@ -96,11 +96,6 @@ public sealed class BanHangController : Controller
             return Loi(field, "Dữ liệu hóa đơn không hợp lệ. Vui lòng kiểm tra số lượng, phiên bản và các khoản thanh toán.");
         }
 
-        if (!req.CaDangMo)
-        {
-            return Loi("shift", "Ca bán hiện tại đã đóng. Vui lòng mở ca trước khi ghi hóa đơn.");
-        }
-
         var maNhap = string.IsNullOrWhiteSpace(req.MaNhap) ? null : req.MaNhap.Trim();
         if ((maNhap is null) == req.PhienBan.HasValue)
         {
@@ -196,7 +191,7 @@ public sealed class BanHangController : Controller
             };
         }
 
-        var ketQua = store.GhiHoaDon(req.MaYeuCau, maNhap, req.PhienBan, req.CaDangMo, dongBans, thanhToanNhap, thanhToans);
+        var ketQua = store.GhiHoaDon(req.MaYeuCau, maNhap, req.PhienBan, req.CaDangMo, req.MaCa, dongBans, thanhToanNhap, thanhToans);
         var hoaDon = ketQua.HoaDon;
         if (hoaDon is null)
         {

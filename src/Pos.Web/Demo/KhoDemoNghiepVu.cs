@@ -79,6 +79,9 @@ public sealed partial class KhoDemoStore
         _phieuNhaps[phieu.Ma] = phieu with { TrangThai = DaHuy, LucHuy = now, LyDoHuy = lyDo.Trim() };
     }
 
+    internal IEnumerable<TraNhaCungCapDemo> CacKhoanTraTuKet() =>
+        _khoanTras.Where(x => x.Nguon == "KetCa" && x.MaCa is not null);
+
     public decimal DaTra(string maPhieu) => _khoanTras.Where(x => x.MaPhieu == maPhieu).Sum(x => x.SoTien);
     public decimal DuNo(PhieuNhapDemo phieu) => phieu.TrangThai == DaXacNhan ? phieu.TongTien - DaTra(phieu.Ma) : 0;
 
@@ -99,8 +102,10 @@ public sealed partial class KhoDemoStore
         }
         if (phieu.TrangThai != DaXacNhan || soTien <= 0 || soTien > DuNo(phieu))
             throw new ThaoTacKhoDemoException("Chỉ trả số tiền dương và tối đa bằng dư nợ của phiếu đã xác nhận.");
-        if (nguon == "KetCa" && (phuongThuc != "TienMat" || !_caChis.Any(x => x.DangMo && x.Ma == maCa)))
-            throw new ThaoTacKhoDemoException("Chi từ két ca yêu cầu tiền mặt và một ca đang mở.");
+        if (nguon == "KetCa" && phuongThuc != "TienMat")
+            throw new ThaoTacKhoDemoException("Chi từ két ca yêu cầu thanh toán tiền mặt.");
+        if (nguon == "KetCa" && !CaDangMo().Any(x => x.Ma == maCa))
+            throw new ThaoTacKhoDemoException("Ca đã đóng hoặc không còn hợp lệ. Tải lại trang để chọn ca đang mở.");
         if (nguon == "QuyCuaHang" && maCa is not null)
             throw new ThaoTacKhoDemoException("Chi từ quỹ cửa hàng không gắn với mã ca.");
 

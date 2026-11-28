@@ -15,25 +15,38 @@ public sealed partial class BanHangDemoStore
     [
         new("S-CA-1010",new(2026,10,10,11,0,0),"S-TC-01","Chi riêng","KetCa","TienMat",-6000,"Mua bút viết","BB-01"),
         new("S-CA-1010",new(2026,10,10,12,0,0),"S-TC-02","Thu riêng","KetCa","TienMat",10000,"Thu lại tiền ứng mua vật tư"),
-        new("S-CA-1010",new(2026,10,10,12,30,0),"S-TC-03","Thu riêng","QuyCuaHang","ChuyenKhoan",20000,"Thu ngoài két ca"),
-        new("S-CA-1010",new(2026,10,10,13,0,0),"S-TNCC-02","Trả nhà cung cấp","KetCa","TienMat",-15000,"Thanh toán phiếu nhập","S-PN-OCT-SUA")
+        new("S-CA-1010",new(2026,10,10,12,30,0),"S-TC-03","Thu riêng","QuyCuaHang","ChuyenKhoan",20000,"Thu ngoài két ca")
     ];
     private readonly Dictionary<string,(PhieuQuyViewModel Request,string Ma)> _yeuCauQuy = new();
     public string? MaCaMo
     {
         get { lock (_sync) return _caBans.Find(c => c.MaNguoiMo == "S-TK-TN1" && c.TrangThai == "DangMo")?.MaCa; }
     }
+    internal CaChiDemo[] CaDangMoDeChi() =>
+        _caBans.Where(c => c.TrangThai == "DangMo")
+            .Select(c => new CaChiDemo(c.MaCa, _banGiao[c.MaCa].Dau, true)).ToArray();
+
     private static bool TienHopLe(decimal n) => n >= 0 && n <= 999999999999999m && decimal.Truncate(n) == n;
     private IEnumerable<DongQuyViewModel> DocSo()
     {
         foreach (var row in _thuChi) yield return row;
+        foreach (var tra in Kho.CacKhoanTraTuKet())
+        {
+            yield return new(tra.MaCa!, tra.LucTra.LocalDateTime, tra.Ma, "Trả nhà cung cấp",
+                tra.Nguon, tra.PhuongThuc, -tra.SoTien, "Thanh toán phiếu nhập", tra.MaPhieu);
+        }
         foreach (var h in _hoaDons.Where(h => h.LucXacNhan.HasValue))
         {
             foreach (var t in h.ThanhToans)
                 yield return new(h.MaCa,h.LucXacNhan!.Value,h.MaHoaDon,"Thu bán",
                     t.PhuongThuc == "TienMat" ? "KetCa" : "QuyCuaHang",t.PhuongThuc,t.SoTienThanhToan);
-            if (h.MaCaDao != null && h.LucHuy.HasValue && h.TongTienMatPhanBo > 0)
-                yield return new(h.MaCaDao,h.LucHuy.Value,h.MaHoaDon,"Đảo hủy","KetCa","TienMat",-h.TongTienMatPhanBo);
+            if (h.TrangThai == "DaHuy" && h.LucHuy is { } lucHuy)
+            {
+                if (h.MaCaDao is { } caDao && h.TongTienMatPhanBo > 0)
+                    yield return new(caDao, lucHuy, h.MaHoaDon, "Đảo hủy", "KetCa", "TienMat", -h.TongTienMatPhanBo);
+                if (h.TongChuyenKhoan > 0)
+                    yield return new(h.MaCa, lucHuy, h.MaHoaDon, "Đảo hủy", "QuyCuaHang", "ChuyenKhoan", -h.TongChuyenKhoan);
+            }
         }
         foreach (var p in _phieuTra.Values.Where(p => p.XacNhan))
         {

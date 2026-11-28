@@ -19,7 +19,7 @@
     var hd = Model.HoaDonDangChon;
     var laQuanLy = Model.VaiTroDemo == "QuanLy";
     var caSuaNhap = laQuanLy ? null : Model.DanhSachCaBan.FirstOrDefault(ca =>
-        ca.MaCa == Pos.Web.Demo.BanHangDemoStore.MaCaHienTai && ca.TrangThai == "DangMo");
+        ca.MaNguoiMo == "S-TK-TN1" && ca.TrangThai == "DangMo");
     var coTienMat = hd is not null && hd.TongTienMatPhanBo > 0;
     var duocHuy = false;
     var lyDoChanHuy = string.Empty;
@@ -224,7 +224,7 @@
                 <div class="pos-success-links">
                     @if (Model.CoTheSuaNhap)
                     {
-                        <a class="pos-btn pos-btn-primary" asp-controller="BanHang" asp-action="Index" asp-route-maNhap="@hd.MaHoaDon">Tiếp tục sửa</a>
+                        <a class="pos-btn pos-btn-primary" asp-controller="BanHang" asp-action="Index" asp-route-maNhap="@hd.MaHoaDon">Sửa nháp</a>
                     }
                     @if (hd.LucXacNhan.HasValue)
                     {

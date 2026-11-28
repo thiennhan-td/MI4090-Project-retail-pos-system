@@ -1,6 +1,6 @@
 # Cơ sở dữ liệu POS
 
-Bộ script dùng **SQL Server 2017 trở lên** và khởi tạo **21 bảng, 123 cột, 38 khóa ngoại** theo [từ điển dữ liệu](../docs/design/Tu_dien_du_lieu_POS.md). Chạy `01_Schema.sql` rồi `02_SeedData.sql` trên cùng một cơ sở dữ liệu trống dành riêng cho POS. Với SSMS, chọn cơ sở dữ liệu đích trước khi chạy. Với SQL Server đặt tên máy chủ hoặc instance khác, thay đối số `-S`.
+Bộ script dùng **SQL Server 2017 trở lên** và khởi tạo **21 bảng, 124 cột, 38 khóa ngoại** theo [từ điển dữ liệu](../docs/design/Tu_dien_du_lieu_POS.md). Chạy `01_Schema.sql` rồi `02_SeedData.sql` trên cùng một cơ sở dữ liệu trống dành riêng cho POS. Với SSMS, chọn cơ sở dữ liệu đích trước khi chạy. Với SQL Server đặt tên máy chủ hoặc instance khác, thay đối số `-S`.
 
 ```powershell
 sqlcmd -S localhost -E -d RetailCorePosDemo -b -f 65001 -i Database/01_Schema.sql
@@ -10,6 +10,16 @@ if ($LASTEXITCODE -ne 0) { throw "Seed loading failed." }
 ```
 
 Tạo trước database `RetailCorePosDemo` trên máy chủ đã chọn. Mỗi script có giao dịch riêng và hoàn tác khi lỗi. Nếu bảng đã chứa dữ liệu, script seed dừng trước khi ghi. Để nạp lại từ đầu, chạy bộ script trên một database trống khác.
+
+## Nâng cấp kiểm kê F6
+
+Đối với cơ sở dữ liệu POS hiện hữu, chạy [001_DongKiemLucDem.sql](Migrations/001_DongKiemLucDem.sql) trước khi triển khai service mới. Script bổ sung cột `DongKiem.lucDem`, ràng buộc và chỉ mục theo mã hàng. Có thể chạy lại script. Các dòng cũ nhận giá trị NULL.
+
+```powershell
+sqlcmd -S localhost -E -d RetailCorePosDemo -b -f 65001 -i Database/Migrations/001_DongKiemLucDem.sql
+```
+
+Phiếu cũ đã hoàn tất vẫn xem được và dùng `mocKiem` làm mốc bảo vệ đối với các dòng thiếu `lucDem`. Phiếu đang kiểm có thể đếm lại nếu tồn sổ tại mốc vẫn khớp và hàng chưa phát sinh biến động sau mốc. Nếu hàng đã phát sinh biến động hoặc phiếu cũ đã chờ duyệt, hủy phiếu và lập phiếu mới để đếm lại.
 
 ## Quy tắc triển khai
 

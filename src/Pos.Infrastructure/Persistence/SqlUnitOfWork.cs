@@ -11,6 +11,8 @@ public sealed class SqlUnitOfWork(SqlConnectionFactory factory) : IUnitOfWork
     private SqlTransaction? _transaction;
     private bool _disposed;
 
+    internal bool CoGiaoDich => _transaction is not null;
+
     public async Task BeginTransactionAsync(CancellationToken ct = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);

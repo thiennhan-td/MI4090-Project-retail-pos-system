@@ -1,0 +1,10 @@
+@model Pos.Web.ViewModels.BaoCaoQuay.LocBaoCaoQuayViewModel
+@{
+    ViewData["Title"] = "Không có quyền xem báo cáo";
+    var query = Model.ThamSo();
+    query["vaiTro"] = "QuanLy";
+}
+<section class="pos-card">
+    <h2>Chỉ Quản lý được xem báo cáo Quầy</h2>
+    <a class="pos-btn pos-btn-primary" asp-action="@ViewContext.RouteData.Values["action"]" asp-all-route-data="query">Chuyển sang vai trò Quản lý</a>
+</section>

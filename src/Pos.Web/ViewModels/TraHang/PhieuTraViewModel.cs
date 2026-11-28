@@ -44,7 +44,7 @@ public record PhieuTraViewModel(
     DongTraViewModel[] Dong,
     decimal TienMat,
     decimal ChuyenKhoan,
-    int PhienBan = 0);
+    int PhienBan = 0, DateTime? LucXacNhan = null);
 
 public record LocTraViewModel(
     string? Ma,

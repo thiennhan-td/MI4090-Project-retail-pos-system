@@ -1,0 +1,66 @@
+@using System.Globalization
+@model Pos.Web.ViewModels.BaoCaoQuay.BaoCaoQuayViewModel
+@{
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    string Tien(decimal n) => n.ToString("N0", vi) + " đ";
+    string HienThi(object? cell, bool tien) => cell switch
+    {
+        decimal n when tien => Tien(n),
+        int n => n.ToString("N0", vi),
+        DateTime luc => luc.ToString("dd/MM/yyyy HH:mm", vi),
+        null => "—",
+        _ => cell.ToString() ?? ""
+    };
+    string MauLech(object? cell) => cell is decimal n
+        ? n < 0 ? "pos-report-negative" : n > 0 ? "pos-report-positive" : ""
+        : "";
+}
+@if (Model.ChiSo.Length > 0)
+{
+    <section class="pos-card">
+        <h2>@(Model.HanhDong == "CuoiNgay" ? "Bán và hoàn trả" : "Tổng hợp trong kỳ")</h2>
+        <dl class="pos-report-kpis">
+            @foreach (var chiSo in Model.ChiSo)
+            {
+                <div>
+                    <dt>@chiSo.Nhan</dt>
+                    <dd class="pos-num">@(chiSo.LaTien ? Tien(chiSo.GiaTri) : chiSo.GiaTri.ToString("N0", vi))</dd>
+                </div>
+            }
+        </dl>
+        @if (Model.GhiChu is not null) { <p>@Model.GhiChu</p> }
+    </section>
+}
+@foreach (var bang in Model.Bang)
+{
+    <section class="pos-card pos-report-section">
+        <h2>@bang.TieuDe</h2>
+        <div class="pos-table-wrap" role="region" aria-label="@bang.TieuDe" tabindex="0">
+            <table class="pos-table">
+                <thead><tr>
+                    @foreach (var cot in bang.Cot) { <th scope="col">@cot</th> }
+                </tr></thead>
+                <tbody>
+                    @foreach (var dong in bang.Dong)
+                    {
+                        <tr>
+                            @for (var i = 0; i < dong.Length; i++)
+                            {
+                                var cell = dong[i];
+                                <td class="@(cell is int or decimal ? "pos-num" : "") @(i == bang.CotChenhLech ? MauLech(cell) : "")">@HienThi(cell, i >= bang.CotTienTu)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+                @if (bang.Tong is { } tong && bang.CotChenhLech is int cotLech)
+                {
+                    <tfoot><tr>
+                        <th scope="row" colspan="@cotLech">@tong[0]</th>
+                        <td class="pos-num @MauLech(tong[cotLech])">@HienThi(tong[cotLech], true)</td>
+                    </tr></tfoot>
+                }
+            </table>
+        </div>
+        @if (bang.Dong.Length == 0) { <p>Không có dữ liệu phù hợp.</p> }
+    </section>
+}

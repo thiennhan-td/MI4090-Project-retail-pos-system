@@ -37,8 +37,8 @@ public sealed partial class BanHangDemoStore
         }
         foreach (var p in _phieuTra.Values.Where(p => p.XacNhan))
         {
-            if (p.TienMat > 0) yield return new(p.Ca,p.Ngay,p.Ma,"Hoàn trả","KetCa","TienMat",-p.TienMat);
-            if (p.ChuyenKhoan > 0) yield return new(p.Ca,p.Ngay,p.Ma,"Hoàn trả","QuyCuaHang","ChuyenKhoan",-p.ChuyenKhoan);
+            if (p.TienMat > 0) yield return new(p.Ca,p.LucXacNhan ?? p.Ngay,p.Ma,"Hoàn trả","KetCa","TienMat",-p.TienMat);
+            if (p.ChuyenKhoan > 0) yield return new(p.Ca,p.LucXacNhan ?? p.Ngay,p.Ma,"Hoàn trả","QuyCuaHang","ChuyenKhoan",-p.ChuyenKhoan);
         }
     }
     public (int Status,CaBanViewModel? Model) XemCa(LocCaViewModel l)

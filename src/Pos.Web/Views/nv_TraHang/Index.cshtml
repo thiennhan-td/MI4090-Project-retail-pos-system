@@ -1,0 +1,160 @@
+@using System.Globalization
+@model Pos.Web.ViewModels.TraHang.LapTraViewModel
+@{
+    ViewData["Title"] = "Lập phiếu trả & Hoàn tiền";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var nhap = Model.NhapDangMo;
+    var dongNhapMap = nhap?.Dong.ToDictionary(d => d.Dong) ?? [];
+    var initialMode = nhap == null
+        ? "cash"
+        : nhap.TienMat > 0 && nhap.ChuyenKhoan > 0
+            ? "mixed"
+            : nhap.ChuyenKhoan > 0
+                ? "bank"
+                : "cash";
+}
+
+<section class="pos-f3-toolbar">
+    <div class="pos-f3-meta-row">
+        <span class="pos-pill pos-pill-teal">Ca đang mở · S-CA-1126</span>
+        <span class="pos-pill">Thu ngân: Lê Linh</span>
+        @if (nhap != null)
+        {
+            <span class="pos-badge pos-badge-amber">Đang mở phiếu nháp: @nhap.Ma</span>
+        }
+    </div>
+    <div class="pos-f3-toolbar-actions">
+        <a class="pos-btn pos-btn-secondary" asp-controller="TraHang" asp-action="TraCuu">Tra cứu phiếu trả hàng</a>
+    </div>
+</section>
+
+<section class="pos-card" style="margin-bottom: 1rem;">
+    <form method="get" class="pos-filter-grid" id="return-search-form">
+        <div class="pos-field">
+            <label for="search-invoice">Hóa đơn gốc</label>
+            <input id="search-invoice" class="pos-input" name="maHoaDon" value="@Model.MaHoaDon" required placeholder="Nhập mã hóa đơn đã xác nhận (VD: S-HD-01)" />
+        </div>
+        <div class="pos-filter-actions">
+            <button type="submit" class="pos-btn pos-btn-primary">Tìm hóa đơn</button>
+        </div>
+    </form>
+</section>
+
+@if (Model.Loi != null)
+{
+    <p class="pos-alert pos-alert-error" role="alert">@Model.Loi</p>
+}
+
+@if (Model.Dong.Length > 0)
+{
+    <section class="pos-card">
+        <form id="return-form"
+              data-invoice="@Model.MaHoaDon"
+              data-draft="@(nhap?.Ma ?? string.Empty)"
+              data-save="@Url.Action("Ghi")"
+              data-lookup="@Url.Action("TraCuu")">
+            @Html.AntiForgeryToken()
+            <fieldset>
+                <legend>Hàng nhận trả · @Model.MaHoaDon</legend>
+                <div style="margin-bottom: 0.75rem;">
+                    <label class="pos-toggle-label">
+                        <input id="shift" type="checkbox" checked />
+                        <span>Ca đang mở · Lê Linh (bỏ chọn để thử ca đã đóng)</span>
+                    </label>
+                </div>
+
+                <div class="pos-table-wrap">
+                    <table class="pos-table">
+                        <thead>
+                            <tr>
+                                <th>Mã hàng</th>
+                                <th>Tên hàng</th>
+                                <th>ĐVT</th>
+                                <th class="pos-num-col">Đơn giá lúc bán</th>
+                                <th class="pos-num-col">Đã mua</th>
+                                <th class="pos-num-col">Đã trả trước</th>
+                                <th class="pos-num-col">Còn được trả</th>
+                                <th class="pos-num-col">SL trả</th>
+                                <th class="pos-num-col">SL nhập lại kho</th>
+                                <th class="pos-num-col">Thành tiền hoàn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in Model.Dong)
+                            {
+                                var con = d.DaMua - d.DaTra;
+                                dongNhapMap.TryGetValue(d.Dong, out var dongCu);
+                                var slInit = dongCu != null ? Math.Min(dongCu.SoLuong, con) : 0;
+                                var nhapLaiInit = dongCu != null ? Math.Min(dongCu.NhapLai, slInit) : 0;
+                                <tr data-line="@d.Dong" data-price="@d.Gia.ToString("0")">
+                                    <td class="pos-num">@d.MaHang</td>
+                                    <td>@d.TenHang</td>
+                                    <td>@d.Dvt</td>
+                                    <td class="pos-num-col pos-num">@d.Gia.ToString("N0", vi) đ</td>
+                                    <td class="pos-num-col pos-num">@d.DaMua</td>
+                                    <td class="pos-num-col pos-num">@d.DaTra</td>
+                                    <td class="pos-num-col pos-num"><strong>@con</strong></td>
+                                    <td class="pos-num-col">
+                                        <input aria-label="SL trả @d.MaHang" class="pos-input pos-input-num qty" type="number" min="0" max="@con" step="1" inputmode="numeric" value="@slInit" disabled="@(con == 0)" />
+                                    </td>
+                                    <td class="pos-num-col">
+                                        <input aria-label="SL nhập lại @d.MaHang" class="pos-input pos-input-num stock" type="number" min="0" max="@slInit" step="1" inputmode="numeric" value="@nhapLaiInit" disabled="@(con == 0)" />
+                                    </td>
+                                    <td class="pos-num-col pos-num subtotal">@((slInit * d.Gia).ToString("N0", vi)) đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="pos-muted" style="margin: 0.75rem 0; font-size: 0.85rem;">
+                    Chỉ nhập lại kho các đơn vị hàng còn nguyên tem, bao bì và đủ điều kiện bán lại.
+                </p>
+
+                <div class="pos-total-box">
+                    <span>Tổng tiền hoàn</span>
+                    <strong class="pos-num pos-grand-total"><output id="total">0 đ</output></strong>
+                </div>
+
+                <div class="pos-filter-grid" style="margin-bottom: 1rem;">
+                    <div class="pos-field">
+                        <label for="mode">Phương thức hoàn</label>
+                        <select id="mode" class="pos-input">
+                            <option value="cash" selected="@(initialMode == "cash")">Tiền mặt</option>
+                            <option value="bank" selected="@(initialMode == "bank")">Chuyển khoản</option>
+                            <option value="mixed" selected="@(initialMode == "mixed")">Hỗn hợp</option>
+                        </select>
+                    </div>
+                    <div class="pos-field">
+                        <label for="cash">Tiền mặt (đ)</label>
+                        <input id="cash" class="pos-input pos-input-num" type="number" min="0" step="1000" inputmode="numeric" value="@(nhap?.TienMat.ToString("0") ?? "0")" />
+                    </div>
+                    <div class="pos-field">
+                        <label for="bank">Chuyển khoản (đ)</label>
+                        <input id="bank" class="pos-input pos-input-num" type="number" min="0" step="1000" inputmode="numeric" value="@(nhap?.ChuyenKhoan.ToString("0") ?? "0")" />
+                    </div>
+                </div>
+
+                <div class="pos-f3-toolbar-actions">
+                    <button type="submit" value="draft" class="pos-btn pos-btn-secondary">Lưu nháp</button>
+                    <button type="submit" value="confirm" class="pos-btn pos-btn-primary">Xác nhận hoàn tiền</button>
+                </div>
+            </fieldset>
+
+            <div class="pos-alert pos-alert-error" id="return-conflict" hidden role="alert">
+                <strong>Mã yêu cầu đã dùng cho phiếu trả <span class="pos-num" id="return-conflict-code"></span> với nội dung khác.</strong>
+                <a id="return-conflict-lookup" asp-controller="TraHang" asp-action="TraCuu">Tra cứu phiếu trả đã ghi</a>
+            </div>
+
+            <p id="feedback" role="status" hidden></p>
+            <div class="pos-f3-toolbar-actions" style="margin-top: 0.5rem;">
+                <button type="button" id="retry" class="pos-btn pos-btn-primary" hidden>Thử lại</button>
+                <a id="receipt" class="pos-btn pos-btn-secondary" hidden>Xem phiếu trả vừa ghi</a>
+            </div>
+        </form>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/pos-returns.js" asp-append-version="true"></script>
+}

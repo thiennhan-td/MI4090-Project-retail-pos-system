@@ -93,14 +93,8 @@
                         <svg class="pos-icon" aria-hidden="true"><use href="@Url.Content("~/images/pos-icons.svg")#icon-f4"></use></svg>
                         <span>F4 · Nhận trả &amp; Hoàn tiền</span>
                     </h2>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Lập phiếu trả &amp; Hoàn tiền</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
-                    <span class="pos-nav-item is-disabled" aria-disabled="true">
-                        <span>Tra cứu phiếu trả hàng</span>
-                        <span class="pos-nav-tag">Sắp có</span>
-                    </span>
+                    <a class="pos-nav-item @(currentController == "TraHang" && currentAction == "Index" ? "is-active" : "")" asp-controller="TraHang" asp-action="Index">Lập phiếu trả &amp; Hoàn tiền</a>
+                    <a class="pos-nav-item @(currentController == "TraHang" && currentAction == "TraCuu" ? "is-active" : "")" asp-controller="TraHang" asp-action="TraCuu">Tra cứu phiếu trả hàng</a>
                 </section>
 
                 <section class="pos-nav-group" aria-label="F5 Nhập hàng và Trả tiền">
